@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail offre{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">{{ offer.reference }}</h1>
+            <p class="text-body-secondary mb-0">{{ offer.client.name }}</p>
+        </div>
+        <a href="{{ path('app_offer_index') }}" class="btn btn-outline-secondary">Retour</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">{{ offer.issuedAt|date('d/m/Y') }}</dd>
+                        <dt class="col-sm-4">Montant</dt>
+                        <dd class="col-sm-8">{{ offer.amount|number_format(2, ',', ' ') }} MAD</dd>
+                        <dt class="col-sm-4">Statut</dt>
+                        <dd class="col-sm-8">{{ offer.status|replace({'_': ' '})|title }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h5">Conditions</h2>
+                    <p>{{ offer.conditionsSummary ?: 'Aucune condition definie.' }}</p>
+                    <h2 class="h5">Historique</h2>
+                    <p class="mb-0">{{ offer.historyNotes ?: 'Aucun historique disponible.' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Clients{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Clients et prospects</h1>
+            <p class="text-body-secondary mb-0">CRUD de reference avec modal Bootstrap et soumission AJAX.</p>
+        </div>
+        <a href="{{ path('app_client_new') }}" class="btn btn-primary" data-crud-modal-url="{{ path('app_client_new') }}">Ajouter</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">Total</div><div class="h4 mb-0">{{ counters.total }}</div></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">Actifs</div><div class="h4 mb-0">{{ counters.active }}</div></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">Potentiels</div><div class="h4 mb-0">{{ counters.potential }}</div></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">En cours</div><div class="h4 mb-0">{{ counters.in_progress }}</div></div></div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0" data-crud-list>
+            {% include 'client/_list.html.twig' with { clients: clients } %}
+        </div>
+    </div>
+{% endblock %}

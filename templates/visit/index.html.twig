@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Visites{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Mes visites</h1>
+            <p class="text-body-secondary mb-0">Suivi des visites terrain et des prochaines actions.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="list-group list-group-flush">
+            {% for visit in visits %}
+                <a href="{{ path('app_visit_show', {id: visit.id}) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold">{{ visit.client.name }}</div>
+                            <div class="text-body-secondary small">{{ visit.client.city }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div>{{ visit.scheduledAt|date('d/m/Y H:i') }}</div>
+                            <span class="badge text-bg-light">{{ visit.status|replace({'_': ' '})|title }}</span>
+                        </div>
+                    </div>
+                </a>
+            {% else %}
+                <div class="list-group-item text-body-secondary">Aucune visite disponible.</div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

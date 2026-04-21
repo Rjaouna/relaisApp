@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Offres{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Offres commerciales</h1>
+            <p class="text-body-secondary mb-0">Suivi des offres et de leur avancement commercial.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Reference</th>
+                        <th>Client</th>
+                        <th>Date</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for offer in offers %}
+                        <tr>
+                            <td><a href="{{ path('app_offer_show', {id: offer.id}) }}">{{ offer.reference }}</a></td>
+                            <td>{{ offer.client.name }}</td>
+                            <td>{{ offer.issuedAt|date('d/m/Y') }}</td>
+                            <td>{{ offer.amount|number_format(2, ',', ' ') }} MAD</td>
+                            <td><span class="badge text-bg-light">{{ offer.status|replace({'_': ' '})|title }}</span></td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucune offre disponible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

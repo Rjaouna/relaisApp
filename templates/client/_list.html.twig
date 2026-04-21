@@ -1,0 +1,45 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Nom</th>
+                <th>Ville</th>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>CA annuel</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">{{ client.name }}</div>
+                        <div class="small text-body-secondary">{{ client.email ?: 'Aucun email' }}</div>
+                    </td>
+                    <td>{{ client.city }}</td>
+                    <td>{{ client.type|replace({'_': ' '})|title }}</td>
+                    <td><span class="badge text-bg-light">{{ client.status|replace({'_': ' '})|title }}</span></td>
+                    <td>{{ client.annualRevenue|number_format(2, ',', ' ') }} MAD</td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_client_show', {id: client.id}) }}" class="btn btn-outline-secondary">Voir</a>
+                            <a href="{{ path('app_client_edit', {id: client.id}) }}" class="btn btn-outline-primary" data-crud-modal-url="{{ path('app_client_edit', {id: client.id}) }}">Editer</a>
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    data-crud-delete-url="{{ path('app_client_delete', {id: client.id}) }}"
+                                    data-crud-refresh-url="{{ path('app_client_list') }}"
+                                    data-crud-confirm="Supprimer {{ client.name }} ?">
+                                Supprimer
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-body-secondary">Aucun client enregistre pour le moment.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Dashboard commercial</h1>
+            <p class="text-body-secondary mb-0">Pilotage de la couverture territoriale et de la performance commerciale.</p>
+        </div>
+        <a href="{{ path('app_client_new') }}" class="btn btn-primary" data-crud-modal-url="{{ path('app_client_new') }}">Ajouter un client</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><p class="text-body-secondary mb-2">Clients</p><h2 class="h4 mb-0">{{ overview.clients }}</h2></div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><p class="text-body-secondary mb-2">Clients actifs</p><h2 class="h4 mb-0">{{ overview.clients_active }}</h2></div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><p class="text-body-secondary mb-2">Prospects</p><h2 class="h4 mb-0">{{ overview.prospects }}</h2></div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><p class="text-body-secondary mb-2">CA du mois</p><h2 class="h4 mb-0">{{ overview.revenue|number_format(2, ',', ' ') }} MAD</h2></div></div></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h2 class="h5 mb-0">Visites planifiees</h2>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for visit in visits %}
+                        <a href="{{ path('app_visit_show', {id: visit.id}) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-semibold">{{ visit.client.name }}</div>
+                                    <div class="text-body-secondary small">{{ visit.client.city }}</div>
+                                </div>
+                                <span class="badge text-bg-light">{{ visit.scheduledAt|date('d/m/Y H:i') }}</span>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="list-group-item text-body-secondary">Aucune visite planifiee pour le moment.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h2 class="h5 mb-0">Offres recentes</h2>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for offer in offers %}
+                        <a href="{{ path('app_offer_show', {id: offer.id}) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-semibold">{{ offer.reference }}</div>
+                                    <div class="text-body-secondary small">{{ offer.client.name }}</div>
+                                </div>
+                                <span class="badge text-bg-light">{{ offer.amount|number_format(2, ',', ' ') }} MAD</span>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="list-group-item text-body-secondary">Aucune offre disponible.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

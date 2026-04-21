@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail visite{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">{{ visit.client.name }}</h1>
+            <p class="text-body-secondary mb-0">{{ visit.client.city }}</p>
+        </div>
+        <a href="{{ path('app_visit_index') }}" class="btn btn-outline-secondary">Retour</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">{{ visit.scheduledAt|date('d/m/Y H:i') }}</dd>
+                        <dt class="col-sm-4">Type</dt>
+                        <dd class="col-sm-8">{{ visit.type|title }}</dd>
+                        <dt class="col-sm-4">Priorite</dt>
+                        <dd class="col-sm-8">{{ visit.priority|title }}</dd>
+                        <dt class="col-sm-4">Statut</dt>
+                        <dd class="col-sm-8">{{ visit.status|replace({'_': ' '})|title }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h5">Objectif</h2>
+                    <p>{{ visit.objective ?: 'Aucun objectif defini.' }}</p>
+                    <h2 class="h5">Compte rendu</h2>
+                    <p>{{ visit.report ?: 'Aucun compte rendu disponible.' }}</p>
+                    <h2 class="h5">Prochaine action</h2>
+                    <p class="mb-0">{{ visit.nextAction ?: 'Aucune action definie.' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

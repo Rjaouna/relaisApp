@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Client{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">{{ client.name }}</h1>
+            <p class="text-body-secondary mb-0">{{ client.city }} - {{ client.type|replace({'_': ' '})|title }}</p>
+        </div>
+        <a href="{{ path('app_client_edit', {id: client.id}) }}" class="btn btn-primary" data-crud-modal-url="{{ path('app_client_edit', {id: client.id}) }}">Modifier</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">{{ client.email ?: 'Non renseigne' }}</dd>
+                        <dt class="col-sm-4">Telephone</dt>
+                        <dd class="col-sm-8">{{ client.phone ?: 'Non renseigne' }}</dd>
+                        <dt class="col-sm-4">Adresse</dt>
+                        <dd class="col-sm-8">{{ client.address ?: 'Non renseignee' }}</dd>
+                        <dt class="col-sm-4">Statut</dt>
+                        <dd class="col-sm-8">{{ client.status|replace({'_': ' '})|title }}</dd>
+                        <dt class="col-sm-4">Potentiel</dt>
+                        <dd class="col-sm-8">{{ client.potentialScore ?: 0 }}</dd>
+                        <dt class="col-sm-4">CA annuel</dt>
+                        <dd class="col-sm-8">{{ client.annualRevenue|number_format(2, ',', ' ') }} MAD</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">Notes</div>
+                <div class="card-body">
+                    {{ client.notes ?: 'Aucune note pour le moment.' }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
