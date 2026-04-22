@@ -1,0 +1,171 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail tournee{% endblock %}
+
+{% block body %}
+    {% set commercial_mode = is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+    {% set is_new_tour = tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and tour.completedVisits == 0 %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-2">{{ commercial_mode ? 'Tournee terrain' : 'Detail tournee' }}</div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h1 class="h2 mb-0">{{ tour.name }}</h1>
+                {% if is_new_tour %}
+                    <span class="badge rounded-pill text-bg-primary">New</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') and tour.status != constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
+                <form method="post" action="{{ path('app_tour_close', {id: tour.id}) }}">
+                    <button type="submit" class="btn btn-success rounded-pill px-4">
+                        <i class="bi bi-check2-circle me-2"></i>Cloturer la tournee
+                    </button>
+                </form>
+            {% endif %}
+            <a href="{{ path('app_tour_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+        </div>
+    </div>
+    {% if criticalClientsCount > 0 %}
+        <div class="alert alert-danger border-0 rounded-5 shadow-sm mb-4">
+            <div class="d-flex align-items-start gap-3">
+                <i class="bi bi-exclamation-octagon-fill fs-4"></i>
+                <div>
+                    <div class="fw-semibold mb-1">Tournee sensible</div>
+                    <div>Cette tournee contient {{ criticalClientsCount }} client(s) avec le statut <strong>refuse</strong>. Le commercial doit adapter son approche et traiter ces visites avec vigilance.</div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge rounded-pill text-bg-light">{{ tour.city }}</span>
+                        {% set show_status_badge = 'text-bg-light' %}
+                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                            {% set show_status_badge = 'text-bg-success' %}
+                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_IN_PROGRESS') %}
+                            {% set show_status_badge = 'text-bg-primary' %}
+                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
+                            {% set show_status_badge = 'text-bg-secondary' %}
+                        {% elseif criticalClientsCount > 0 %}
+                            {% set show_status_badge = 'text-bg-danger' %}
+                        {% endif %}
+                        <span class="badge rounded-pill {{ show_status_badge }}">{{ tour.status|replace({'_': ' '})|title }}</span>
+                        {% if criticalClientsCount > 0 %}
+                            <span class="badge rounded-pill text-bg-danger">{{ criticalClientsCount }} refus critique(s)</span>
+                        {% endif %}
+                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                            <span class="badge rounded-pill text-bg-success">Commercial a termine sa tournee</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-body-secondary">{{ tour.commercial.fullName }}</p>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">{{ tour.scheduledFor|date('d/m/Y') }}</dd>
+                        <dt class="col-sm-4">Statut</dt>
+                        <dd class="col-sm-8">
+                            {{ tour.status|replace({'_': ' '})|title }}
+                            {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                                <span class="small text-success fw-semibold ms-2">Tournee cloturee par le commercial</span>
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-4">Avancement</dt>
+                        <dd class="col-sm-8">
+                            <div class="fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
+                            <div class="progress mt-2" style="height: 0.45rem;">
+                                <div class="progress-bar" style="width: {{ tour.plannedVisits > 0 ? (tour.completedVisits / tour.plannedVisits * 100) : 0 }}%"></div>
+                            </div>
+                        </dd>
+                        <dt class="col-sm-4">Trajet</dt>
+                        <dd class="col-sm-8">{{ tour.routeSummary ?: 'Non defini' }}</dd>
+                        <dt class="col-sm-4">Notes</dt>
+                        <dd class="col-sm-8">{{ tour.notes ?: 'Aucune note' }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                        <h2 class="h5 mb-0">{{ commercial_mode ? 'Clients de la tournee' : 'Visites rattachees a la tournee' }}</h2>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-tour-locate><i class="bi bi-crosshair me-2"></i>Ma position</button>
+                            <button type="button" class="btn btn-outline-primary rounded-pill" data-tour-distance><i class="bi bi-rulers me-2"></i>Calculer les distances</button>
+                            <button type="button" class="btn btn-primary rounded-pill" data-tour-optimize><i class="bi bi-signpost-2 me-2"></i>Calculer les itineraires</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" data-tour-table>
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Heure</th>
+                                    <th>Distance</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th>Resultat</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for visit in visits %}
+                                    {% set is_refused_client = visit.client.status == constant('App\\Entity\\Client::STATUS_REFUSED') %}
+                                    {% set is_new_visit = visit.status == constant('App\\Entity\\Visit::STATUS_PLANNED') and not visit.result %}
+                                    <tr class="{{ is_refused_client ? 'table-danger' : '' }}" data-tour-stop data-destination="{{ [visit.client.address, visit.client.city]|filter(v => v)|join(', ')|e('html_attr') }}" data-client-name="{{ visit.client.name|e('html_attr') }}">
+                                        <td>
+                                            <div class="fw-semibold d-flex flex-wrap align-items-center gap-2">
+                                                <span>{{ visit.client.name }}</span>
+                                                {% if is_new_visit %}
+                                                    <span class="badge rounded-pill text-bg-primary">New</span>
+                                                {% endif %}
+                                                {% if is_refused_client %}
+                                                    <span class="badge rounded-pill text-bg-danger">
+                                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>Client refuse
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-body-secondary small">{{ visit.client.city }}</div>
+                                        </td>
+                                        <td>{{ visit.scheduledAt|date('H:i') }}</td>
+                                        <td>
+                                            <span class="badge rounded-pill {{ is_refused_client ? 'text-bg-danger' : 'text-bg-light' }}" data-distance-badge>Non calculee</span>
+                                        </td>
+                                        <td><span class="badge rounded-pill text-bg-light">{{ visit.type|replace({'_': ' '})|title }}</span></td>
+                                        <td><span class="badge rounded-pill text-bg-light">{{ visit.status|replace({'_': ' '})|title }}</span></td>
+                                        <td>
+                                            {% if is_refused_client and not visit.result %}
+                                                <span class="fw-semibold text-danger">Reprise sensible a preparer</span>
+                                            {% else %}
+                                                {{ visit.result ? visit.result|replace({'_': ' '})|title : 'A renseigner' }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
+                                                <a href="https://www.waze.com/ul?q={{ [visit.client.address, visit.client.city]|filter(v => v)|join(', ')|url_encode }}&navigate=yes" target="_blank" rel="noopener" class="btn btn-sm {{ is_refused_client ? 'btn-outline-danger' : 'btn-outline-secondary' }} rounded-pill px-3">
+                                                    <i class="bi bi-sign-turn-right me-1"></i>Waze
+                                                </a>
+                                                <a href="{{ path('app_visit_outcome', {id: visit.id, tour: tour.id}) }}" class="btn btn-sm {{ is_refused_client ? 'btn-danger' : 'btn-primary' }} rounded-pill px-3">
+                                                    {{ visit.result ? 'Mettre a jour' : 'Renseigner' }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-body-secondary">Aucun client planifie sur cette tournee.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

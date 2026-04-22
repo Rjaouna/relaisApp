@@ -1,0 +1,42 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ visit.id ? 'Modifier la visite' : 'Ajouter une visite' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: visit.id ? path('app_visit_edit', {id: visit.id}) : path('app_visit_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_visit_list'),
+        'data-visit-prefill-current': visit.id ?: '',
+        'data-visit-prefill-url-template': path('app_visit_prefill', {id: '__CLIENT__'}),
+        'data-visit-prefill-mode': visit.id ? 'edit' : 'new'
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.client, { attr: form.client.vars.attr|merge({'data-visit-client': true}) }) }}</div>
+            <div class="col-md-6">{{ form_row(form.scheduledAt) }}</div>
+            <div class="col-md-4">{% include '_partials/_reference_option_field.html.twig' with { field: form.type, category: 'visit_type' } %}</div>
+            <div class="col-md-4">{% include '_partials/_reference_option_field.html.twig' with { field: form.priority, category: 'visit_priority' } %}</div>
+            {% if visit.id %}
+                <div class="col-md-4" data-visit-status-wrap>{% include '_partials/_reference_option_field.html.twig' with { field: form.status, category: 'visit_status' } %}</div>
+            {% else %}
+                {{ form_widget(form.status) }}
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <div class="form-control bg-body-tertiary">Prevue</div>
+                    <div class="form-text">Le statut initial est defini automatiquement a la creation de la visite.</div>
+                </div>
+            {% endif %}
+            <div class="col-md-6" data-visit-result-wrap>{% include '_partials/_reference_option_field.html.twig' with { field: form.result, category: 'visit_result' } %}</div>
+            <div class="col-12">{% include '_partials/_interest_level_field.html.twig' with { field: form.interestLevel } %}</div>
+            <div class="col-12">{{ form_row(form.objective, { attr: form.objective.vars.attr|merge({'data-visit-prefill-field': 'objective'}) }) }}</div>
+            <div class="col-12">{{ form_row(form.report, { attr: form.report.vars.attr|merge({'data-visit-prefill-field': 'report'}) }) }}</div>
+            <div class="col-12">{{ form_row(form.nextAction, { attr: form.nextAction.vars.attr|merge({'data-visit-prefill-field': 'nextAction'}) }) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

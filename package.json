@@ -7,10 +7,15 @@
     "test": "tests"
   },
   "scripts": {
+    "build:theme": "sass assets/styles/app.scss public/assets/theme/app.css --style=expanded --no-source-map",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "sass": "^1.99.0"
+  }
 }

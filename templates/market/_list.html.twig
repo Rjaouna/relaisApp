@@ -1,0 +1,40 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Ville</th>
+                <th>Clients</th>
+                <th>CA</th>
+                <th>Score global</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for market in markets %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_market_show', {id: market.id}) }}">{{ market.city }}</a>
+                        <div class="small text-body-secondary">{{ market.zoneStatus|replace({'_': ' '})|title }}</div>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ market.clientsCount }}</span></td>
+                    <td>{{ market.revenue|number_format(2, ',', ' ') }} MAD</td>
+                    <td>
+                        <div class="fw-semibold">{{ market.globalScore }}/100</div>
+                        <div class="progress mt-2" style="height: 0.4rem;">
+                            <div class="progress-bar" style="width: {{ market.globalScore }}%"></div>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_market_show', {id: market.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_market_edit', {id: market.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_market_edit', {id: market.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_market_delete', {id: market.id}) }}" data-crud-refresh-url="{{ path('app_market_list') }}" data-crud-confirm="Supprimer cette analyse ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucune analyse de marche disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

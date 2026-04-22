@@ -1,0 +1,27 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ zone.id ? 'Modifier la zone' : 'Ajouter une zone' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: zone.id ? path('app_zone_edit', {id: zone.id}) : path('app_zone_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_zone_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.name) }}</div>
+            <div class="col-md-6">
+                {% include '_partials/_city_select_field.html.twig' with { field: form.city } %}
+            </div>
+            <div class="col-md-6">{{ form_row(form.code) }}</div>
+            <div class="col-md-6">{{ form_row(form.isActive) }}</div>
+            <div class="col-12">{{ form_row(form.notes) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

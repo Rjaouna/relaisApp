@@ -8,6 +8,8 @@ class DashboardService
         private readonly ClientCrudService $clientCrudService,
         private readonly VisitService $visitService,
         private readonly OfferService $offerService,
+        private readonly DecisionSupportService $decisionSupportService,
+        private readonly TourCrudService $tourCrudService,
     ) {
     }
 
@@ -16,6 +18,7 @@ class DashboardService
         $clientCounters = $this->clientCrudService->getCounters();
         $visitStats = $this->visitService->getDashboardStats();
         $offerStats = $this->offerService->getDashboardStats();
+        $tourOverview = $this->tourCrudService->getStatusOverview();
 
         return [
             'clients' => $clientCounters['total'],
@@ -25,6 +28,8 @@ class DashboardService
             'visits_completed' => $visitStats['completed_this_month'],
             'offers_in_progress' => $offerStats['in_progress'],
             'revenue' => $offerStats['revenue'],
+            'tour_status' => $tourOverview,
+            ...$this->decisionSupportService->getExecutiveMetrics(),
         ];
     }
 }

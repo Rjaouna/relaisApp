@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Parametrage{% endblock %}
+
+{% block body %}
+    <section class="d-flex flex-column gap-4">
+        <div class="app-page-hero rounded-5 p-4 p-lg-5">
+            <div class="row g-4 align-items-end">
+                <div class="col-lg-8">
+                    <div class="app-section-kicker text-secondary mb-3">Administration</div>
+                    <h1 class="display-6 fw-bold mb-3">Parametrage central de l'application</h1>
+                    <p class="text-body-secondary mb-0">Alimente les references qui structurent toute la saisie metier, reduisent les doublons et gardent une application fiable dans le temps.</p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="rounded-5 p-4 h-100" style="background: linear-gradient(135deg, rgba(75, 194, 196, 0.14), rgba(45, 100, 100, 0.1));">
+                        <div class="small text-uppercase text-body-secondary mb-2">Elements administres</div>
+                        <div class="h2 fw-bold mb-0">{{ citiesCount + zonesCount + choicesCount + usersCount }}</div>
+                        <div class="small text-body-secondary mt-2">Villes, zones, choix et comptes disponibles.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-xl-4">
+                <div class="card app-settings-card border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="badge rounded-pill text-bg-light">{{ usersCount }} utilisateur(s)</span>
+                            <span class="app-user-panel-icon"><i class="bi bi-person-gear"></i></span>
+                        </div>
+                        <h2 class="h4 fw-bold">Gestion des utilisateurs</h2>
+                        <p class="text-body-secondary flex-grow-1">Administre les comptes, les roles et l'activation des acces a l'application.</p>
+                        <a href="{{ path('app_user_index') }}" class="btn btn-primary">Ouvrir</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card app-settings-card border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="badge rounded-pill text-bg-light">{{ citiesCount }} ville(s)</span>
+                            <span class="app-user-panel-icon"><i class="bi bi-pin-map"></i></span>
+                        </div>
+                        <h2 class="h4 fw-bold">Gestion des villes</h2>
+                        <p class="text-body-secondary flex-grow-1">Base de reference utilisee par les zones, les clients, les tournees, les livraisons et l'analyse du marche.</p>
+                        <a href="{{ path('app_city_index') }}" class="btn btn-primary">Ouvrir</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card app-settings-card border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="badge rounded-pill text-bg-light">{{ zonesCount }} zone(s)</span>
+                            <span class="app-user-panel-icon"><i class="bi bi-geo-alt"></i></span>
+                        </div>
+                        <h2 class="h4 fw-bold">Gestion des zones</h2>
+                        <p class="text-body-secondary flex-grow-1">Structure les secteurs commerciaux et normalise le rattachement des clients et des equipes terrain.</p>
+                        <a href="{{ path('app_zone_index') }}" class="btn btn-primary">Ouvrir</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card app-settings-card border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="badge rounded-pill text-bg-light">{{ choicesCount }} choix</span>
+                            <span class="app-user-panel-icon"><i class="bi bi-ui-checks-grid"></i></span>
+                        </div>
+                        <h2 class="h4 fw-bold">Gestion des choix</h2>
+                        <p class="text-body-secondary flex-grow-1">Types, statuts, priorites et resultats reutilisables partout dans l'application pour limiter les erreurs de saisie.</p>
+                        <a href="{{ path('app_reference_option_index') }}" class="btn btn-primary">Ouvrir</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

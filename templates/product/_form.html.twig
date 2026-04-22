@@ -1,0 +1,27 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ product.id ? 'Modifier le produit' : 'Ajouter un produit' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: product.id ? path('app_product_edit', {id: product.id}) : path('app_product_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_product_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.name) }}</div>
+            <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.category, category: 'product_category' } %}</div>
+            <div class="col-md-6">{{ form_row(form.purchasePrice) }}</div>
+            <div class="col-md-6">{{ form_row(form.salePrice) }}</div>
+            <div class="col-md-6">{{ form_row(form.stockQuantity) }}</div>
+            <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.marketStatus, category: 'product_market_status' } %}</div>
+            <div class="col-12">{{ form_row(form.supplier) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

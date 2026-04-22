@@ -1,0 +1,38 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Nom</th>
+                <th>Pays</th>
+                <th>Statut</th>
+                <th>Scores</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for supplier in suppliers %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_supplier_show', {id: supplier.id}) }}">{{ supplier.name }}</a>
+                        <div class="small text-body-secondary">{{ supplier.contactEmail ?: 'Aucun email' }}</div>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ supplier.country }}</span></td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ supplier.status|replace({'_': ' '})|title }}</span></td>
+                    <td>
+                        <div class="small text-body-secondary">Reactivite {{ supplier.reactivityScore }}/100</div>
+                        <div class="small text-body-secondary">Prix {{ supplier.priceScore }}/100</div>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_supplier_show', {id: supplier.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_supplier_edit', {id: supplier.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_supplier_edit', {id: supplier.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_supplier_delete', {id: supplier.id}) }}" data-crud-refresh-url="{{ path('app_supplier_list') }}" data-crud-confirm="Supprimer {{ supplier.name }} ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucun fournisseur disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

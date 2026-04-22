@@ -1,0 +1,83 @@
+<div class="p-1">
+    <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Import prospection</span>
+            <h2 class="h4 mb-1">Importer une liste Excel de prospects</h2>
+            <p class="text-body-secondary mb-0">Le systeme compte d abord les lignes exploitables, puis importe la liste par lots avec journal de progression en direct.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+    </div>
+
+    {% if error is defined and error %}
+        <div class="alert alert-danger border-0 rounded-4 mb-4">{{ error }}</div>
+    {% endif %}
+
+    <form method="post"
+          action="{{ path('app_client_import_prepare') }}"
+          enctype="multipart/form-data"
+          data-client-import-form
+          data-client-import-process-template="{{ path('app_client_import_process', { token: '__TOKEN__' }) }}"
+          data-client-import-refresh-url="{{ path('app_client_list') }}">
+        <div class="app-import-panel rounded-5 p-4 mb-4">
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-7">
+                    <label for="client-import-file" class="form-label fw-semibold">Fichier Excel ou CSV</label>
+                    <input id="client-import-file" class="form-control form-control-lg" type="file" name="import_file" accept=".xlsx,.xls,.csv" required>
+                    <div class="form-text">Colonnes conseillees : <strong>nom</strong>, <strong>ville</strong>, <strong>zone</strong>, <strong>type</strong>, <strong>email</strong>, <strong>telephone</strong>, <strong>adresse</strong>.</div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="app-import-help rounded-4 p-3 h-100">
+                        <div class="fw-semibold mb-2">Ce que fait l import</div>
+                        <ul class="small text-body-secondary mb-0 ps-3">
+                            <li>Compte les lignes utiles avant le lancement.</li>
+                            <li>Cree ou met a jour les prospects deja connus.</li>
+                            <li>Force le statut sur `potentiel` pour les fiches de prospection.</li>
+                            <li>Conserve les informations deja saisies si elles existent.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-import-progress rounded-5 p-4 d-none" data-client-import-status>
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center mb-3">
+                <div>
+                    <div class="small text-uppercase text-body-secondary fw-semibold mb-1">Suivi de l import</div>
+                    <div class="fw-semibold" data-client-import-meta>En attente du lancement...</div>
+                </div>
+                <span class="badge rounded-pill text-bg-light px-3 py-2" data-client-import-counter>0 / 0</span>
+            </div>
+            <div class="progress rounded-pill mb-3" style="height: 0.9rem;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated rounded-pill" role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100" data-client-import-progress-bar>0%</div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-4">
+                    <div class="app-import-stat rounded-4 p-3">
+                        <div class="small text-body-secondary text-uppercase mb-1">Crees</div>
+                        <div class="h4 mb-0" data-client-import-created>0</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="app-import-stat rounded-4 p-3">
+                        <div class="small text-body-secondary text-uppercase mb-1">Mis a jour</div>
+                        <div class="h4 mb-0" data-client-import-updated>0</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="app-import-stat rounded-4 p-3">
+                        <div class="small text-body-secondary text-uppercase mb-1">Ignores</div>
+                        <div class="h4 mb-0" data-client-import-skipped>0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="app-import-log rounded-4 p-3" data-client-import-log></div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary" data-client-import-submit>
+                <i class="bi bi-cloud-arrow-up me-2"></i>Lancer l import
+            </button>
+        </div>
+    </form>
+</div>

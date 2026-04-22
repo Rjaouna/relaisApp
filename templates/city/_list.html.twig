@@ -1,0 +1,30 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Ville</th>
+                <th>Zones</th>
+                <th>Statut</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for city in cities %}
+                <tr>
+                    <td><a class="fw-semibold text-decoration-none" href="{{ path('app_city_show', {id: city.id}) }}">{{ city.name }}</a></td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ city.zonesCount }}</span></td>
+                    <td><span class="badge rounded-pill {{ city.isActive ? 'text-bg-success' : 'text-bg-secondary' }}">{{ city.isActive ? 'Active' : 'Inactive' }}</span></td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_city_show', {id: city.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_city_edit', {id: city.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_city_edit', {id: city.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_city_delete', {id: city.id}) }}" data-crud-refresh-url="{{ path('app_city_list') }}" data-crud-confirm="Supprimer {{ city.name }} ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="4" class="text-center py-4 text-body-secondary">Aucune ville disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

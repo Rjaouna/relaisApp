@@ -3,31 +3,23 @@
 {% block title %}Visites{% endblock %}
 
 {% block body %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1">Mes visites</h1>
-            <p class="text-body-secondary mb-0">Suivi des visites terrain et des prochaines actions.</p>
+    <div class="card border-0 shadow-sm rounded-5 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Activite terrain</span>
+                    <h1 class="h3 mb-1">Mes visites</h1>
+                    <p class="text-body-secondary mb-0">Suivez le planning, les statuts et les comptes rendus de visite.</p>
+                </div>
+                <a href="{{ path('app_visit_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_visit_new') }}"><i class="bi bi-plus-lg me-2"></i>Ajouter</a>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="list-group list-group-flush">
-            {% for visit in visits %}
-                <a href="{{ path('app_visit_show', {id: visit.id}) }}" class="list-group-item list-group-item-action">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="fw-semibold">{{ visit.client.name }}</div>
-                            <div class="text-body-secondary small">{{ visit.client.city }}</div>
-                        </div>
-                        <div class="text-end">
-                            <div>{{ visit.scheduledAt|date('d/m/Y H:i') }}</div>
-                            <span class="badge text-bg-light">{{ visit.status|replace({'_': ' '})|title }}</span>
-                        </div>
-                    </div>
-                </a>
-            {% else %}
-                <div class="list-group-item text-body-secondary">Aucune visite disponible.</div>
-            {% endfor %}
+    <div class="card border-0 shadow-sm rounded-5 overflow-hidden" data-list-search-scope>
+        {% include '_partials/_listing_search.html.twig' with { placeholder: 'Rechercher un client, un type ou un statut de visite...' } %}
+        <div class="card-body p-0" data-crud-list>
+            {% include 'visit/_list.html.twig' with { visits: visits } %}
         </div>
     </div>
 {% endblock %}

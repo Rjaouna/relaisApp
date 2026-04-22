@@ -14,6 +14,13 @@ class Visit
     public const STATUS_PENDING = 'en_attente';
     public const STATUS_CANCELLED = 'annulee';
 
+    public const RESULT_ABSENT = 'absent';
+    public const RESULT_NOT_INTERESTED = 'pas_interesse';
+    public const RESULT_APPOINTMENT_BOOKED = 'rdv_pris';
+    public const RESULT_QUOTE_SENT = 'devis_envoye';
+    public const RESULT_ORDER_CONFIRMED = 'commande_confirmee';
+    public const RESULT_FOLLOW_UP = 'a_relancer';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -34,6 +41,9 @@ class Visit
 
     #[ORM\Column(length: 50)]
     private ?string $status = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $result = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $objective = null;
@@ -60,6 +70,49 @@ class Visit
         $this->type = 'prospection';
         $this->priority = 'moyenne';
         $this->status = self::STATUS_PLANNED;
+    }
+
+    public static function typeChoices(): array
+    {
+        return [
+            'Prospection' => 'prospection',
+            'Recouvrement' => 'recouvrement',
+            'Demonstration produit' => 'demonstration',
+            'Veille' => 'veille',
+            'Contrat SAV' => 'sav',
+            'Courtoisie' => 'courtoisie',
+        ];
+    }
+
+    public static function priorityChoices(): array
+    {
+        return [
+            'Haute' => 'haute',
+            'Moyenne' => 'moyenne',
+            'Basse' => 'basse',
+        ];
+    }
+
+    public static function statusChoices(): array
+    {
+        return [
+            'Prevue' => self::STATUS_PLANNED,
+            'Realisee' => self::STATUS_COMPLETED,
+            'En attente' => self::STATUS_PENDING,
+            'Annulee' => self::STATUS_CANCELLED,
+        ];
+    }
+
+    public static function resultChoices(): array
+    {
+        return [
+            'Absent' => self::RESULT_ABSENT,
+            'Pas interesse' => self::RESULT_NOT_INTERESTED,
+            'RDV pris' => self::RESULT_APPOINTMENT_BOOKED,
+            'Devis envoye' => self::RESULT_QUOTE_SENT,
+            'Commande confirmee' => self::RESULT_ORDER_CONFIRMED,
+            'A relancer' => self::RESULT_FOLLOW_UP,
+        ];
     }
 
     public function touch(): void
@@ -132,6 +185,18 @@ class Visit
         return $this;
     }
 
+    public function getResult(): ?string
+    {
+        return $this->result;
+    }
+
+    public function setResult(?string $result): static
+    {
+        $this->result = $result;
+
+        return $this;
+    }
+
     public function getObjective(): ?string
     {
         return $this->objective;
@@ -178,5 +243,15 @@ class Visit
         $this->interestLevel = $interestLevel;
 
         return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
     }
 }

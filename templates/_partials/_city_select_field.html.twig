@@ -1,0 +1,13 @@
+<div>
+    {{ form_label(field) }}
+    <div class="input-group">
+        {{ form_widget(field, {'attr': field.vars.attr|merge({'class': (field.vars.attr.class|default('form-select')) ~ ' form-select', 'data-city-select': 'true'})}) }}
+        {% if is_granted('ROLE_ADMIN') %}
+            <button type="button" class="btn btn-outline-secondary" data-city-modal-url="{{ path('app_city_new', {picker: 1}) }}" title="Ajouter une ville">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        {% endif %}
+    </div>
+    {{ form_help(field) }}
+    {{ form_errors(field) }}
+</div>

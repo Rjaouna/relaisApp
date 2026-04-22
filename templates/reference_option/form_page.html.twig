@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Formulaire choix{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-xl-7">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4 p-lg-5">
+                    {% include 'reference_option/_form.html.twig' %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,37 @@
+<div>
+    {{ form_label(field) }}
+    <div class="row row-cols-2 row-cols-lg-3 g-2">
+        {% for child in field %}
+            <div class="col">
+                <input
+                    type="radio"
+                    id="{{ child.vars.id }}"
+                    name="{{ child.vars.full_name }}"
+                    value="{{ child.vars.value }}"
+                    class="btn-check"
+                    autocomplete="off"
+                    {% if child.vars.checked %}checked{% endif %}
+                >
+                <label for="{{ child.vars.id }}" class="btn btn-outline-dark w-100 rounded-4 py-3 h-100 d-flex flex-column align-items-start text-start">
+                    <span class="fw-semibold">{{ child.vars.label }}</span>
+                    <span class="small text-body-secondary">
+                        {% if child.vars.value == '1' %}
+                            Contact froid
+                        {% elseif child.vars.value == '2' %}
+                            Peu engage
+                        {% elseif child.vars.value == '3' %}
+                            Interet a confirmer
+                        {% elseif child.vars.value == '4' %}
+                            Bonne opportunite
+                        {% elseif child.vars.value == '5' %}
+                            Priorite commerciale
+                        {% endif %}
+                    </span>
+                </label>
+                {% do child.setRendered() %}
+            </div>
+        {% endfor %}
+    </div>
+    {{ form_errors(field) }}
+</div>
+{% do field.setRendered() %}

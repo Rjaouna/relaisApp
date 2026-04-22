@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\OfferRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -42,8 +44,15 @@ class Offer
     #[ORM\Column]
     private \DateTimeImmutable $updatedAt;
 
+    /**
+     * @var Collection<int, OfferItem>
+     */
+    #[ORM\OneToMany(mappedBy: 'offer', targetEntity: OfferItem::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $items;
+
     public function __construct()
     {
+        $this->items = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
         $this->status = 'en_cours';
@@ -140,6 +149,33 @@ class Offer
     public function setHistoryNotes(?string $historyNotes): static
     {
         $this->historyNotes = $historyNotes;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, OfferItem>
+     */
+    public function getItems(): Collection
+    {
+        return $this->items;
+    }
+
+    public function addItem(OfferItem $item): static
+    {
+        if (!$this->items->contains($item)) {
+            $this->items->add($item);
+            $item->setOffer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeItem(OfferItem $item): static
+    {
+        if ($this->items->removeElement($item) && $item->getOffer() === $this) {
+            $item->setOffer(null);
+        }
 
         return $this;
     }

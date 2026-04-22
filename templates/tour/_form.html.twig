@@ -1,0 +1,29 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ tour.id ? 'Modifier la tournee' : 'Ajouter une tournee' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: tour.id ? path('app_tour_edit', {id: tour.id}) : (tour.name == 'Tournee optimisee' ? path('app_tour_generate') : path('app_tour_new')),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_tour_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.name) }}</div>
+            <div class="col-md-6">{{ form_row(form.commercial) }}</div>
+            <div class="col-md-6">{% include '_partials/_city_select_field.html.twig' with { field: form.city } %}</div>
+            <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.status, category: 'tour_status' } %}</div>
+            <div class="col-12">{{ form_row(form.scheduledFor) }}</div>
+            <div class="col-md-6">{{ form_row(form.plannedVisits) }}</div>
+            <div class="col-md-6">{{ form_row(form.completedVisits) }}</div>
+            <div class="col-12">{{ form_row(form.routeSummary) }}</div>
+            <div class="col-12">{{ form_row(form.notes) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

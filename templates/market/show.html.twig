@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail marche{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-2">Vue marche</div>
+            <h1 class="h2 mb-0">{{ market.city }}</h1>
+        </div>
+        <a href="{{ path('app_market_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4">
+                    <div class="small text-body-secondary mb-3">Indicateurs recalcules automatiquement a partir des clients et des offres rattaches a cette ville.</div>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge rounded-pill text-bg-light">{{ market.zoneStatus|replace({'_': ' '})|title }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ market.clientsCount }} clients</span>
+                    </div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">CA estime</dt>
+                        <dd class="col-sm-8">{{ market.revenue|number_format(2, ',', ' ') }} MAD</dd>
+                        <dt class="col-sm-4">Concurrence</dt>
+                        <dd class="col-sm-8">{{ market.competitionScore }}/100</dd>
+                        <dt class="col-sm-4">Couverture</dt>
+                        <dd class="col-sm-8">{{ market.coverageScore }}/100</dd>
+                        <dt class="col-sm-4">Score global</dt>
+                        <dd class="col-sm-8">{{ market.globalScore }}/100</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-body p-4">
+                    <div class="text-body-secondary small text-uppercase mb-2">Priorite</div>
+                    <div class="display-6 fw-semibold">{{ market.globalScore }}</div>
+                    <div class="text-body-secondary">score global /100</div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

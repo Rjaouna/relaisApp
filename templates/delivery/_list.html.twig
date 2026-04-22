@@ -1,0 +1,37 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Reference</th>
+                <th>Client</th>
+                <th>Ville</th>
+                <th>Date</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for delivery in deliveries %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_delivery_show', {id: delivery.id}) }}">{{ delivery.reference }}</a>
+                        <div class="small text-body-secondary">{{ delivery.status|replace({'_': ' '})|title }}</div>
+                    </td>
+                    <td>
+                        <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_client_show', {id: delivery.client.id}) }}">{{ delivery.client.name }}</a>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ delivery.city }}</span></td>
+                    <td>{{ delivery.scheduledAt|date('d/m/Y H:i') }}</td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_delivery_show', {id: delivery.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_delivery_edit', {id: delivery.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_delivery_edit', {id: delivery.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_delivery_delete', {id: delivery.id}) }}" data-crud-refresh-url="{{ path('app_delivery_list') }}" data-crud-confirm="Supprimer cette livraison ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucune livraison disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

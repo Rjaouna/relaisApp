@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Commercial;
 use App\Entity\Offer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -36,6 +37,23 @@ class OfferRepository extends ServiceEntityRepository
             ->select('COALESCE(SUM(offer.amount), 0)')
             ->andWhere('offer.issuedAt >= :start')
             ->setParameter('start', $startOfMonth)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function sumAcceptedForCommercialInPeriod(Commercial $commercial, \DateTimeImmutable $start, \DateTimeImmutable $end): float
+    {
+        return (float) $this->createQueryBuilder('offer')
+            ->select('COALESCE(SUM(offer.amount), 0)')
+            ->leftJoin('offer.client', 'client')
+            ->andWhere('client.assignedCommercial = :commercial')
+            ->andWhere('offer.issuedAt >= :start')
+            ->andWhere('offer.issuedAt < :end')
+            ->andWhere('offer.status IN (:statuses)')
+            ->setParameter('commercial', $commercial)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setParameter('statuses', ['acceptee', 'commande_confirmee'])
             ->getQuery()
             ->getSingleScalarResult();
     }

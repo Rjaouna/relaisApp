@@ -3,39 +3,27 @@
 {% block title %}Offres{% endblock %}
 
 {% block body %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1">Offres commerciales</h1>
-            <p class="text-body-secondary mb-0">Suivi des offres et de leur avancement commercial.</p>
+    <section class="d-flex flex-column gap-4">
+        <div class="card border-0 rounded-5">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                    <div>
+                        <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Pipeline commercial</span>
+                        <h1 class="h3 mb-1">Offres commerciales</h1>
+                        <p class="text-body-secondary mb-0">Ce module sert a preparer, suivre et faire evoluer les propositions commerciales adressees aux clients.</p>
+                    </div>
+                    <a href="{{ path('app_offer_new') }}" class="btn btn-primary px-4" data-crud-modal-url="{{ path('app_offer_new') }}">
+                        <i class="bi bi-plus-lg me-2"></i>Ajouter
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Reference</th>
-                        <th>Client</th>
-                        <th>Date</th>
-                        <th>Montant</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for offer in offers %}
-                        <tr>
-                            <td><a href="{{ path('app_offer_show', {id: offer.id}) }}">{{ offer.reference }}</a></td>
-                            <td>{{ offer.client.name }}</td>
-                            <td>{{ offer.issuedAt|date('d/m/Y') }}</td>
-                            <td>{{ offer.amount|number_format(2, ',', ' ') }} MAD</td>
-                            <td><span class="badge text-bg-light">{{ offer.status|replace({'_': ' '})|title }}</span></td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucune offre disponible.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card app-table-card border-0 overflow-hidden" data-list-search-scope>
+            {% include '_partials/_listing_search.html.twig' with { placeholder: 'Rechercher une offre, un client ou un statut...' } %}
+            <div class="card-body p-0" data-crud-list>
+                {% include 'offer/_list.html.twig' with { offers: offers } %}
+            </div>
         </div>
-    </div>
+    </section>
 {% endblock %}

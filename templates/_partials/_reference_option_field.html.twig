@@ -1,0 +1,13 @@
+<div>
+    {{ form_label(field) }}
+    <div class="input-group">
+        {{ form_widget(field, {'attr': field.vars.attr|merge({'class': (field.vars.attr.class|default('form-select')) ~ ' form-select', 'data-option-select': category})}) }}
+        {% if is_granted('ROLE_ADMIN') %}
+            <button type="button" class="btn btn-outline-secondary" data-option-modal-url="{{ path('app_reference_option_new', {picker: 1, category: category}) }}" title="Ajouter un choix">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        {% endif %}
+    </div>
+    {{ form_help(field) }}
+    {{ form_errors(field) }}
+</div>

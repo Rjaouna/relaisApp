@@ -1,0 +1,41 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Zone</th>
+                <th>Ville</th>
+                <th>Code</th>
+                <th>Commerciaux</th>
+                <th>Statut</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for zone in zones %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_zone_show', {id: zone.id}) }}">{{ zone.name }}</a>
+                        <div class="small text-body-secondary">{{ zone.notes ? zone.notes|slice(0, 45) ~ (zone.notes|length > 45 ? '...' : '') : 'Aucune note' }}</div>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ zone.city.name }}</span></td>
+                    <td>{{ zone.code ?: 'Non defini' }}</td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ zone.commercialsCount }}</span></td>
+                    <td>
+                        <span class="badge rounded-pill {{ zone.isActive ? 'text-bg-success' : 'text-bg-secondary' }}">
+                            {{ zone.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_zone_show', {id: zone.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_zone_edit', {id: zone.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_zone_edit', {id: zone.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_zone_delete', {id: zone.id}) }}" data-crud-refresh-url="{{ path('app_zone_list') }}" data-crud-confirm="Supprimer la zone {{ zone.name }} ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="text-center py-4 text-body-secondary">Aucune zone disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

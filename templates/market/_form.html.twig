@@ -1,0 +1,26 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ market.id ? 'Modifier la ville analysee' : 'Ajouter une ville a analyser' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: market.id ? path('app_market_edit', {id: market.id}) : path('app_market_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_market_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="rounded-5 p-4 mb-4" style="background: linear-gradient(135deg, rgba(75, 194, 196, 0.1), rgba(45, 100, 100, 0.08)); border: 1px solid rgba(45, 100, 100, 0.08);">
+            <div class="small text-uppercase text-body-secondary mb-2">Logique du module</div>
+            <div class="fw-semibold mb-2">Tu ajoutes seulement une ville dans l'analyse.</div>
+            <p class="text-body-secondary mb-0">Les scores, le chiffre d'affaires, la couverture et le statut de zone sont recalcules automatiquement a partir des clients et des offres de l'application.</p>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-8">{% include '_partials/_city_select_field.html.twig' with { field: form.city } %}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

@@ -1,0 +1,26 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ delivery.id ? 'Modifier la livraison' : 'Ajouter une livraison' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: delivery.id ? path('app_delivery_edit', {id: delivery.id}) : path('app_delivery_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_delivery_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.reference) }}</div>
+            <div class="col-md-6">{{ form_row(form.client) }}</div>
+            <div class="col-md-6">{% include '_partials/_city_select_field.html.twig' with { field: form.city } %}</div>
+            <div class="col-md-6">{{ form_row(form.scheduledAt) }}</div>
+            <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.status, category: 'delivery_status' } %}</div>
+            <div class="col-md-6">{{ form_row(form.delayDays) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

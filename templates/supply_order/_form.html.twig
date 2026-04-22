@@ -1,0 +1,26 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ order.id ? 'Modifier la commande' : 'Ajouter une commande' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: order.id ? path('app_supply_order_edit', {id: order.id}) : path('app_supply_order_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_supply_order_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.reference) }}</div>
+            <div class="col-md-6">{{ form_row(form.supplier) }}</div>
+            <div class="col-md-6">{{ form_row(form.orderedAt) }}</div>
+            <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.status, category: 'supply_order_status' } %}</div>
+            <div class="col-md-6">{{ form_row(form.leadTimeDays) }}</div>
+            <div class="col-md-6">{{ form_row(form.amount) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

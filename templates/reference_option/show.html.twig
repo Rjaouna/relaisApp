@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail choix{% endblock %}
+
+{% block body %}
+    <section class="d-flex flex-column gap-4">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div>
+                <div class="text-body-secondary small text-uppercase mb-2">Fiche choix</div>
+                <h1 class="h2 mb-1">{{ option.label }}</h1>
+                <p class="text-body-secondary mb-0">{{ option.category|replace({'_': ' '})|title }}</p>
+            </div>
+            <a href="{{ path('app_reference_option_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-5">
+            <div class="card-body p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Categorie</dt>
+                    <dd class="col-sm-8">{{ option.category|replace({'_': ' '})|title }}</dd>
+                    <dt class="col-sm-4">Libelle</dt>
+                    <dd class="col-sm-8">{{ option.label }}</dd>
+                    <dt class="col-sm-4">Valeur</dt>
+                    <dd class="col-sm-8"><code>{{ option.value }}</code></dd>
+                    <dt class="col-sm-4">Ordre</dt>
+                    <dd class="col-sm-8">{{ option.sortOrder }}</dd>
+                    <dt class="col-sm-4">Etat</dt>
+                    <dd class="col-sm-8">{{ option.isActive ? 'Active' : 'Inactive' }}</dd>
+                </dl>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail produit{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-2">Fiche produit</div>
+            <h1 class="h2 mb-0">{{ product.name }}</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_product_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+            <a href="{{ path('app_product_edit', {id: product.id}) }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_product_edit', {id: product.id}) }}">Modifier</a>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4">
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge rounded-pill text-bg-light">{{ product.category }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ product.marketStatus|replace({'_': ' '})|title }}</span>
+                    </div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Fournisseur</dt>
+                        <dd class="col-sm-8">{{ product.supplier ? product.supplier.name : 'Non assigne' }}</dd>
+                        <dt class="col-sm-4">Prix achat</dt>
+                        <dd class="col-sm-8">{{ product.purchasePrice|number_format(2, ',', ' ') }} MAD</dd>
+                        <dt class="col-sm-4">Prix vente</dt>
+                        <dd class="col-sm-8">{{ product.salePrice|number_format(2, ',', ' ') }} MAD</dd>
+                        <dt class="col-sm-4">Stock</dt>
+                        <dd class="col-sm-8">{{ product.stockQuantity }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-body p-4">
+                    <div class="text-body-secondary small text-uppercase mb-2">Statut</div>
+                    <div class="display-6 fw-semibold">{{ product.stockQuantity }}</div>
+                    <div class="text-body-secondary">unites en stock</div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

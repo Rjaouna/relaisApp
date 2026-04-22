@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Choix administrables{% endblock %}
+
+{% block body %}
+    <section class="d-flex flex-column gap-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <div class="text-body-secondary text-uppercase small fw-semibold mb-2">Referentiel</div>
+                <h1 class="h3 mb-1">Choix administrables</h1>
+                <p class="text-body-secondary mb-0">Centralise les listes de statuts, types et resultats de toute l'application.</p>
+            </div>
+            <a href="{{ path('app_reference_option_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_reference_option_new') }}">
+                <i class="bi bi-plus-lg me-2"></i>Ajouter
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-5" data-list-search-scope>
+            {% include '_partials/_listing_search.html.twig' with { placeholder: 'Rechercher un choix, une categorie ou une valeur...' } %}
+            <div class="card-body p-0" data-crud-list>
+                {% include 'reference_option/_list.html.twig' with { options: options } %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

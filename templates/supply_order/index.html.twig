@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Import{% endblock %}
+
+{% block body %}
+    <div class="card border-0 shadow-sm rounded-5 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Approvisionnement</span>
+                    <h1 class="h3 mb-1">Commandes fournisseurs</h1>
+                    <p class="text-body-secondary mb-0">Suivez les achats, les statuts d import et les delais d approvisionnement.</p>
+                </div>
+                <a href="{{ path('app_supply_order_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_supply_order_new') }}"><i class="bi bi-plus-lg me-2"></i>Ajouter</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-5 overflow-hidden" data-list-search-scope>
+        {% include '_partials/_listing_search.html.twig' with { placeholder: 'Rechercher une commande import ou un fournisseur...' } %}
+        <div class="card-body p-0" data-crud-list>
+            {% include 'supply_order/_list.html.twig' with { orders: orders } %}
+        </div>
+    </div>
+{% endblock %}

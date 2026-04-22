@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Formulaire ville{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-xxl-10">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4 p-lg-5">
+                    {% include 'city/_form.html.twig' %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

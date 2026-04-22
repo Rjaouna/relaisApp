@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail import{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-2">Fiche import</div>
+            <h1 class="h2 mb-0">{{ order.reference }}</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_supply_order_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+            <a href="{{ path('app_supply_order_edit', {id: order.id}) }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_supply_order_edit', {id: order.id}) }}">Modifier</a>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4">
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge rounded-pill text-bg-light">{{ order.supplier.name }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ order.status|replace({'_': ' '})|title }}</span>
+                    </div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Montant</dt>
+                        <dd class="col-sm-8">{{ order.amount|number_format(2, ',', ' ') }} MAD</dd>
+                        <dt class="col-sm-4">Date commande</dt>
+                        <dd class="col-sm-8">{{ order.orderedAt|date('d/m/Y H:i') }}</dd>
+                        <dt class="col-sm-4">Delai</dt>
+                        <dd class="col-sm-8">{{ order.leadTimeDays }} jours</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-body p-4">
+                    <div class="text-body-secondary small text-uppercase mb-2">Statut</div>
+                    <div class="fw-semibold">{{ order.status|replace({'_': ' '})|title }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

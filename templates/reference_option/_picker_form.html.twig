@@ -1,0 +1,26 @@
+<div class="modal-header">
+    <h5 class="modal-title">Ajouter un choix</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: option.id ? path('app_reference_option_edit', {id: option.id, picker: 1, category: option.category}) : path('app_reference_option_new', {picker: 1, category: option.category}),
+    attr: {
+        'data-option-ajax-form': true
+    }
+}) }}
+    <div class="modal-body">
+        <div class="alert alert-light border rounded-4">
+            <div class="small text-body-secondary text-uppercase mb-1">Categorie</div>
+            <div class="fw-semibold">{{ (option.category ?? '')|replace({'_': ' '})|title }}</div>
+        </div>
+        {{ form_widget(form.category) }}
+        <div class="row g-3">
+            <div class="col-12">{{ form_row(form.label) }}</div>
+            <div class="col-12">{{ form_row(form.value) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Ajouter le choix</button>
+    </div>
+{{ form_end(form) }}

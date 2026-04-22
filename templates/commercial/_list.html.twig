@@ -1,0 +1,41 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Commercial</th>
+                <th>Ville</th>
+                <th>Zone</th>
+                <th>Objectifs</th>
+                <th>Charge</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for commercial in commercials %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_commercial_show', {id: commercial.id}) }}">{{ commercial.fullName }}</a>
+                        <div class="small text-body-secondary">{{ commercial.user ? commercial.user.email : 'Aucun compte lie' }}</div>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ commercial.city }}</span></td>
+                    <td>{{ commercial.zone ? commercial.zone.name : 'Non definie' }}</td>
+                    <td>
+                        <div class="small text-body-secondary">CA {{ commercial.salesTarget }}</div>
+                        <div class="small text-body-secondary">Visites {{ commercial.visitsTarget }}</div>
+                        <div class="small text-body-secondary">Nvx clients {{ commercial.newClientsTarget }}</div>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ commercial.commercialLoad }}</span></td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_commercial_show', {id: commercial.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_commercial_edit', {id: commercial.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_commercial_edit', {id: commercial.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_commercial_delete', {id: commercial.id}) }}" data-crud-refresh-url="{{ path('app_commercial_list') }}" data-crud-confirm="Supprimer {{ commercial.fullName }} ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="text-center py-4 text-body-secondary">Aucun commercial disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

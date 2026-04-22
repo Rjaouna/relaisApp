@@ -1,0 +1,41 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Produit</th>
+                <th>Categorie</th>
+                <th>Fournisseur</th>
+                <th>Stock</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_product_show', {id: product.id}) }}">{{ product.name }}</a>
+                        <div class="small text-body-secondary">{{ product.marketStatus|replace({'_': ' '})|title }}</div>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ product.category }}</span></td>
+                    <td>
+                        {% if product.supplier %}
+                            <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_supplier_show', {id: product.supplier.id}) }}">{{ product.supplier.name }}</a>
+                        {% else %}
+                            Non assigne
+                        {% endif %}
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ product.stockQuantity }}</span></td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_product_show', {id: product.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_product_edit', {id: product.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_product_edit', {id: product.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_product_delete', {id: product.id}) }}" data-crud-refresh-url="{{ path('app_product_list') }}" data-crud-confirm="Supprimer {{ product.name }} ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucun produit disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

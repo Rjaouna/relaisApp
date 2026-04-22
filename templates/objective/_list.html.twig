@@ -1,0 +1,44 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Periode</th>
+                <th>Commercial</th>
+                <th>CA</th>
+                <th>Visites</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for objective in objectives %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_objective_show', {id: objective.id}) }}">{{ objective.periodLabel }}</a>
+                    </td>
+                    <td>
+                        <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: objective.commercial.id}) }}">{{ objective.commercial.fullName }}</a>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ objective.salesActual }}/{{ objective.salesTarget }}</div>
+                        <div class="progress mt-2" style="height: 0.4rem;">
+                            <div class="progress-bar" style="width: {{ objective.salesTarget > 0 ? (objective.salesActual / objective.salesTarget * 100) : 0 }}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ objective.visitsActual }}/{{ objective.visitsTarget }}</div>
+                        <div class="small text-body-secondary">Nvx clients {{ objective.newClientsActual }}/{{ objective.newClientsTarget }}</div>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_objective_show', {id: objective.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_objective_edit', {id: objective.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_objective_edit', {id: objective.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_objective_delete', {id: objective.id}) }}" data-crud-refresh-url="{{ path('app_objective_list') }}" data-crud-confirm="Supprimer cet objectif ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucun objectif disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,21 @@
+<div class="modal-header">
+    <h5 class="modal-title">Ajouter une ville</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: city.id ? path('app_city_edit', {id: city.id, picker: 1}) : path('app_city_new', {picker: 1}),
+    attr: {
+        'data-city-ajax-form': true
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-8">{{ form_row(form.name) }}</div>
+            <div class="col-md-4">{{ form_row(form.isActive) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Ajouter la ville</button>
+    </div>
+{{ form_end(form) }}

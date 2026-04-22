@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Zones{% endblock %}
+
+{% block body %}
+    <div class="card border-0 shadow-sm rounded-5 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Territoire</span>
+                    <h1 class="h3 mb-1">Zones commerciales</h1>
+                    <p class="text-body-secondary mb-0">Structurez le maillage territorial et rattachez les commerciaux aux bons secteurs.</p>
+                </div>
+                <a href="{{ path('app_zone_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_zone_new') }}"><i class="bi bi-plus-lg me-2"></i>Ajouter</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-5 overflow-hidden" data-list-search-scope>
+        {% include '_partials/_listing_search.html.twig' with { placeholder: 'Rechercher une zone ou une ville...' } %}
+        <div class="card-body p-0" data-crud-list>
+            {% include 'zone/_list.html.twig' with { zones: zones } %}
+        </div>
+    </div>
+{% endblock %}

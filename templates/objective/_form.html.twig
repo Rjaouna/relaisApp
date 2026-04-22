@@ -1,0 +1,28 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ objective.id ? 'Modifier l objectif' : 'Ajouter un objectif' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: objective.id ? path('app_objective_edit', {id: objective.id}) : path('app_objective_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_objective_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.periodLabel) }}</div>
+            <div class="col-md-6">{{ form_row(form.commercial) }}</div>
+            <div class="col-md-4">{{ form_row(form.salesTarget) }}</div>
+            <div class="col-md-4">{{ form_row(form.visitsTarget) }}</div>
+            <div class="col-md-4">{{ form_row(form.newClientsTarget) }}</div>
+            <div class="col-md-4">{{ form_row(form.salesActual) }}</div>
+            <div class="col-md-4">{{ form_row(form.visitsActual) }}</div>
+            <div class="col-md-4">{{ form_row(form.newClientsActual) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

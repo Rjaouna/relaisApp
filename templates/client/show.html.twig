@@ -3,18 +3,37 @@
 {% block title %}Client{% endblock %}
 
 {% block body %}
+    {% set read_only = read_only|default(false) %}
+    {% set back_route = back_route|default('app_client_index') %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-1">{{ client.name }}</h1>
+            <div class="text-body-secondary small text-uppercase mb-2">{{ read_only ? 'Fiche client refusee' : 'Fiche client' }}</div>
+            <h1 class="h2 mb-1">{{ client.name }}</h1>
             <p class="text-body-secondary mb-0">{{ client.city }} - {{ client.type|replace({'_': ' '})|title }}</p>
         </div>
-        <a href="{{ path('app_client_edit', {id: client.id}) }}" class="btn btn-primary" data-crud-modal-url="{{ path('app_client_edit', {id: client.id}) }}">Modifier</a>
+        <div class="d-flex gap-2">
+            <a href="{{ path(back_route) }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+            {% if not read_only %}
+                <a href="{{ path('app_client_edit', {id: client.id}) }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_client_edit', {id: client.id}) }}">Modifier</a>
+            {% endif %}
+        </div>
     </div>
+
+    {% if read_only %}
+        <div class="alert alert-danger border-0 rounded-5 shadow-sm mb-4">
+            Consultation en lecture seule : cette fiche client refusee ne peut pas etre modifiee depuis cette rubrique.
+        </div>
+    {% endif %}
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4">
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <span class="badge rounded-pill text-bg-light">{{ client.status|replace({'_': ' '})|title }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ client.zone ? client.zone.name : 'Zone non renseignee' }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ client.segment ? client.segment|replace({'_': ' '})|title : 'Standard' }}</span>
+                    </div>
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Email</dt>
                         <dd class="col-sm-8">{{ client.email ?: 'Non renseigne' }}</dd>
@@ -24,8 +43,16 @@
                         <dd class="col-sm-8">{{ client.address ?: 'Non renseignee' }}</dd>
                         <dt class="col-sm-4">Statut</dt>
                         <dd class="col-sm-8">{{ client.status|replace({'_': ' '})|title }}</dd>
+                        <dt class="col-sm-4">Zone</dt>
+                        <dd class="col-sm-8">{{ client.zone ? client.zone.name : 'Non renseignee' }}</dd>
+                        <dt class="col-sm-4">Segment</dt>
+                        <dd class="col-sm-8">{{ client.segment ? client.segment|replace({'_': ' '})|title : 'Standard' }}</dd>
+                        <dt class="col-sm-4">Solvabilite</dt>
+                        <dd class="col-sm-8">{{ client.solvencyLabel }}</dd>
+                        <dt class="col-sm-4">Commercial</dt>
+                        <dd class="col-sm-8">{{ client.assignedCommercial ? client.assignedCommercial.fullName : 'Non affecte' }}</dd>
                         <dt class="col-sm-4">Potentiel</dt>
-                        <dd class="col-sm-8">{{ client.potentialScore ?: 0 }}</dd>
+                        <dd class="col-sm-8">{{ client.potentialLabel }}</dd>
                         <dt class="col-sm-4">CA annuel</dt>
                         <dd class="col-sm-8">{{ client.annualRevenue|number_format(2, ',', ' ') }} MAD</dd>
                     </dl>
@@ -33,8 +60,8 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-white">Notes</div>
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-header bg-white border-0 pt-4 px-4">Notes</div>
                 <div class="card-body">
                     {{ client.notes ?: 'Aucune note pour le moment.' }}
                 </div>

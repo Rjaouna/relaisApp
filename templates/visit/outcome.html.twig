@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Resultat de visite{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5 overflow-hidden mb-4">
+                <div class="card-body bg-dark text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <div class="text-white-50 small text-uppercase mb-2">Compte rendu terrain</div>
+                            <h1 class="h3 mb-1">{{ visit.client.name }}</h1>
+                            <p class="text-white-50 mb-0">
+                                {{ visit.scheduledAt|date('d/m/Y H:i') }} - {{ visit.type|replace({'_': ' '})|title }}
+                            </p>
+                        </div>
+                        <a href="{{ tourId ? path('app_tour_show', {id: tourId}) : path('app_home') }}" class="btn btn-outline-light rounded-pill">Retour</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4 p-lg-5">
+                    {{ form_start(form) }}
+                        <div class="row g-3">
+                            <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.result, category: 'visit_result' } %}</div>
+                            <div class="col-12">{% include '_partials/_interest_level_field.html.twig' with { field: form.interestLevel } %}</div>
+                            <div class="col-12">{{ form_row(form.report) }}</div>
+                            <div class="col-12">{{ form_row(form.nextAction) }}</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ tourId ? path('app_tour_show', {id: tourId}) : path('app_home') }}" class="btn btn-outline-secondary rounded-pill px-4">Annuler</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">Enregistrer le resultat</button>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

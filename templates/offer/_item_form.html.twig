@@ -1,0 +1,18 @@
+<div class="rounded-4 border bg-white p-3 mb-3" data-offer-item-row>
+    <div class="row g-3 align-items-end">
+        <div class="col-lg-6">
+            {{ form_row(itemForm.product) }}
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            {{ form_row(itemForm.quantity) }}
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            {{ form_row(itemForm.unitPrice) }}
+        </div>
+        <div class="col-lg-1 d-grid">
+            <button type="button" class="btn btn-outline-danger" data-offer-item-remove title="Supprimer l'article">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+</div>

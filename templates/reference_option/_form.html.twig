@@ -1,0 +1,25 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ option.id ? 'Modifier le choix' : 'Ajouter un choix' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: option.id ? path('app_reference_option_edit', {id: option.id}) : path('app_reference_option_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_reference_option_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.category) }}</div>
+            <div class="col-md-6">{{ form_row(form.label) }}</div>
+            <div class="col-md-6">{{ form_row(form.value) }}</div>
+            <div class="col-md-3">{{ form_row(form.sortOrder) }}</div>
+            <div class="col-md-3">{{ form_row(form.isActive) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

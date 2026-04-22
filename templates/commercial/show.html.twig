@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail commercial{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-2">{{ isOwnCommercialView ? 'Mon espace terrain' : 'Fiche commercial' }}</div>
+            <h1 class="h2 mb-0">{{ commercial.fullName }}</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_commercial_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+            <a href="{{ path('app_commercial_edit', {id: commercial.id}) }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_commercial_edit', {id: commercial.id}) }}">Modifier</a>
+        </div>
+    </div>
+    {% if isOwnCommercialView %}
+        <div class="card border-0 shadow-sm rounded-5 mb-4 overflow-hidden">
+            <div class="card-body bg-dark text-white p-4 p-lg-5">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-4 align-items-lg-center">
+                    <div>
+                        <span class="badge rounded-pill text-bg-light text-dark mb-3">Vue terrain</span>
+                        <h2 class="h3 mb-2">Priorites du moment</h2>
+                        <p class="text-white-50 mb-0">Cette vue met en avant les informations utiles pour l action terrain, pas les indicateurs de pilotage direction.</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ path('app_tour_index') }}" class="btn btn-light rounded-pill px-4"><i class="bi bi-signpost-2 me-2"></i>Mes tournees</a>
+                        <a href="{{ path('app_visit_index') }}" class="btn btn-outline-light rounded-pill px-4"><i class="bi bi-clipboard2-pulse me-2"></i>Mes visites</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4">
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge rounded-pill text-bg-light">{{ commercial.city }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ commercial.zone ? commercial.zone.name : 'Sans zone' }}</span>
+                    </div>
+                    {% if showManagerMetrics %}
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Zone</dt>
+                            <dd class="col-sm-8">{{ commercial.zone ? commercial.zone.name : 'Non rattachee' }}</dd>
+                            <dt class="col-sm-4">Objectif CA</dt>
+                            <dd class="col-sm-8">{{ commercial.salesTarget }}</dd>
+                            <dt class="col-sm-4">Objectif visites</dt>
+                            <dd class="col-sm-8">{{ commercial.visitsTarget }}</dd>
+                            <dt class="col-sm-4">Objectif nouveaux clients</dt>
+                            <dd class="col-sm-8">{{ commercial.newClientsTarget }}</dd>
+                            <dt class="col-sm-4">Clients affectes</dt>
+                            <dd class="col-sm-8">{{ operationalSummary.assigned_clients }}</dd>
+                            <dt class="col-sm-4">Visites affectees</dt>
+                            <dd class="col-sm-8">{{ operationalSummary.planned_visits }}</dd>
+                            <dt class="col-sm-4">Charge commerciale</dt>
+                            <dd class="col-sm-8">{{ commercial.commercialLoad }}</dd>
+                        </dl>
+                    {% else %}
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-xl-4">
+                                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-body-secondary small text-uppercase mb-2">Tournees du jour</div>
+                                        <div class="display-6 fw-semibold mb-0">{{ operationalSummary.today_tours }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xl-4">
+                                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-body-secondary small text-uppercase mb-2">Visites restantes</div>
+                                        <div class="display-6 fw-semibold mb-0">{{ operationalSummary.planned_visits }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xl-4">
+                                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-body-secondary small text-uppercase mb-2">Visites realisees</div>
+                                        <div class="display-6 fw-semibold mb-0">{{ operationalSummary.completed_visits }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xl-6">
+                                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-body-secondary small text-uppercase mb-2">Clients critiques</div>
+                                        <div class="display-6 fw-semibold mb-0 {{ operationalSummary.critical_clients > 0 ? 'text-danger' : '' }}">{{ operationalSummary.critical_clients }}</div>
+                                        <div class="small text-body-secondary mt-2">Clients au statut refuse qui demandent une approche adaptee.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xl-6">
+                                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-body">
+                                        <div class="text-body-secondary small text-uppercase mb-2">Prochaine visite</div>
+                                        {% if operationalSummary.next_visit %}
+                                            <div class="fw-semibold">{{ operationalSummary.next_visit.client.name }}</div>
+                                            <div class="small text-body-secondary mt-2">{{ operationalSummary.next_visit.scheduledAt|date('d/m/Y H:i') }} - {{ operationalSummary.next_visit.client.city }}</div>
+                                        {% else %}
+                                            <div class="fw-semibold">Aucune visite planifiee</div>
+                                            <div class="small text-body-secondary mt-2">Ton planning terrain est vide pour le moment.</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-body p-4">
+                    <div class="text-body-secondary small text-uppercase mb-2">Compte lie</div>
+                    <div class="fw-semibold mb-2">{{ commercial.user ? commercial.user.fullName : 'Aucun utilisateur' }}</div>
+                    <div class="text-body-secondary">{{ commercial.user ? commercial.user.email : 'Compte non associe' }}</div>
+                    {% if isOwnCommercialView %}
+                        <hr class="my-4">
+                        <div class="text-body-secondary small text-uppercase mb-2">Repere terrain</div>
+                        <div class="fw-semibold mb-2">{{ commercial.zone ? commercial.zone.name : 'Zone non rattachee' }}</div>
+                        <div class="text-body-secondary">{{ commercial.city ?: 'Ville non definie' }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

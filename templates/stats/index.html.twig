@@ -1,0 +1,351 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques{% endblock %}
+
+{% block body %}
+    <section class="d-flex flex-column gap-3">
+        <div class="app-page-hero rounded-5 p-3 p-lg-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+                <div>
+                    <div class="app-section-kicker text-secondary mb-2">Statistiques</div>
+                    <h1 class="h2 fw-bold mb-2">Lecture decisionnelle</h1>
+                    <p class="text-body-secondary mb-0">Visualisez les indicateurs les plus utiles pour suivre l'activite commerciale et territoriale.</p>
+                </div>
+                <a href="{{ path('app_dashboard') }}" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Retour dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-6 col-md-4">
+                <div class="card border-0 h-100 app-stats-kpi-card">
+                    <div class="card-body p-3">
+                        <div class="text-body-secondary small text-uppercase mb-2">Clients</div>
+                        <div class="h3 fw-bold mb-0">{{ stats.kpis.clients }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card border-0 h-100 app-stats-kpi-card">
+                    <div class="card-body p-3">
+                        <div class="text-body-secondary small text-uppercase mb-2">Prospects</div>
+                        <div class="h3 fw-bold mb-0">{{ stats.kpis.prospects }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card border-0 h-100 app-stats-kpi-card">
+                    <div class="card-body p-3">
+                        <div class="text-body-secondary small text-uppercase mb-2">Visites realisees</div>
+                        <div class="h3 fw-bold mb-0">{{ stats.kpis.visits_completed }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card border-0 h-100 app-stats-kpi-card">
+                    <div class="card-body p-3">
+                        <div class="text-body-secondary small text-uppercase mb-2">Offres en cours</div>
+                        <div class="h3 fw-bold mb-0">{{ stats.kpis.offers_in_progress }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card border-0 h-100 app-stats-kpi-card">
+                    <div class="card-body p-3">
+                        <div class="text-body-secondary small text-uppercase mb-2">CA du mois</div>
+                        <div class="h5 fw-bold mb-0">{{ stats.kpis.revenue|number_format(0, ',', ' ') }} MAD</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card border-0 h-100 app-stats-kpi-card">
+                    <div class="card-body p-3">
+                        <div class="text-body-secondary small text-uppercase mb-2">Tournees cloturees</div>
+                        <div class="h3 fw-bold mb-0">{{ stats.kpis.tours_completed }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-xl-3">
+                <div class="card border-0 h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="app-section-kicker text-secondary mb-1">Clients</div>
+                                <h2 class="h5 mb-0">Repartition par statut</h2>
+                            </div>
+                        </div>
+                        <div class="app-stats-chart-wrap">
+                            <canvas id="clientsStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card border-0 h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="app-section-kicker text-secondary mb-1">Visites</div>
+                                <h2 class="h5 mb-0">Etat global des visites</h2>
+                            </div>
+                        </div>
+                        <div class="app-stats-chart-wrap">
+                            <canvas id="visitsStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card border-0 h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="app-section-kicker text-secondary mb-1">Revenu</div>
+                                <h2 class="h5 mb-0">Evolution du chiffre d'affaires</h2>
+                            </div>
+                        </div>
+                        <div class="app-stats-chart-wrap">
+                            <canvas id="monthlyRevenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card border-0 h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="app-section-kicker text-secondary mb-1">Tournees</div>
+                                <h2 class="h5 mb-0">Etat des tournees</h2>
+                            </div>
+                        </div>
+                        <div class="app-stats-chart-wrap">
+                            <canvas id="toursStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card border-0 h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="app-section-kicker text-secondary mb-1">Marche</div>
+                                <h2 class="h5 mb-0">Top zones par score</h2>
+                            </div>
+                        </div>
+                        <div class="app-stats-chart-wrap">
+                            <canvas id="marketsScoreChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-9">
+                <div class="card border-0 h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="app-section-kicker text-secondary mb-1">Equipe</div>
+                                <h2 class="h5 mb-0">Commerciaux les plus actifs</h2>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Commercial</th>
+                                        <th>Ville</th>
+                                        <th>Clients</th>
+                                        <th>Visites realisees</th>
+                                        <th>Visites prevues</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for commercial in stats.top_commercials %}
+                                        <tr>
+                                            <td class="fw-semibold">{{ commercial.name }}</td>
+                                            <td>{{ commercial.city ?: 'Non defini' }}</td>
+                                            <td>{{ commercial.clients }}</td>
+                                            <td>{{ commercial.visits_completed }}</td>
+                                            <td>{{ commercial.visits_planned }}</td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-body-secondary py-4">Aucune statistique commerciale disponible.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        window.rmStatsCharts = window.rmStatsCharts || {};
+
+        const loadChartLibrary = () => new Promise((resolve, reject) => {
+            if (typeof Chart !== 'undefined') {
+                resolve();
+                return;
+            }
+
+            const existingScript = document.querySelector('script[data-chartjs-loader]');
+            if (existingScript) {
+                existingScript.addEventListener('load', () => resolve(), { once: true });
+                existingScript.addEventListener('error', () => reject(new Error('Chart.js failed to load.')), { once: true });
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+            script.dataset.chartjsLoader = 'true';
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Chart.js failed to load.'));
+            document.head.appendChild(script);
+        });
+
+        const initStatsPage = async () => {
+            if (!document.getElementById('clientsStatusChart')) {
+                return;
+            }
+
+            const chartPalette = {
+                primary: '#4bc2c4',
+                secondary: '#2d6464',
+                dark: '#111827',
+                soft: 'rgba(75, 194, 196, 0.18)',
+                success: '#1b8e74',
+                warning: '#c67d10',
+                danger: '#dc3545',
+                slate: '#7b8a8b'
+            };
+
+            const createChart = (id, config) => {
+                const element = document.getElementById(id);
+                if (!element || typeof Chart === 'undefined') {
+                    return;
+                }
+
+                if (window.rmStatsCharts[id]) {
+                    window.rmStatsCharts[id].destroy();
+                }
+
+                window.rmStatsCharts[id] = new Chart(element, config);
+            };
+
+            try {
+                await loadChartLibrary();
+            } catch (error) {
+                console.error(error);
+                return;
+            }
+
+            createChart('clientsStatusChart', {
+                type: 'doughnut',
+                data: {
+                    labels: {{ stats.charts.clients_by_status.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.clients_by_status.values|json_encode|raw }},
+                        backgroundColor: [chartPalette.primary, chartPalette.secondary, chartPalette.success, chartPalette.danger],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            createChart('visitsStatusChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.visits_by_status.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.visits_by_status.values|json_encode|raw }},
+                        backgroundColor: [chartPalette.primary, chartPalette.success, chartPalette.warning, chartPalette.slate],
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+
+            createChart('monthlyRevenueChart', {
+                type: 'line',
+                data: {
+                    labels: {{ stats.charts.monthly_revenue.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.monthly_revenue.values|json_encode|raw }},
+                        borderColor: chartPalette.secondary,
+                        backgroundColor: chartPalette.soft,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: chartPalette.primary,
+                        pointBorderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            createChart('toursStatusChart', {
+                type: 'polarArea',
+                data: {
+                    labels: {{ stats.charts.tours_by_status.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.tours_by_status.values|json_encode|raw }},
+                        backgroundColor: [
+                            'rgba(75, 194, 196, 0.78)',
+                            'rgba(45, 100, 100, 0.78)',
+                            'rgba(27, 142, 116, 0.78)',
+                            'rgba(123, 138, 139, 0.78)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            createChart('marketsScoreChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.markets_by_score.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.markets_by_score.values|json_encode|raw }},
+                        backgroundColor: chartPalette.primary,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, max: 100 } }
+                }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', initStatsPage);
+        document.addEventListener('turbo:load', initStatsPage);
+    </script>
+{% endblock %}

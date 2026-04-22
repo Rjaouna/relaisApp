@@ -21,6 +21,11 @@ class Client
     public const STATUS_ACTIVE = 'actif';
     public const STATUS_REFUSED = 'refuse';
 
+    public const SEGMENT_STANDARD = 'standard';
+    public const SEGMENT_DEVELOPMENT = 'developpement';
+    public const SEGMENT_PREMIUM = 'premium';
+    public const SEGMENT_STRATEGIC = 'strategique';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -31,6 +36,10 @@ class Client
 
     #[ORM\Column(length: 120)]
     private ?string $city = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Zone $zone = null;
 
     #[ORM\Column(length: 50)]
     private ?string $type = null;
@@ -44,14 +53,26 @@ class Client
     #[ORM\Column(length: 30, nullable: true)]
     private ?string $phone = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $address = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7, nullable: true)]
+    private ?string $latitude = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7, nullable: true)]
+    private ?string $longitude = null;
 
     #[ORM\Column(nullable: true)]
     private ?int $potentialScore = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $segment = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $solvencyScore = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
     private string $annualRevenue = '0.00';
@@ -64,6 +85,10 @@ class Client
 
     #[ORM\Column]
     private \DateTimeImmutable $updatedAt;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Commercial $assignedCommercial = null;
 
     /**
      * @var Collection<int, Visit>
@@ -85,6 +110,7 @@ class Client
         $this->updatedAt = new \DateTimeImmutable();
         $this->status = self::STATUS_POTENTIAL;
         $this->type = self::TYPE_CLINIC;
+        $this->segment = 'standard';
     }
 
     public static function typeChoices(): array
@@ -105,6 +131,39 @@ class Client
             'Actif' => self::STATUS_ACTIVE,
             'Refuse' => self::STATUS_REFUSED,
         ];
+    }
+
+    public static function segmentChoices(): array
+    {
+        return [
+            'Standard' => self::SEGMENT_STANDARD,
+            'Developpement' => self::SEGMENT_DEVELOPMENT,
+            'Premium' => self::SEGMENT_PREMIUM,
+            'Strategique' => self::SEGMENT_STRATEGIC,
+        ];
+    }
+
+    public static function scoreLevelChoices(): array
+    {
+        return [
+            'Tres faible' => 20,
+            'Faible' => 40,
+            'Moyen' => 60,
+            'Bon' => 80,
+            'Tres bon' => 100,
+        ];
+    }
+
+    public static function scoreLabel(?int $score): string
+    {
+        return match (true) {
+            $score === null => 'Non renseigne',
+            $score <= 20 => 'Tres faible',
+            $score <= 40 => 'Faible',
+            $score <= 60 => 'Moyen',
+            $score <= 80 => 'Bon',
+            default => 'Tres bon',
+        };
     }
 
     public function touch(): void
@@ -137,6 +196,18 @@ class Client
     public function setCity(string $city): static
     {
         $this->city = $city;
+
+        return $this;
+    }
+
+    public function getZone(): ?Zone
+    {
+        return $this->zone;
+    }
+
+    public function setZone(?Zone $zone): static
+    {
+        $this->zone = $zone;
 
         return $this;
     }
@@ -194,9 +265,33 @@ class Client
         return $this->address;
     }
 
-    public function setAddress(?string $address): static
+    public function setAddress(string $address): static
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    public function getLatitude(): ?string
+    {
+        return $this->latitude;
+    }
+
+    public function setLatitude(?string $latitude): static
+    {
+        $this->latitude = $latitude;
+
+        return $this;
+    }
+
+    public function getLongitude(): ?string
+    {
+        return $this->longitude;
+    }
+
+    public function setLongitude(?string $longitude): static
+    {
+        $this->longitude = $longitude;
 
         return $this;
     }
@@ -213,6 +308,11 @@ class Client
         return $this;
     }
 
+    public function getPotentialLabel(): string
+    {
+        return self::scoreLabel($this->potentialScore);
+    }
+
     public function getNotes(): ?string
     {
         return $this->notes;
@@ -223,6 +323,35 @@ class Client
         $this->notes = $notes;
 
         return $this;
+    }
+
+    public function getSegment(): ?string
+    {
+        return $this->segment;
+    }
+
+    public function setSegment(?string $segment): static
+    {
+        $this->segment = $segment;
+
+        return $this;
+    }
+
+    public function getSolvencyScore(): ?int
+    {
+        return $this->solvencyScore;
+    }
+
+    public function setSolvencyScore(?int $solvencyScore): static
+    {
+        $this->solvencyScore = $solvencyScore;
+
+        return $this;
+    }
+
+    public function getSolvencyLabel(): string
+    {
+        return self::scoreLabel($this->solvencyScore);
     }
 
     public function getAnnualRevenue(): string
@@ -257,6 +386,18 @@ class Client
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function getAssignedCommercial(): ?Commercial
+    {
+        return $this->assignedCommercial;
+    }
+
+    public function setAssignedCommercial(?Commercial $assignedCommercial): static
+    {
+        $this->assignedCommercial = $assignedCommercial;
+
+        return $this;
     }
 
     /**

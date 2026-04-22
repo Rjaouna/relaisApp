@@ -3,24 +3,62 @@
 {% block title %}Clients{% endblock %}
 
 {% block body %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1">Clients et prospects</h1>
-            <p class="text-body-secondary mb-0">CRUD de reference avec modal Bootstrap et soumission AJAX.</p>
+    <section class="app-page-hero rounded-5 p-4 p-lg-5 mb-4">
+        <div class="d-flex flex-column flex-xl-row justify-content-between gap-4 align-items-xl-center">
+            <div class="pe-xl-4">
+                <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Portefeuille commercial</span>
+                <h1 class="h2 mb-2">Clients et prospection</h1>
+                <p class="text-body-secondary mb-0">Un point d entrée clair pour separer la prospection en cours des clients deja confirmes, avec import rapide et actions immediates.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 justify-content-xl-end">
+                <button type="button" class="btn btn-outline-primary" data-client-import-url="{{ path('app_client_import_form') }}">
+                    <i class="bi bi-file-earmark-arrow-up me-2"></i>Importer une prospection
+                </button>
+                <form method="post" action="{{ path('app_client_auto_assign') }}">
+                    <button class="btn btn-outline-primary" type="submit"><i class="bi bi-diagram-3 me-2"></i>Affectation automatique</button>
+                </form>
+                <a href="{{ path('app_client_new') }}" class="btn btn-primary" data-crud-modal-url="{{ path('app_client_new') }}">
+                    <i class="bi bi-plus-lg me-2"></i>Ajouter un client
+                </a>
+            </div>
         </div>
-        <a href="{{ path('app_client_new') }}" class="btn btn-primary" data-crud-modal-url="{{ path('app_client_new') }}">Ajouter</a>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">Total</div><div class="h4 mb-0">{{ counters.total }}</div></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">Actifs</div><div class="h4 mb-0">{{ counters.active }}</div></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">Potentiels</div><div class="h4 mb-0">{{ counters.potential }}</div></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><div class="text-body-secondary">En cours</div><div class="h4 mb-0">{{ counters.in_progress }}</div></div></div></div>
-    </div>
-
-    <div class="card">
-        <div class="card-body p-0" data-crud-list>
-            {% include 'client/_list.html.twig' with { clients: clients } %}
+        <div class="row g-3 mt-1">
+            <div class="col-6 col-xl-3">
+                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body">
+                        <div class="text-body-secondary small text-uppercase mb-2">Total</div>
+                        <div class="display-6 fw-semibold mb-0">{{ counters.total }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body">
+                        <div class="text-body-secondary small text-uppercase mb-2">Prospection</div>
+                        <div class="display-6 fw-semibold mb-0">{{ counters.prospection }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body">
+                        <div class="text-body-secondary small text-uppercase mb-2">Confirmes</div>
+                        <div class="display-6 fw-semibold mb-0">{{ counters.confirmed }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body">
+                        <div class="text-body-secondary small text-uppercase mb-2">Refuses</div>
+                        <div class="display-6 fw-semibold mb-0">{{ counters.refused }}</div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
+
+    <div data-crud-list>
+        {% include 'client/_sections.html.twig' with { groupedClients: groupedClients, counters: counters } %}
     </div>
 {% endblock %}

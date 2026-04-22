@@ -1,0 +1,95 @@
+{% set commercial_mode = is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Tournee</th>
+                {% if not commercial_mode %}
+                    <th>Commercial</th>
+                {% endif %}
+                <th>Ville</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Avancement</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tour in tours %}
+                {% set critical_count = tourCriticalCounts[tour.id ?? 0]|default(0) %}
+                {% set is_new_tour = tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and tour.completedVisits == 0 %}
+                <tr>
+                    <td>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
+                            {% if is_new_tour %}
+                                <span class="badge rounded-pill text-bg-primary">New</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-body-secondary">{{ tour.routeSummary ?: 'Aucun itineraire defini' }}</div>
+                        <div class="small mt-2 {{ tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') ? 'text-success fw-semibold' : 'text-body-secondary' }}">
+                            Etat actuel : {{ tour.status|replace({'_': ' '})|title }}
+                        </div>
+                        {% if critical_count > 0 %}
+                            <div class="mt-2">
+                                <span class="badge rounded-pill text-bg-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ critical_count }} client(s) refuse(s)
+                                </span>
+                            </div>
+                        {% endif %}
+                    </td>
+                    {% if not commercial_mode %}
+                        <td>
+                            {% if tour.commercial %}
+                                <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: tour.commercial.id}) }}">{{ tour.commercial.fullName }}</a>
+                            {% else %}
+                                Non assigne
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                    <td>{{ tour.city }}</td>
+                    <td>{{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</td>
+                    <td>
+                        {% set status_badge = 'text-bg-light' %}
+                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                            {% set status_badge = 'text-bg-success' %}
+                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_IN_PROGRESS') %}
+                            {% set status_badge = 'text-bg-primary' %}
+                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
+                            {% set status_badge = 'text-bg-secondary' %}
+                        {% elseif critical_count > 0 %}
+                            {% set status_badge = 'text-bg-danger' %}
+                        {% endif %}
+                        <span class="badge rounded-pill {{ status_badge }}">
+                            {{ tour.status|replace({'_': ' '})|title }}
+                        </span>
+                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                            <div class="small text-success fw-semibold mt-2">Tournee cloturee</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
+                        <div class="progress mt-2" style="height: 0.4rem;">
+                            <div class="progress-bar" style="width: {{ tour.plannedVisits > 0 ? (tour.completedVisits / tour.plannedVisits * 100) : 0 }}%"></div>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_tour_show', {id: tour.id}) }}" class="btn btn-outline-secondary rounded-pill">{{ commercial_mode ? 'Choisir' : 'Voir' }}</a>
+                            {% if not commercial_mode %}
+                                <a href="{{ path('app_tour_edit', {id: tour.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_tour_edit', {id: tour.id}) }}">Editer</a>
+                                {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                                    <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_tour_delete', {id: tour.id}) }}" data-crud-refresh-url="{{ path('app_tour_list') }}" data-crud-confirm="Supprimer {{ tour.name }} ?">Supprimer</button>
+                                {% else %}
+                                    <button type="button" class="btn btn-outline-danger rounded-pill" disabled title="La tournee doit etre cloturee avant suppression.">Supprimer</button>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="{{ commercial_mode ? 6 : 7 }}" class="text-center py-4 text-body-secondary">Aucune tournee disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

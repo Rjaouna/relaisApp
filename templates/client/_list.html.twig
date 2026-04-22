@@ -6,6 +6,7 @@
                 <th>Ville</th>
                 <th>Type</th>
                 <th>Statut</th>
+                <th>Commercial</th>
                 <th>CA annuel</th>
                 <th class="text-end">Actions</th>
             </tr>
@@ -14,30 +15,45 @@
             {% for client in clients %}
                 <tr>
                     <td>
-                        <div class="fw-semibold">{{ client.name }}</div>
+                        {% set show_route = (read_only|default(false)) and client.status == constant('App\\Entity\\Client::STATUS_REFUSED') ? 'app_client_refused_show' : 'app_client_show' %}
+                        <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path(show_route, {id: client.id}) }}">{{ client.name }}</a>
                         <div class="small text-body-secondary">{{ client.email ?: 'Aucun email' }}</div>
                     </td>
-                    <td>{{ client.city }}</td>
-                    <td>{{ client.type|replace({'_': ' '})|title }}</td>
-                    <td><span class="badge text-bg-light">{{ client.status|replace({'_': ' '})|title }}</span></td>
-                    <td>{{ client.annualRevenue|number_format(2, ',', ' ') }} MAD</td>
+                    <td>
+                        <div>{{ client.city }}</div>
+                        <div class="small text-body-secondary">{{ client.zone ? client.zone.name : 'Zone non definie' }}</div>
+                    </td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ client.type|replace({'_': ' '})|title }}</span></td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ client.status|replace({'_': ' '})|title }}</span></td>
+                    <td>
+                        {% if client.assignedCommercial %}
+                            <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: client.assignedCommercial.id}) }}">{{ client.assignedCommercial.fullName }}</a>
+                        {% else %}
+                            Non affecte
+                        {% endif %}
+                    </td>
+                    <td><span class="fw-semibold">{{ client.annualRevenue|number_format(2, ',', ' ') }}</span> MAD</td>
                     <td class="text-end">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ path('app_client_show', {id: client.id}) }}" class="btn btn-outline-secondary">Voir</a>
-                            <a href="{{ path('app_client_edit', {id: client.id}) }}" class="btn btn-outline-primary" data-crud-modal-url="{{ path('app_client_edit', {id: client.id}) }}">Editer</a>
-                            <button type="button"
-                                    class="btn btn-outline-danger"
-                                    data-crud-delete-url="{{ path('app_client_delete', {id: client.id}) }}"
-                                    data-crud-refresh-url="{{ path('app_client_list') }}"
-                                    data-crud-confirm="Supprimer {{ client.name }} ?">
-                                Supprimer
-                            </button>
-                        </div>
+                        {% if read_only|default(false) %}
+                            <a href="{{ path(show_route, {id: client.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                        {% else %}
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ path('app_client_show', {id: client.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                                <a href="{{ path('app_client_edit', {id: client.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_client_edit', {id: client.id}) }}">Editer</a>
+                                <button type="button"
+                                        class="btn btn-outline-danger rounded-pill"
+                                        data-crud-delete-url="{{ path('app_client_delete', {id: client.id}) }}"
+                                        data-crud-refresh-url="{{ path('app_client_list') }}"
+                                        data-crud-confirm="Supprimer {{ client.name }} ?">
+                                    Supprimer
+                                </button>
+                            </div>
+                        {% endif %}
                     </td>
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="6" class="text-center py-4 text-body-secondary">Aucun client enregistre pour le moment.</td>
+                    <td colspan="7" class="text-center py-4 text-body-secondary">{{ empty_message|default('Aucun client enregistre pour le moment.') }}</td>
                 </tr>
             {% endfor %}
         </tbody>

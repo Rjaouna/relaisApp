@@ -1,0 +1,38 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ userEntity.id ? 'Modifier l utilisateur' : 'Ajouter un utilisateur' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: userEntity.id ? path('app_user_edit', {id: userEntity.id}) : path('app_user_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_user_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.fullName) }}</div>
+            <div class="col-md-6">{{ form_row(form.email) }}</div>
+            <div class="col-12">
+                <label class="form-label fw-semibold mb-3">{{ form.roles.vars.label }}</label>
+                <div class="row g-2">
+                    {% for child in form.roles %}
+                        <div class="col-md-6">
+                            <div class="form-check border rounded-4 px-3 py-3 bg-white">
+                                {{ form_widget(child, { attr: { class: 'form-check-input' } }) }}
+                                {{ form_label(child, null, { label_attr: { class: 'form-check-label fw-semibold ms-2' } }) }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ form_errors(form.roles) }}
+            </div>
+            <div class="col-md-6">{{ form_row(form.isActive) }}</div>
+            <div class="col-md-6">{{ form_row(form.plainPassword) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

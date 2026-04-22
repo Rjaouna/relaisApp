@@ -3,9 +3,13 @@
 {% block title %}Formulaire client{% endblock %}
 
 {% block body %}
-    <div class="card">
-        <div class="card-body">
-            {% include 'client/_form.html.twig' %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-xxl-10">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4 p-lg-5">
+                    {% include 'client/_form.html.twig' %}
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

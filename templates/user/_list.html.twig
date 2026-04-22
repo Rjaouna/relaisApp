@@ -1,0 +1,37 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Etat</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_user_show', {id: user.id}) }}">{{ user.fullName }}</a>
+                        <div class="small text-body-secondary">{{ user.commercial ? 'Compte lie a un commercial' : 'Compte standard' }}</div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge rounded-pill text-bg-light">{{ user.roleLabels ?: 'ROLE_USER' }}</span></td>
+                    <td><span class="badge rounded-pill {{ user.isActive ? 'text-bg-success' : 'text-bg-secondary' }}">{{ user.isActive ? 'Actif' : 'Inactif' }}</span></td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm app-action-group">
+                            <a href="{{ path('app_user_show', {id: user.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_user_edit', {id: user.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_user_edit', {id: user.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_user_delete', {id: user.id}) }}" data-crud-refresh-url="{{ path('app_user_list') }}" data-crud-confirm="Supprimer {{ user.fullName }} ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-body-secondary">Aucun utilisateur disponible.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,30 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ commercial.id ? 'Modifier le commercial' : 'Ajouter un commercial' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: commercial.id ? path('app_commercial_edit', {id: commercial.id}) : path('app_commercial_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_commercial_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.fullName) }}</div>
+            <div class="col-md-6">{% include '_partials/_city_select_field.html.twig' with { field: form.city } %}</div>
+            <div class="col-md-6">{{ form_row(form.zone) }}</div>
+            <div class="col-md-6">{{ form_row(form.user) }}</div>
+            <div class="col-md-6">{{ form_row(form.isActive) }}</div>
+            <div class="col-md-4">{{ form_row(form.salesTarget) }}</div>
+            <div class="col-md-4">{{ form_row(form.visitsTarget) }}</div>
+            <div class="col-md-4">{{ form_row(form.newClientsTarget) }}</div>
+            <div class="col-md-6">{{ form_row(form.currentClientsLoad) }}</div>
+            <div class="col-md-6">{{ form_row(form.currentVisitsLoad) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}
