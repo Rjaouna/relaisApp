@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Objective;
+use App\Entity\Commercial;
 use App\Repository\ObjectiveRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -12,6 +13,7 @@ class ObjectiveCrudService
         private readonly EntityManagerInterface $entityManager,
         private readonly ObjectiveRepository $objectiveRepository,
         private readonly ObjectivePerformanceService $objectivePerformanceService,
+        private readonly ObjectivePlanningService $objectivePlanningService,
     ) {
     }
 
@@ -29,6 +31,16 @@ class ObjectiveCrudService
 
     public function save(Objective $objective): void
     {
+        $existing = $this->objectiveRepository->findOneForCommercialAndPeriod(
+            $objective->getCommercial(),
+            (string) $objective->getPeriodLabel(),
+            $objective->getId()
+        );
+
+        if ($existing instanceof Objective) {
+            throw new \DomainException('Un objectif existe deja pour ce commercial sur cette periode.');
+        }
+
         $this->objectivePerformanceService->hydrateObjective($objective);
         $this->entityManager->persist($objective);
         $this->entityManager->flush();
@@ -38,5 +50,15 @@ class ObjectiveCrudService
     {
         $this->entityManager->remove($objective);
         $this->entityManager->flush();
+    }
+
+    public function getPlanningContext(?Commercial $commercial, ?string $periodLabel, ?Objective $objective = null): array
+    {
+        return $this->objectivePlanningService->buildContext($commercial, $periodLabel, $objective);
+    }
+
+    public function getSuggestedPeriodLabel(): string
+    {
+        return $this->objectivePlanningService->getSuggestedPeriodLabel();
     }
 }

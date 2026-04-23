@@ -1,0 +1,31 @@
+{% set project = project ?? entity %}
+<div class="modal-header">
+    <h5 class="modal-title">{{ project.id ? 'Modifier le projet de lancement' : 'Ajouter un projet de lancement' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: project.id ? path('app_product_launch_project_edit', {id: project.id}) : path('app_product_launch_project_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_product_launch_project_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.product) }}</div>
+            <div class="col-md-6">{{ form_row(form.status) }}</div>
+            <div class="col-md-6">{{ form_row(form.name) }}</div>
+            <div class="col-md-6">{{ form_row(form.targetCity) }}</div>
+            <div class="col-12">{{ form_row(form.targetEntities) }}</div>
+            <div class="col-12">{{ form_row(form.marketStudy) }}</div>
+            <div class="col-12">{{ form_row(form.feasibilityNotes) }}</div>
+            <div class="col-12">{{ form_row(form.importConditions) }}</div>
+            <div class="col-12">{{ form_row(form.registrationRequired) }}</div>
+            <div class="col-12">{{ form_row(form.followUpNotes) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

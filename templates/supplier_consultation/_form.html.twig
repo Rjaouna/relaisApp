@@ -1,0 +1,32 @@
+{% set consultation = consultation ?? entity %}
+<div class="modal-header">
+    <h5 class="modal-title">{{ consultation.id ? 'Modifier la consultation fournisseur' : 'Ajouter une consultation fournisseur' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: consultation.id ? path('app_supplier_consultation_edit', {id: consultation.id}) : path('app_supplier_consultation_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_supplier_consultation_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.supplier) }}</div>
+            <div class="col-md-6">{{ form_row(form.expectedDelay) }}</div>
+            <div class="col-12">{{ form_row(form.needTitle) }}</div>
+            <div class="col-12">{{ form_row(form.needDetails) }}</div>
+            <div class="col-md-6">{{ form_row(form.status) }}</div>
+            <div class="col-md-6">{{ form_row(form.sampleStatus) }}</div>
+            <div class="col-md-6">{{ form_row(form.quotedAmount) }}</div>
+            <div class="col-md-6">{{ form_row(form.negotiatedAmount) }}</div>
+            <div class="col-12">{{ form_row(form.complianceNotes) }}</div>
+            <div class="col-12">{{ form_row(form.negotiationNotes) }}</div>
+            <div class="col-12">{{ form_row(form.selectedSupplier) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

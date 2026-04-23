@@ -28,4 +28,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * @return User[]
+     */
+    public function findActiveForMeetingSelection(): array
+    {
+        return $this->createQueryBuilder('user')
+            ->andWhere('user.isActive = :active')
+            ->setParameter('active', true)
+            ->orderBy('user.fullName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

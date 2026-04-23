@@ -6,19 +6,94 @@
     action: objective.id ? path('app_objective_edit', {id: objective.id}) : path('app_objective_new'),
     attr: {
         'data-crud-ajax-form': true,
-        'data-crud-refresh-url': path('app_objective_list')
+        'data-crud-refresh-url': path('app_objective_list'),
+        'data-objective-context-url-template': path('app_objective_context', {id: '__COMMERCIAL__'})
     }
 }) }}
     <div class="modal-body">
+        <div class="alert alert-info border-0 rounded-4 mb-4">
+            <div class="fw-semibold mb-1">Assistant d objectif</div>
+            <div class="small mb-0">Le formulaire te montre la charge actuelle du commercial, son dernier objectif et bloque les doublons sur la meme periode.</div>
+        </div>
         <div class="row g-3">
             <div class="col-md-6">{{ form_row(form.periodLabel) }}</div>
             <div class="col-md-6">{{ form_row(form.commercial) }}</div>
             <div class="col-md-4">{{ form_row(form.salesTarget) }}</div>
             <div class="col-md-4">{{ form_row(form.visitsTarget) }}</div>
             <div class="col-md-4">{{ form_row(form.newClientsTarget) }}</div>
-            <div class="col-md-4">{{ form_row(form.salesActual) }}</div>
-            <div class="col-md-4">{{ form_row(form.visitsActual) }}</div>
-            <div class="col-md-4">{{ form_row(form.newClientsActual) }}</div>
+        </div>
+
+        <div class="card border-0 bg-light-subtle rounded-4 mt-4" data-objective-context-panel>
+            <div class="card-body p-4">
+                {% if planningContext.ready ?? false %}
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                        <div>
+                            <div class="small text-uppercase text-body-secondary mb-1">Commercial</div>
+                            <div class="fw-semibold">{{ planningContext.commercial.name }}</div>
+                            <div class="small text-body-secondary">{{ planningContext.commercial.zone }}</div>
+                        </div>
+                        <div class="text-lg-end">
+                            <div class="small text-uppercase text-body-secondary mb-1">Periode</div>
+                            <div class="fw-semibold">{{ planningContext.periodLabel }}</div>
+                        </div>
+                    </div>
+
+                    {% if planningContext.duplicate %}
+                        <div class="alert alert-danger border-0 rounded-4 mb-3" data-objective-duplicate>
+                            {{ planningContext.duplicateMessage }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success border-0 rounded-4 mb-3 d-none" data-objective-duplicate></div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="rounded-4 bg-white p-3 h-100">
+                                <div class="small text-body-secondary">Clients affectes</div>
+                                <div class="h4 mb-0" data-objective-clients>{{ planningContext.commercial.clientsAssigned }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="rounded-4 bg-white p-3 h-100">
+                                <div class="small text-body-secondary">Visites prevues</div>
+                                <div class="h4 mb-0" data-objective-visits>{{ planningContext.commercial.plannedVisits }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="rounded-4 bg-white p-3 h-100">
+                                <div class="small text-body-secondary">Charge actuelle</div>
+                                <div class="h4 mb-0" data-objective-load>{{ planningContext.commercial.load }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-lg-6">
+                            <div class="rounded-4 bg-white p-3 h-100">
+                                <div class="small text-uppercase text-body-secondary mb-2">Objectif recommande</div>
+                                <div class="small">CA : <strong data-objective-reco-sales>{{ planningContext.recommendedTargets.salesTarget }}</strong></div>
+                                <div class="small">Visites : <strong data-objective-reco-visits>{{ planningContext.recommendedTargets.visitsTarget }}</strong></div>
+                                <div class="small">Nouveaux clients : <strong data-objective-reco-new-clients>{{ planningContext.recommendedTargets.newClientsTarget }}</strong></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="rounded-4 bg-white p-3 h-100">
+                                <div class="small text-uppercase text-body-secondary mb-2">Dernier objectif connu</div>
+                                {% if planningContext.lastObjective %}
+                                    <div class="small">{{ planningContext.lastObjective.periodLabel }}</div>
+                                    <div class="small">CA : <strong data-objective-last-sales>{{ planningContext.lastObjective.salesTarget }}</strong></div>
+                                    <div class="small">Visites : <strong data-objective-last-visits>{{ planningContext.lastObjective.visitsTarget }}</strong></div>
+                                    <div class="small">Nouveaux clients : <strong data-objective-last-new-clients>{{ planningContext.lastObjective.newClientsTarget }}</strong></div>
+                                {% else %}
+                                    <div class="small text-body-secondary" data-objective-last-empty>Aucun objectif precedent pour ce commercial.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-body-secondary" data-objective-empty>{{ planningContext.message }}</div>
+                {% endif %}
+            </div>
         </div>
     </div>
     <div class="modal-footer">

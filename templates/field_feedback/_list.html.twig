@@ -1,0 +1,48 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Synthese</th>
+                <th>Contexte</th>
+                <th>Priorite</th>
+                <th>Decision</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feedback in feedbacks %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_field_feedback_show', {id: feedback.id}) }}">{{ feedback.summary|length > 70 ? feedback.summary|slice(0, 70) ~ '...' : feedback.summary }}</a>
+                        <div class="small text-body-secondary">{{ feedback.category|title }}</div>
+                    </td>
+                    <td>
+                        {% if feedback.client %}
+                            <div><a class="text-decoration-none" href="{{ path('app_client_show', {id: feedback.client.id}) }}">{{ feedback.client.name }}</a></div>
+                        {% endif %}
+                        {% if feedback.commercial %}
+                            <div class="small text-body-secondary"><a class="text-decoration-none" href="{{ path('app_commercial_show', {id: feedback.commercial.id}) }}">{{ feedback.commercial.fullName }}</a></div>
+                        {% endif %}
+                        {% if feedback.visit %}
+                            <div class="small text-body-secondary">Visite du {{ feedback.visit.scheduledAt ? feedback.visit.scheduledAt|date('d/m/Y H:i') : 'sans date' }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill {{ feedback.priority == 'haute' ? 'text-bg-danger' : (feedback.priority == 'moyenne' ? 'text-bg-warning' : 'text-bg-light') }}">{{ feedback.priority|title }}</span>
+                        <div class="small text-body-secondary mt-2">{{ feedback.status|replace({'_': ' '})|title }}</div>
+                    </td>
+                    <td>{{ feedback.decisionAction ? (feedback.decisionAction|length > 60 ? feedback.decisionAction|slice(0, 60) ~ '...' : feedback.decisionAction) : 'A preciser' }}</td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_field_feedback_show', {id: feedback.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_field_feedback_edit', {id: feedback.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_field_feedback_edit', {id: feedback.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_field_feedback_delete', {id: feedback.id}) }}" data-crud-refresh-url="{{ path('app_field_feedback_list') }}" data-crud-confirm="Supprimer ce retour terrain ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucun retour terrain disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail retour terrain{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-2">Retour terrain</div>
+            <h1 class="h2 mb-0">{{ feedback.category|title }}</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_field_feedback_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+            <a href="{{ path('app_field_feedback_edit', {id: feedback.id}) }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_field_feedback_edit', {id: feedback.id}) }}">Modifier</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge rounded-pill {{ feedback.priority == 'haute' ? 'text-bg-danger' : (feedback.priority == 'moyenne' ? 'text-bg-warning' : 'text-bg-light') }}">{{ feedback.priority|title }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ feedback.status|replace({'_': ' '})|title }}</span>
+                    </div>
+                    <div class="small text-uppercase text-body-secondary mb-2">Synthese</div>
+                    <p class="mb-4">{{ feedback.summary }}</p>
+                    <div class="small text-uppercase text-body-secondary mb-2">Signaux terrain</div>
+                    <p class="mb-4">{{ feedback.marketSignals ?: 'Aucun signal terrain detaille.' }}</p>
+                    <div class="small text-uppercase text-body-secondary mb-2">Decision / action</div>
+                    <p class="mb-0">{{ feedback.decisionAction ?: 'Aucune decision formalisée.' }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-header bg-white border-0 pt-4 px-4">Contexte</div>
+                <div class="card-body pt-0">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Client</dt>
+                        <dd class="col-sm-7">
+                            {% if feedback.client %}
+                                <a class="text-decoration-none" href="{{ path('app_client_show', {id: feedback.client.id}) }}">{{ feedback.client.name }}</a>
+                            {% else %}
+                                Non renseigne
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-5">Commercial</dt>
+                        <dd class="col-sm-7">
+                            {% if feedback.commercial %}
+                                <a class="text-decoration-none" href="{{ path('app_commercial_show', {id: feedback.commercial.id}) }}">{{ feedback.commercial.fullName }}</a>
+                            {% else %}
+                                Non renseigne
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-5">Visite source</dt>
+                        <dd class="col-sm-7">
+                            {% if feedback.visit %}
+                                <a class="text-decoration-none" href="{{ path('app_visit_show', {id: feedback.visit.id}) }}">Voir la visite</a>
+                            {% else %}
+                                Non rattachee
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

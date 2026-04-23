@@ -1,0 +1,28 @@
+{% set satisfaction = satisfaction ?? entity %}
+<div class="modal-header">
+    <h5 class="modal-title">{{ satisfaction.id ? 'Modifier le suivi de satisfaction' : 'Ajouter un suivi de satisfaction' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: satisfaction.id ? path('app_customer_satisfaction_edit', {id: satisfaction.id}) : path('app_customer_satisfaction_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_customer_satisfaction_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.client) }}</div>
+            <div class="col-md-3">{{ form_row(form.satisfactionLevel) }}</div>
+            <div class="col-md-3">{{ form_row(form.status) }}</div>
+            <div class="col-12">{{ form_row(form.expectationSummary) }}</div>
+            <div class="col-12">{{ form_row(form.marketListening) }}</div>
+            <div class="col-md-6">{{ form_row(form.deliveryRequestedAt) }}</div>
+            <div class="col-12">{{ form_row(form.nextAction) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

@@ -1,0 +1,35 @@
+{% set meeting = meeting ?? entity %}
+<div class="modal-header">
+    <h5 class="modal-title">{{ meeting.id ? 'Modifier la reunion commerciale' : 'Ajouter une reunion commerciale' }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+{{ form_start(form, {
+    action: meeting.id ? path('app_weekly_meeting_edit', {id: meeting.id}) : path('app_weekly_meeting_new'),
+    attr: {
+        'data-crud-ajax-form': true,
+        'data-crud-refresh-url': path('app_weekly_meeting_list')
+    }
+}) }}
+    <div class="modal-body">
+        <div class="alert alert-info border-0 rounded-4 mb-4">
+            <div class="fw-semibold mb-1">Invitation automatique</div>
+            <div class="small mb-0">
+                L organisateur est defini automatiquement avec l utilisateur connecte. Les utilisateurs selectionnes recevront un email avec le sujet, la date et l organisateur de la reunion.
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.meetingDate) }}</div>
+            <div class="col-md-6">{{ form_row(form.status) }}</div>
+            <div class="col-md-6">{{ form_row(form.title) }}</div>
+            <div class="col-md-6">{{ form_row(form.teamScope) }}</div>
+            <div class="col-12">{{ form_row(form.attendees) }}</div>
+            <div class="col-12">{{ form_row(form.agenda) }}</div>
+            <div class="col-12">{{ form_row(form.decisions) }}</div>
+            <div class="col-12">{{ form_row(form.actionItems) }}</div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+{{ form_end(form) }}

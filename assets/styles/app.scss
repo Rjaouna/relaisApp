@@ -170,13 +170,15 @@ a {
 }
 
 .app-menu-trigger {
-    width: 3rem;
-    height: 3rem;
+    width: auto;
+    min-height: 3rem;
     border-radius: 0.9rem;
     border: 1px solid rgba($secondary, 0.12);
     background: rgba(255, 255, 255, 0.85);
     color: $dark;
     box-shadow: 0 0.75rem 2rem rgba($dark, 0.06);
+    flex-shrink: 0;
+    max-width: min(100%, 18rem);
 }
 
 .app-menu-trigger:hover,
@@ -188,6 +190,14 @@ a {
 
 .app-menu-trigger i {
     color: $secondary;
+}
+
+.app-menu-trigger .app-user-avatar {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 0.85rem;
+    font-size: 0.82rem;
+    flex-shrink: 0;
 }
 
 .app-main {

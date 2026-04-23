@@ -1,0 +1,44 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Client</th>
+                <th>Satisfaction</th>
+                <th>Ecoute / attentes</th>
+                <th>Suivi</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for satisfaction in satisfactions %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_customer_satisfaction_show', {id: satisfaction.id}) }}">{{ satisfaction.client.name }}</a>
+                        <div class="small text-body-secondary"><a class="text-decoration-none" href="{{ path('app_client_show', {id: satisfaction.client.id}) }}">Voir la fiche client</a></div>
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill {{ satisfaction.satisfactionLevel == 'eleve' ? 'text-bg-success' : (satisfaction.satisfactionLevel == 'moyen' ? 'text-bg-warning' : 'text-bg-danger') }}">{{ satisfaction.satisfactionLevel|title }}</span>
+                        <div class="small text-body-secondary mt-2">{{ satisfaction.status|replace({'_': ' '})|title }}</div>
+                    </td>
+                    <td>
+                        <div>{{ satisfaction.expectationSummary ? (satisfaction.expectationSummary|length > 70 ? satisfaction.expectationSummary|slice(0, 70) ~ '...' : satisfaction.expectationSummary) : 'Aucune attente saisie' }}</div>
+                        <div class="small text-body-secondary">{{ satisfaction.marketListening ? (satisfaction.marketListening|length > 50 ? satisfaction.marketListening|slice(0, 50) ~ '...' : satisfaction.marketListening) : 'Aucune ecoute marche' }}</div>
+                    </td>
+                    <td>
+                        <div class="small text-body-secondary">Livraison souhaitee</div>
+                        <div>{{ satisfaction.deliveryRequestedAt ? satisfaction.deliveryRequestedAt|date('d/m/Y') : 'Non renseignee' }}</div>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_customer_satisfaction_show', {id: satisfaction.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_customer_satisfaction_edit', {id: satisfaction.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_customer_satisfaction_edit', {id: satisfaction.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_customer_satisfaction_delete', {id: satisfaction.id}) }}" data-crud-refresh-url="{{ path('app_customer_satisfaction_list') }}" data-crud-confirm="Supprimer ce suivi de satisfaction ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucun suivi de satisfaction disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

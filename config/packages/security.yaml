@@ -45,9 +45,14 @@ security:
         - { path: ^/tournees, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_COMMERCIAL] }
         - { path: ^/offres, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
         - { path: ^/fournisseurs, roles: [ROLE_ADMIN, ROLE_ACHAT] }
+        - { path: ^/consultations-fournisseurs, roles: [ROLE_ADMIN, ROLE_ACHAT] }
         - { path: ^/imports, roles: [ROLE_ADMIN, ROLE_ACHAT] }
         - { path: ^/produits, roles: [ROLE_ADMIN, ROLE_ACHAT, ROLE_LOGISTIQUE] }
+        - { path: ^/lancements-produits, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_ACHAT] }
         - { path: ^/livraisons, roles: [ROLE_ADMIN, ROLE_LOGISTIQUE] }
+        - { path: ^/retours-terrain, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_COMMERCIAL] }
+        - { path: ^/reunions-commerciales, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
+        - { path: ^/satisfaction-clients, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_COMMERCIAL] }
         - { path: ^/, roles: ROLE_USER }
 
 when@test:

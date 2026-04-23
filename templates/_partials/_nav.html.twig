@@ -14,8 +14,14 @@
             </button>
 
             {% if app.user %}
-                <button class="btn app-menu-trigger d-inline-flex align-items-center justify-content-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#userMenuPanel" aria-controls="userMenuPanel">
-                    <i class="bi bi-sliders2 fs-5"></i>
+                <button class="btn app-menu-trigger d-inline-flex align-items-center gap-3 px-3 py-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#userMenuPanel" aria-controls="userMenuPanel">
+                    <span class="app-user-avatar d-inline-flex align-items-center justify-content-center">
+                        {{ app.user.fullName|split(' ')|map(v => v|first)|join('')|slice(0, 2)|upper }}
+                    </span>
+                    <span class="text-start lh-sm d-none d-lg-block">
+                        <span class="d-block fw-semibold text-dark">{{ app.user.fullName }}</span>
+                        <span class="d-block small text-body-secondary">{{ app.user.roleLabels ?: 'Utilisateur' }}</span>
+                    </span>
                 </button>
             {% endif %}
         </div>
@@ -23,44 +29,35 @@
         <div class="collapse navbar-collapse order-xl-2" id="mainNavigation">
             <ul class="navbar-nav mx-auto mb-3 mb-xl-0 app-nav-menu">
                 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'active' : '' }}" href="{{ path('app_dashboard') }}">
-                            <i class="bi bi-grid-1x2 fs-5"></i>
-                            <span class="small mt-1">Dashboard</span>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') in ['app_dashboard'] or app.request.attributes.get('_route') starts with 'app_stats_' or app.request.attributes.get('_route') starts with 'app_market_' or app.request.attributes.get('_route') starts with 'app_objective_' or app.request.attributes.get('_route') starts with 'app_weekly_meeting_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bar-chart-line fs-5"></i>
+                            <span class="small mt-1">Pilotage</span>
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_stats_' ? 'active' : '' }}" href="{{ path('app_stats_index') }}">
-                            <i class="bi bi-pie-chart fs-5"></i>
-                            <span class="small mt-1">Stat</span>
-                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_dashboard') }}">Dashboard</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_stats_index') }}">Statistiques</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_market_index') }}">Marche</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_objective_index') }}">Objectifs</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_weekly_meeting_index') }}">Reunions</a></li>
+                        </ul>
                     </li>
                 {% endif %}
 
                 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_client_' ? 'active' : '' }}" href="{{ path('app_client_index') }}">
-                            <i class="bi bi-buildings fs-5"></i>
-                            <span class="small mt-1">Clients</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_visit_' ? 'active' : '' }}" href="{{ path('app_visit_index') }}">
-                            <i class="bi bi-calendar-check fs-5"></i>
-                            <span class="small mt-1">Visites</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_offer_' ? 'active' : '' }}" href="{{ path('app_offer_index') }}">
-                            <i class="bi bi-receipt fs-5"></i>
-                            <span class="small mt-1">Offres</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_commercial_' ? 'active' : '' }}" href="{{ path('app_commercial_index') }}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_client_' or app.request.attributes.get('_route') starts with 'app_visit_' or app.request.attributes.get('_route') starts with 'app_commercial_' or app.request.attributes.get('_route') starts with 'app_offer_' or app.request.attributes.get('_route') starts with 'app_field_feedback_' or app.request.attributes.get('_route') starts with 'app_customer_satisfaction_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-people fs-5"></i>
-                            <span class="small mt-1">Commerciaux</span>
+                            <span class="small mt-1">Commercial</span>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_client_index') }}">Clients</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_commercial_index') }}">Commerciaux</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_visit_index') }}">Visites</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_offer_index') }}">Offres</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_field_feedback_index') }}">Retours terrain</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_customer_satisfaction_index') }}">Satisfaction</a></li>
+                        </ul>
                     </li>
                 {% endif %}
 
@@ -73,48 +70,21 @@
                     </li>
                 {% endif %}
 
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_market_' ? 'active' : '' }}" href="{{ path('app_market_index') }}">
-                            <i class="bi bi-bar-chart fs-5"></i>
-                            <span class="small mt-1">Marche</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_objective_' ? 'active' : '' }}" href="{{ path('app_objective_index') }}">
-                            <i class="bi bi-bullseye fs-5"></i>
-                            <span class="small mt-1">Objectifs</span>
-                        </a>
-                    </li>
-                {% endif %}
-
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_offer_' ? 'active' : '' }}" href="{{ path('app_offer_index') }}">
-                            <i class="bi bi-receipt fs-5"></i>
-                            <span class="small mt-1">Offres</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_supplier_' ? 'active' : '' }}" href="{{ path('app_supplier_index') }}">
-                            <i class="bi bi-box-seam fs-5"></i>
-                            <span class="small mt-1">Fournisseurs</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_product_' ? 'active' : '' }}" href="{{ path('app_product_index') }}">
-                            <i class="bi bi-capsule-pill fs-5"></i>
-                            <span class="small mt-1">Produits</span>
-                        </a>
-                    </li>
-                {% endif %}
-
                 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_ACHAT') %}
-                    <li class="nav-item">
-                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_supply_order_' ? 'active' : '' }}" href="{{ path('app_supply_order_index') }}">
-                            <i class="bi bi-truck fs-5"></i>
-                            <span class="small mt-1">Imports</span>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_supplier_' or app.request.attributes.get('_route') starts with 'app_supplier_consultation_' or app.request.attributes.get('_route') starts with 'app_product_' or app.request.attributes.get('_route') starts with 'app_supply_order_' or app.request.attributes.get('_route') starts with 'app_product_launch_project_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam fs-5"></i>
+                            <span class="small mt-1">Achats</span>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
+                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
+                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supplier_index') }}">Fournisseurs</a></li>
+                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_product_index') }}">Produits</a></li>
+                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_product_launch_project_index') }}">Lancements</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supplier_consultation_index') }}">Consultations</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supply_order_index') }}">Imports</a></li>
+                        </ul>
                     </li>
                 {% endif %}
 
@@ -124,6 +94,22 @@
                             <i class="bi bi-truck-flatbed fs-5"></i>
                             <span class="small mt-1">Livraisons</span>
                         </a>
+                    </li>
+                {% endif %}
+
+                {% if is_granted('ROLE_ADMIN') %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_settings_' or app.request.attributes.get('_route') starts with 'app_user_' or app.request.attributes.get('_route') starts with 'app_city_' or app.request.attributes.get('_route') starts with 'app_zone_' or app.request.attributes.get('_route') starts with 'app_reference_option_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sliders fs-5"></i>
+                            <span class="small mt-1">Parametrage</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_settings_index') }}">Vue generale</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_user_index') }}">Utilisateurs</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_city_index') }}">Villes</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_zone_index') }}">Zones</a></li>
+                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_reference_option_index') }}">Choix</a></li>
+                        </ul>
                     </li>
                 {% endif %}
             </ul>
@@ -151,21 +137,11 @@
                         <div class="small text-body-secondary text-break">{{ app.user.userIdentifier }}</div>
                     </div>
                 </div>
-                <div class="small text-body-secondary">Roles actifs</div>
-                <div class="fw-semibold">{{ app.user.roles|join(' • ') }}</div>
+                <div class="small text-body-secondary">Role</div>
+                <div class="fw-semibold">{{ app.user.roleLabels ?: 'Utilisateur' }}</div>
             </div>
 
             <div class="d-grid gap-3">
-                {% if is_granted('ROLE_ADMIN') %}
-                    <a href="{{ path('app_settings_index') }}" class="app-user-panel-link">
-                        <span class="app-user-panel-icon"><i class="bi bi-sliders"></i></span>
-                        <span>
-                            <span class="d-block fw-semibold">Parametrage</span>
-                            <span class="small text-body-secondary">Villes, zones et choix de reference</span>
-                        </span>
-                    </a>
-                {% endif %}
-
                 <a href="{{ path('app_home') }}" class="app-user-panel-link">
                     <span class="app-user-panel-icon"><i class="bi bi-house-door"></i></span>
                     <span>

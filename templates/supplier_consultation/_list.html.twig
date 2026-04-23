@@ -1,0 +1,52 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Besoin</th>
+                <th>Fournisseur</th>
+                <th>Delai</th>
+                <th>Suivi</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for consultation in consultations %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none" href="{{ path('app_supplier_consultation_show', {id: consultation.id}) }}">{{ consultation.needTitle }}</a>
+                        <div class="small text-body-secondary">{{ consultation.needDetails|length > 90 ? consultation.needDetails|slice(0, 90) ~ '...' : consultation.needDetails }}</div>
+                    </td>
+                    <td>
+                        {% if consultation.supplier %}
+                            <a class="text-decoration-none" href="{{ path('app_supplier_show', {id: consultation.supplier.id}) }}">{{ consultation.supplier.name }}</a>
+                        {% else %}
+                            <span class="text-body-secondary">Non rattache</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ consultation.expectedDelay ?: 'A preciser' }}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill text-bg-light">{{ consultation.status|replace({'_': ' '})|title }}</span>
+                            <span class="badge rounded-pill {{ consultation.sampleStatus == 'non_conforme' ? 'text-bg-danger' : 'text-bg-light' }}">{{ consultation.sampleStatus|replace({'_': ' '})|title }}</span>
+                            {% if consultation.selectedSupplier %}
+                                <span class="badge rounded-pill text-bg-success">Retenu</span>
+                            {% endif %}
+                        </div>
+                        {% if consultation.quotedAmount %}
+                            <div class="small text-body-secondary mt-2">Devis {{ consultation.quotedAmount }} MAD{% if consultation.negotiatedAmount %} · Negocie {{ consultation.negotiatedAmount }} MAD{% endif %}</div>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_supplier_consultation_show', {id: consultation.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
+                            <a href="{{ path('app_supplier_consultation_edit', {id: consultation.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_supplier_consultation_edit', {id: consultation.id}) }}">Editer</a>
+                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_supplier_consultation_delete', {id: consultation.id}) }}" data-crud-refresh-url="{{ path('app_supplier_consultation_list') }}" data-crud-confirm="Supprimer cette consultation fournisseur ?">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center py-4 text-body-secondary">Aucune consultation fournisseur disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

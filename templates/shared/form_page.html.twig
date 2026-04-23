@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edition{% endblock %}
+
+{% block body %}
+    <div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+        {{ include(form_partial, { form: form, entity: entity }) }}
+    </div>
+{% endblock %}

@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\Commercial;
 use App\Entity\Objective;
 use App\Form\ObjectiveType;
 use App\Service\ObjectiveCrudService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,10 +37,24 @@ class ObjectiveController extends AbstractController
         ]);
     }
 
+    #[Route('/context/{id}', name: 'context', methods: ['GET'])]
+    public function context(Commercial $commercial, Request $request): JsonResponse
+    {
+        return $this->json(
+            $this->objectiveCrudService->getPlanningContext(
+                $commercial,
+                $request->query->get('period')
+            )
+        );
+    }
+
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
-        return $this->handleForm($request, new Objective());
+        $objective = new Objective();
+        $objective->setPeriodLabel($this->objectiveCrudService->getSuggestedPeriodLabel());
+
+        return $this->handleForm($request, $objective);
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
@@ -67,10 +83,24 @@ class ObjectiveController extends AbstractController
     {
         $form = $this->createForm(ObjectiveType::class, $objective);
         $form->handleRequest($request);
+        $saveSucceeded = false;
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->objectiveCrudService->save($objective);
+            try {
+                $this->objectiveCrudService->save($objective);
+                $saveSucceeded = true;
+            } catch (\DomainException $exception) {
+                $form->get('periodLabel')->addError(new FormError($exception->getMessage()));
+            }
+        }
 
+        $planningContext = $this->objectiveCrudService->getPlanningContext(
+            $objective->getCommercial(),
+            $objective->getPeriodLabel(),
+            $objective
+        );
+
+        if ($saveSucceeded) {
             return $request->isXmlHttpRequest()
                 ? $this->json(['success' => true])
                 : $this->redirectToRoute('app_objective_show', ['id' => $objective->getId()]);
@@ -83,6 +113,7 @@ class ObjectiveController extends AbstractController
                     'form' => $this->renderView('objective/_form.html.twig', [
                         'form' => $form,
                         'objective' => $objective,
+                        'planningContext' => $planningContext,
                     ]),
                 ]);
             }
@@ -90,12 +121,14 @@ class ObjectiveController extends AbstractController
             return new Response($this->renderView('objective/_form.html.twig', [
                 'form' => $form,
                 'objective' => $objective,
+                'planningContext' => $planningContext,
             ]));
         }
 
         return $this->render('objective/form_page.html.twig', [
             'form' => $form,
             'objective' => $objective,
+            'planningContext' => $planningContext,
         ]);
     }
 }

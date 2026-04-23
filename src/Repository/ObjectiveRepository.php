@@ -29,4 +29,43 @@ class ObjectiveRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findOneForCommercialAndPeriod(Commercial $commercial, string $periodLabel, ?int $excludedId = null): ?Objective
+    {
+        $queryBuilder = $this->createQueryBuilder('objective')
+            ->andWhere('objective.commercial = :commercial')
+            ->andWhere('LOWER(objective.periodLabel) = :periodLabel')
+            ->setParameter('commercial', $commercial)
+            ->setParameter('periodLabel', mb_strtolower(trim($periodLabel)));
+
+        if ($excludedId !== null) {
+            $queryBuilder
+                ->andWhere('objective.id != :excludedId')
+                ->setParameter('excludedId', $excludedId);
+        }
+
+        return $queryBuilder
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findLatestForCommercial(Commercial $commercial, ?int $excludedId = null): ?Objective
+    {
+        $queryBuilder = $this->createQueryBuilder('objective')
+            ->andWhere('objective.commercial = :commercial')
+            ->setParameter('commercial', $commercial)
+            ->orderBy('objective.id', 'DESC');
+
+        if ($excludedId !== null) {
+            $queryBuilder
+                ->andWhere('objective.id != :excludedId')
+                ->setParameter('excludedId', $excludedId);
+        }
+
+        return $queryBuilder
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

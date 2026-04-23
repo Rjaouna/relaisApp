@@ -17,11 +17,21 @@ class ObjectiveType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('periodLabel', TextType::class, ['label' => 'Periode'])
+            ->add('periodLabel', TextType::class, [
+                'label' => 'Periode',
+                'attr' => [
+                    'placeholder' => 'Ex. Avril 2026',
+                    'data-objective-period' => 'true',
+                ],
+                'help' => 'Utilise une periode lisible comme Avril 2026.',
+            ])
             ->add('commercial', EntityType::class, [
                 'class' => Commercial::class,
                 'choice_label' => 'fullName',
                 'label' => 'Commercial',
+                'attr' => [
+                    'data-objective-commercial' => 'true',
+                ],
             ])
             ->add('salesTarget', IntegerType::class, ['label' => 'Objectif CA'])
             ->add('visitsTarget', IntegerType::class, ['label' => 'Objectif visites'])

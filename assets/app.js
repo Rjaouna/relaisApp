@@ -1,4 +1,3 @@
-import './stimulus_bootstrap.js';
 
 const getModalElement = () => document.getElementById('crud-modal');
 
@@ -748,6 +747,26 @@ const bindFlashAlerts = () => {
     });
 };
 
+const resetNavigationOverlays = () => {
+    document.querySelectorAll('.dropdown-toggle').forEach((toggle) => {
+        const instance = bootstrap.Dropdown.getInstance(toggle);
+        instance?.hide();
+        toggle.setAttribute('aria-expanded', 'false');
+    });
+
+    document.querySelectorAll('.dropdown-menu.show').forEach((menu) => {
+        menu.classList.remove('show');
+    });
+
+    document.querySelectorAll('.offcanvas.show').forEach((panel) => {
+        bootstrap.Offcanvas.getInstance(panel)?.hide();
+    });
+
+    document.querySelectorAll('.navbar-collapse.show').forEach((collapseElement) => {
+        bootstrap.Collapse.getInstance(collapseElement)?.hide();
+    });
+};
+
 const parseMoney = (value) => {
     const normalized = String(value ?? '')
         .replace(/\s/g, '')
@@ -867,6 +886,116 @@ const bindOfferItems = (scope = document) => {
     updateOfferTotal(scope);
 };
 
+const renderObjectiveContext = (form, context) => {
+    const panel = form.querySelector('[data-objective-context-panel]');
+    if (!panel) {
+        return;
+    }
+
+    const duplicateAlert = panel.querySelector('[data-objective-duplicate]');
+    const emptyMessage = panel.querySelector('[data-objective-empty]');
+
+    if (!context?.ready) {
+        if (emptyMessage) {
+            emptyMessage.textContent = context?.message || 'Selectionne un commercial.';
+            emptyMessage.classList.remove('d-none');
+        }
+        panel.querySelectorAll('[data-objective-clients],[data-objective-visits],[data-objective-load],[data-objective-reco-sales],[data-objective-reco-visits],[data-objective-reco-new-clients],[data-objective-last-sales],[data-objective-last-visits],[data-objective-last-new-clients]').forEach((node) => {
+            node.textContent = '--';
+        });
+        if (duplicateAlert) {
+            duplicateAlert.classList.add('d-none');
+        }
+        return;
+    }
+
+    if (emptyMessage) {
+        emptyMessage.classList.add('d-none');
+    }
+
+    const setText = (selector, value) => {
+        const element = panel.querySelector(selector);
+        if (element) {
+            element.textContent = value ?? '--';
+        }
+    };
+
+    setText('[data-objective-clients]', context.commercial?.clientsAssigned ?? '--');
+    setText('[data-objective-visits]', context.commercial?.plannedVisits ?? '--');
+    setText('[data-objective-load]', context.commercial?.load ?? '--');
+    setText('[data-objective-reco-sales]', context.recommendedTargets?.salesTarget ?? '--');
+    setText('[data-objective-reco-visits]', context.recommendedTargets?.visitsTarget ?? '--');
+    setText('[data-objective-reco-new-clients]', context.recommendedTargets?.newClientsTarget ?? '--');
+
+    const lastObjective = context.lastObjective;
+    const lastEmpty = panel.querySelector('[data-objective-last-empty]');
+    if (lastObjective) {
+        setText('[data-objective-last-sales]', lastObjective.salesTarget ?? '--');
+        setText('[data-objective-last-visits]', lastObjective.visitsTarget ?? '--');
+        setText('[data-objective-last-new-clients]', lastObjective.newClientsTarget ?? '--');
+        if (lastEmpty) {
+            lastEmpty.classList.add('d-none');
+        }
+    } else if (lastEmpty) {
+        lastEmpty.classList.remove('d-none');
+    }
+
+    if (duplicateAlert) {
+        duplicateAlert.textContent = context.duplicateMessage || '';
+        duplicateAlert.classList.toggle('d-none', !context.duplicate);
+    }
+};
+
+const loadObjectiveContext = async (form) => {
+    const template = form.dataset.objectiveContextUrlTemplate;
+    const commercialField = form.querySelector('[data-objective-commercial]');
+    const periodField = form.querySelector('[data-objective-period]');
+
+    if (!template || !commercialField?.value) {
+        renderObjectiveContext(form, {
+            ready: false,
+            message: 'Selectionne un commercial pour afficher sa charge actuelle et ses reperes.',
+        });
+        return;
+    }
+
+    const query = new URLSearchParams();
+    if (periodField?.value) {
+        query.set('period', periodField.value);
+    }
+
+    const response = await fetch(`${template.replace('__COMMERCIAL__', commercialField.value)}?${query.toString()}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Unable to load objective context.');
+    }
+
+    renderObjectiveContext(form, await response.json());
+};
+
+const bindObjectivePlanning = (scope = document) => {
+    const form = scope.querySelector('[data-objective-context-url-template]');
+    const commercialField = form?.querySelector('[data-objective-commercial]');
+    const periodField = form?.querySelector('[data-objective-period]');
+
+    if (!form || !commercialField || !periodField || form.dataset.objectivePlanningBound === 'true') {
+        return;
+    }
+
+    const sync = async () => {
+        await loadObjectiveContext(form);
+    };
+
+    commercialField.addEventListener('change', sync);
+    periodField.addEventListener('input', sync);
+    form.dataset.objectivePlanningBound = 'true';
+    void sync();
+};
+
 const openCrudModal = async (url) => {
     const response = await fetch(url, {
         headers: {
@@ -888,6 +1017,7 @@ const openCrudModal = async (url) => {
     bindVisitStatusLock(modalBody);
     bindVisitClientPrefill(modalBody);
     bindOfferItems(modalBody);
+    bindObjectivePlanning(modalBody);
     getModalInstance()?.show();
 };
 
@@ -920,6 +1050,7 @@ const submitCrudForm = async (form) => {
             bindVisitStatusLock(modalBody);
             bindVisitClientPrefill(modalBody);
             bindOfferItems(modalBody);
+            bindObjectivePlanning(modalBody);
         }
 
         return;
@@ -1122,4 +1253,19 @@ document.addEventListener('DOMContentLoaded', () => {
     bindLiveSearch();
     bindOfferItems(document);
     bindFlashAlerts();
+    bindObjectivePlanning(document);
+});
+
+document.addEventListener('turbo:before-cache', () => {
+    resetNavigationOverlays();
+});
+
+document.addEventListener('turbo:load', () => {
+    bindZoneCodeAutofill(document);
+    bindVisitStatusLock(document);
+    bindVisitClientPrefill(document);
+    bindOfferItems(document);
+    bindFlashAlerts();
+    bindObjectivePlanning(document);
+    resetNavigationOverlays();
 });
