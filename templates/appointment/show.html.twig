@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detail rendez-vous{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-2">Fiche rendez-vous</div>
+            <h1 class="h2 mb-1">{{ appointment.client.name }}</h1>
+            <p class="text-body-secondary mb-0">{{ appointment.scheduledAt|date('d/m/Y H:i') }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_appointment_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
+            {% if appointment.visit %}
+                <a href="{{ path('app_visit_show', {id: appointment.visit.id}) }}" class="btn btn-primary rounded-pill px-4">Voir la visite source</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Client</dt>
+                        <dd class="col-sm-8">{{ appointment.client.name }}</dd>
+                        <dt class="col-sm-4">Commercial</dt>
+                        <dd class="col-sm-8">{{ appointment.commercial.fullName }}</dd>
+                        <dt class="col-sm-4">Date du RDV</dt>
+                        <dd class="col-sm-8">{{ appointment.scheduledAt|date('d/m/Y H:i') }}</dd>
+                        <dt class="col-sm-4">Statut</dt>
+                        <dd class="col-sm-8">{{ appointment.status|replace({'_': ' '})|title }}</dd>
+                        <dt class="col-sm-4">Sujet</dt>
+                        <dd class="col-sm-8">{{ appointment.subject ?: 'Rendez-vous commercial' }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-5 h-100">
+                <div class="card-body p-4">
+                    <div class="text-body-secondary small text-uppercase mb-2">Contexte client</div>
+                    <div class="fw-semibold mb-2">{{ appointment.client.city }}</div>
+                    <div class="text-body-secondary mb-3">{{ appointment.client.address ?: 'Adresse non renseignee' }}</div>
+                    {% if appointment.client.phone %}
+                        <div class="small text-body-secondary">Telephone</div>
+                        <div class="fw-semibold">{{ appointment.client.phone }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

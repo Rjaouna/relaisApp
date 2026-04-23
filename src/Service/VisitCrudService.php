@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Client;
 use App\Entity\Visit;
+use App\Repository\ClientRepository;
 use App\Repository\VisitRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -12,17 +13,77 @@ class VisitCrudService
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly VisitRepository $visitRepository,
+        private readonly ClientRepository $clientRepository,
         private readonly ObjectivePerformanceService $objectivePerformanceService,
+        private readonly AppointmentCrudService $appointmentCrudService,
     ) {
     }
 
     public function getListing(): array
     {
-        return $this->visitRepository->findBy([], ['scheduledAt' => 'DESC']);
+        return $this->visitRepository->findForListing();
+    }
+
+    public function getArchivedListing(): array
+    {
+        return $this->visitRepository->findForListing(true);
+    }
+
+    /**
+     * @return Client[]
+     */
+    public function getClientsAvailableForPlanning(): array
+    {
+        return $this->clientRepository->findAvailableForVisitPlanning();
+    }
+
+    /**
+     * @param int[] $clientIds
+     *
+     * @return array{created:int, skipped:int}
+     */
+    public function createBatch(array $clientIds): array
+    {
+        $created = 0;
+        $skipped = 0;
+        $availableClients = [];
+
+        foreach ($this->getClientsAvailableForPlanning() as $client) {
+            if ($client->getId() !== null) {
+                $availableClients[$client->getId()] = $client;
+            }
+        }
+
+        foreach (array_unique(array_map('intval', $clientIds)) as $clientId) {
+            $client = $availableClients[$clientId] ?? null;
+            if (!$client instanceof Client) {
+                ++$skipped;
+                continue;
+            }
+
+            $visit = new Visit();
+            $visit->setClient($client);
+            $visit->setScheduledAt($visit->getCreatedAt());
+            $visit->touch();
+
+            $this->entityManager->persist($visit);
+            ++$created;
+        }
+
+        $this->entityManager->flush();
+
+        return [
+            'created' => $created,
+            'skipped' => $skipped,
+        ];
     }
 
     public function save(Visit $visit): void
     {
+        if (!$visit->getScheduledAt() instanceof \DateTimeImmutable) {
+            $visit->setScheduledAt($visit->getCreatedAt());
+        }
+
         if (
             $visit->getClient() !== null
             && $visit->getStatus() === Visit::STATUS_PLANNED
@@ -34,6 +95,14 @@ class VisitCrudService
         // Once a visit outcome is captured, the visit is considered completed.
         if ($visit->getResult() !== null) {
             $visit->setStatus(Visit::STATUS_COMPLETED);
+            $visit
+                ->setAdminReviewStatus(Visit::REVIEW_PENDING)
+                ->setAdminReviewComment(null)
+                ->setAdminReviewedAt(null);
+        }
+
+        if ($visit->getResult() === Visit::RESULT_APPOINTMENT_BOOKED) {
+            $this->appointmentCrudService->validateNoConflictForVisit($visit);
         }
 
         $this->synchronizeClientStatusFromVisitResult($visit);
@@ -47,11 +116,35 @@ class VisitCrudService
 
         $visit->touch();
         $this->entityManager->persist($visit);
+        $this->appointmentCrudService->syncFromVisit($visit);
         $this->entityManager->flush();
 
-        $this->objectivePerformanceService->syncObjectivesForCommercialAtDate(
-            $visit->getClient()?->getAssignedCommercial(),
-            $visit->getScheduledAt()
+        $this->objectivePerformanceService->syncAllObjectivesForCommercial(
+            $visit->getClient()?->getAssignedCommercial()
+        );
+    }
+
+    public function review(Visit $visit, string $decision, ?string $comment): void
+    {
+        if (!in_array($decision, [Visit::REVIEW_VALIDATED, Visit::REVIEW_REJECTED], true)) {
+            throw new \LogicException('Decision de controle invalide.');
+        }
+
+        if ($visit->getResult() === null || $visit->getStatus() !== Visit::STATUS_COMPLETED) {
+            throw new \LogicException('Seules les visites renseignees peuvent etre controlees.');
+        }
+
+        $visit
+            ->setAdminReviewStatus($decision)
+            ->setAdminReviewComment($comment ?: null)
+            ->setAdminReviewedAt(new \DateTimeImmutable());
+
+        $visit->touch();
+        $this->entityManager->persist($visit);
+        $this->entityManager->flush();
+
+        $this->objectivePerformanceService->syncAllObjectivesForCommercial(
+            $visit->getClient()?->getAssignedCommercial()
         );
     }
 
@@ -59,6 +152,20 @@ class VisitCrudService
     {
         $this->entityManager->remove($visit);
         $this->entityManager->flush();
+    }
+
+    /**
+     * @param Visit[] $visits
+     */
+    public function archiveVisits(array $visits): void
+    {
+        $archivedAt = new \DateTimeImmutable();
+
+        foreach ($visits as $visit) {
+            $visit->setArchivedAt($archivedAt);
+            $visit->touch();
+            $this->entityManager->persist($visit);
+        }
     }
 
     public function getLatestForClient(Client $client, ?int $excludedVisitId = null): ?Visit

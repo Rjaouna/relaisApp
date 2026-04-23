@@ -18,9 +18,14 @@
                 </div>
                 {% if not commercial_mode %}
                     <div class="d-flex gap-2 flex-wrap">
-                        <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#tour-generation-filters" aria-expanded="false" aria-controls="tour-generation-filters">
-                            <i class="bi bi-sliders me-2"></i>Generer automatiquement
-                        </button>
+                        <form method="post" action="{{ path('app_tour_generate') }}">
+                            {% for value in tourGenerationSelectedStatuses %}
+                                <input type="hidden" name="client_statuses[]" value="{{ value }}">
+                            {% endfor %}
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="bi bi-sliders me-2"></i>Preparer la generation
+                            </button>
+                        </form>
                         <a href="{{ path('app_tour_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_tour_new') }}"><i class="bi bi-plus-lg me-2"></i>Ajouter</a>
                     </div>
                 {% endif %}
@@ -28,45 +33,12 @@
         </div>
     </div>
 
-    {% if not commercial_mode %}
-        <div class="collapse mb-4" id="tour-generation-filters">
-            <div class="card border-0 shadow-sm rounded-5">
-                <div class="card-body p-4">
-                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
-                        <div class="pe-lg-4">
-                            <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Generation ciblee</span>
-                            <h2 class="h4 mb-2">Choisir les statuts client a inclure</h2>
-                            <p class="text-body-secondary mb-0">La generation peut concerner tous les clients, mais tu peux maintenant filtrer par statut pour separer prospection, suivi ou portefeuille actif.</p>
-                        </div>
-                        <form method="post" action="{{ path('app_tour_generate') }}" class="flex-grow-1">
-                            <div class="row g-3 mb-3">
-                                {% for label, value in tourGenerationStatusChoices %}
-                                    <div class="col-md-6 col-xl-3">
-                                        <label class="card border-0 shadow-sm rounded-4 h-100">
-                                            <div class="card-body d-flex align-items-center gap-3">
-                                                <input class="form-check-input mt-0" type="checkbox" name="client_statuses[]" value="{{ value }}" {{ value in tourGenerationSelectedStatuses ? 'checked' : '' }}>
-                                                <div>
-                                                    <div class="fw-semibold">{{ label }}</div>
-                                                    <div class="small text-body-secondary">{{ tourGenerationStatusHelp[value]|default('Selectionne ce statut pour l inclure dans la generation.') }}</div>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-signpost-split me-2"></i>Lancer la generation
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-
-    <div class="card border-0 shadow-sm rounded-5 overflow-hidden" data-list-search-scope>
+    <div
+        class="card border-0 shadow-sm rounded-5 overflow-hidden"
+        data-list-search-scope
+        data-tour-live-refresh-url="{{ path('app_tour_list') }}"
+        data-tour-live-refresh-interval="{{ commercial_mode ? '15000' : '10000' }}"
+    >
         {% include '_partials/_listing_search.html.twig' with { placeholder: commercial_mode ? 'Rechercher une tournee...' : 'Rechercher une tournee, une ville ou un commercial...' } %}
         <div class="card-body p-0" data-crud-list>
             {% include 'tour/_list.html.twig' with { tours: tours } %}

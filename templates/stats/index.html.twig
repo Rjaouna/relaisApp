@@ -68,83 +68,43 @@
             </div>
         </div>
 
+        {% set chartCards = [
+            { id: 'clientsStatusChart', kicker: 'Clients', title: 'Repartition par statut', type: 'doughnut' },
+            { id: 'clientsTypeChart', kicker: 'Clients', title: 'Repartition par type', type: 'bar' },
+            { id: 'visitsStatusChart', kicker: 'Visites', title: 'Etat global des visites', type: 'bar' },
+            { id: 'visitsResultChart', kicker: 'Visites', title: 'Resultats des visites', type: 'doughnut' },
+            { id: 'visitsTypeChart', kicker: 'Visites', title: 'Types de visites', type: 'bar' },
+            { id: 'visitsPriorityChart', kicker: 'Visites', title: 'Priorites de visites', type: 'polarArea' },
+            { id: 'visitsByCommercialChart', kicker: 'Equipe', title: 'Visites par commercial', type: 'bar' },
+            { id: 'visitsByCityChart', kicker: 'Terrain', title: 'Visites par ville', type: 'bar' },
+            { id: 'toursStatusChart', kicker: 'Tournees', title: 'Etat des tournees', type: 'polarArea' },
+            { id: 'toursByCommercialChart', kicker: 'Tournees', title: 'Tournees par commercial', type: 'bar' },
+            { id: 'topClientsByVisitsChart', kicker: 'Clients', title: 'Clients les plus visites', type: 'bar' },
+            { id: 'marketsScoreChart', kicker: 'Marche', title: 'Top zones par score', type: 'bar' },
+            { id: 'monthlyRevenueChart', kicker: 'Revenu', title: "Evolution du chiffre d'affaires", type: 'line', wide: true },
+            { id: 'monthlyActivityChart', kicker: 'Activite', title: 'Rythme des visites et tournees', type: 'line', wide: true },
+        ] %}
+
         <div class="row g-3">
-            <div class="col-xl-3">
-                <div class="card border-0 h-100">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <div class="app-section-kicker text-secondary mb-1">Clients</div>
-                                <h2 class="h5 mb-0">Repartition par statut</h2>
+            {% for chart in chartCards %}
+                <div class="{{ chart.wide is defined and chart.wide ? 'col-xl-6' : 'col-xl-3 col-md-6' }}">
+                    <div class="card border-0 h-100">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <div class="app-section-kicker text-secondary mb-1">{{ chart.kicker }}</div>
+                                    <h2 class="h5 mb-0">{{ chart.title }}</h2>
+                                </div>
                             </div>
-                        </div>
-                        <div class="app-stats-chart-wrap">
-                            <canvas id="clientsStatusChart"></canvas>
+                            <div class="app-stats-chart-wrap">
+                                <canvas id="{{ chart.id }}"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-xl-3">
-                <div class="card border-0 h-100">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <div class="app-section-kicker text-secondary mb-1">Visites</div>
-                                <h2 class="h5 mb-0">Etat global des visites</h2>
-                            </div>
-                        </div>
-                        <div class="app-stats-chart-wrap">
-                            <canvas id="visitsStatusChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3">
-                <div class="card border-0 h-100">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <div class="app-section-kicker text-secondary mb-1">Revenu</div>
-                                <h2 class="h5 mb-0">Evolution du chiffre d'affaires</h2>
-                            </div>
-                        </div>
-                        <div class="app-stats-chart-wrap">
-                            <canvas id="monthlyRevenueChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3">
-                <div class="card border-0 h-100">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <div class="app-section-kicker text-secondary mb-1">Tournees</div>
-                                <h2 class="h5 mb-0">Etat des tournees</h2>
-                            </div>
-                        </div>
-                        <div class="app-stats-chart-wrap">
-                            <canvas id="toursStatusChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3">
-                <div class="card border-0 h-100">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <div class="app-section-kicker text-secondary mb-1">Marche</div>
-                                <h2 class="h5 mb-0">Top zones par score</h2>
-                            </div>
-                        </div>
-                        <div class="app-stats-chart-wrap">
-                            <canvas id="marketsScoreChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-9">
+            {% endfor %}
+
+            <div class="col-xl-12">
                 <div class="card border-0 h-100">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -192,6 +152,7 @@
     {{ parent() }}
     <script>
         window.rmStatsCharts = window.rmStatsCharts || {};
+        window.rmStatsChartBooted = window.rmStatsChartBooted || false;
 
         const loadChartLibrary = () => new Promise((resolve, reject) => {
             if (typeof Chart !== 'undefined') {
@@ -225,10 +186,13 @@
                 secondary: '#2d6464',
                 dark: '#111827',
                 soft: 'rgba(75, 194, 196, 0.18)',
+                softStrong: 'rgba(75, 194, 196, 0.7)',
                 success: '#1b8e74',
                 warning: '#c67d10',
                 danger: '#dc3545',
-                slate: '#7b8a8b'
+                slate: '#7b8a8b',
+                muted: '#d4ddde',
+                aqua: '#86dbdd'
             };
 
             const createChart = (id, config) => {
@@ -244,12 +208,28 @@
                 window.rmStatsCharts[id] = new Chart(element, config);
             };
 
+            const defaultScales = {
+                x: {
+                    ticks: { color: chartPalette.dark, font: { size: 11 } },
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0, color: chartPalette.dark, font: { size: 11 } },
+                    grid: { color: 'rgba(17, 24, 39, 0.08)' }
+                }
+            };
+
             try {
                 await loadChartLibrary();
             } catch (error) {
                 console.error(error);
                 return;
             }
+
+            Chart.defaults.font.family = 'Segoe UI, sans-serif';
+            Chart.defaults.color = chartPalette.dark;
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
 
             createChart('clientsStatusChart', {
                 type: 'doughnut',
@@ -267,6 +247,23 @@
                 }
             });
 
+            createChart('clientsTypeChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.clients_by_type.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.clients_by_type.values|json_encode|raw }},
+                        backgroundColor: [chartPalette.primary, chartPalette.secondary, chartPalette.success, chartPalette.warning],
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: defaultScales
+                }
+            });
+
             createChart('visitsStatusChart', {
                 type: 'bar',
                 data: {
@@ -280,28 +277,105 @@
                 options: {
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                    scales: defaultScales
                 }
             });
 
-            createChart('monthlyRevenueChart', {
-                type: 'line',
+            createChart('visitsResultChart', {
+                type: 'doughnut',
                 data: {
-                    labels: {{ stats.charts.monthly_revenue.labels|json_encode|raw }},
+                    labels: {{ stats.charts.visits_by_result.labels|json_encode|raw }},
                     datasets: [{
-                        data: {{ stats.charts.monthly_revenue.values|json_encode|raw }},
-                        borderColor: chartPalette.secondary,
-                        backgroundColor: chartPalette.soft,
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: chartPalette.primary,
-                        pointBorderWidth: 0
+                        data: {{ stats.charts.visits_by_result.values|json_encode|raw }},
+                        backgroundColor: [
+                            chartPalette.slate,
+                            chartPalette.danger,
+                            chartPalette.primary,
+                            chartPalette.warning,
+                            chartPalette.success,
+                            chartPalette.secondary
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            createChart('visitsTypeChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.visits_by_type.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.visits_by_type.values|json_encode|raw }},
+                        backgroundColor: chartPalette.secondary,
+                        borderRadius: 10
                     }]
                 },
                 options: {
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+                    scales: defaultScales
+                }
+            });
+
+            createChart('visitsPriorityChart', {
+                type: 'polarArea',
+                data: {
+                    labels: {{ stats.charts.visits_by_priority.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.visits_by_priority.values|json_encode|raw }},
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.75)',
+                            'rgba(75, 194, 196, 0.75)',
+                            'rgba(123, 138, 139, 0.75)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            createChart('visitsByCommercialChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.visits_by_commercial.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.visits_by_commercial.values|json_encode|raw }},
+                        backgroundColor: chartPalette.primary,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: defaultScales.y,
+                        y: defaultScales.x
+                    }
+                }
+            });
+
+            createChart('visitsByCityChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.visits_by_city.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.visits_by_city.values|json_encode|raw }},
+                        backgroundColor: chartPalette.aqua,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: defaultScales
                 }
             });
 
@@ -326,6 +400,103 @@
                 }
             });
 
+            createChart('toursByCommercialChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.tours_by_commercial.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.tours_by_commercial.values|json_encode|raw }},
+                        backgroundColor: chartPalette.secondary,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: defaultScales
+                }
+            });
+
+            createChart('topClientsByVisitsChart', {
+                type: 'bar',
+                data: {
+                    labels: {{ stats.charts.top_clients_by_visits.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.top_clients_by_visits.values|json_encode|raw }},
+                        backgroundColor: chartPalette.softStrong,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: defaultScales.y,
+                        y: defaultScales.x
+                    }
+                }
+            });
+
+            createChart('monthlyRevenueChart', {
+                type: 'line',
+                data: {
+                    labels: {{ stats.charts.monthly_revenue.labels|json_encode|raw }},
+                    datasets: [{
+                        data: {{ stats.charts.monthly_revenue.values|json_encode|raw }},
+                        borderColor: chartPalette.secondary,
+                        backgroundColor: chartPalette.soft,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: chartPalette.primary,
+                        pointBorderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: defaultScales
+                }
+            });
+
+            createChart('monthlyActivityChart', {
+                type: 'line',
+                data: {
+                    labels: {{ stats.charts.monthly_activity.labels|json_encode|raw }},
+                    datasets: [
+                        {
+                            label: 'Visites prevues',
+                            data: {{ stats.charts.monthly_activity.datasets[0].values|json_encode|raw }},
+                            borderColor: chartPalette.primary,
+                            backgroundColor: 'rgba(75, 194, 196, 0.16)',
+                            tension: 0.35,
+                            fill: false
+                        },
+                        {
+                            label: 'Visites realisees',
+                            data: {{ stats.charts.monthly_activity.datasets[1].values|json_encode|raw }},
+                            borderColor: chartPalette.success,
+                            backgroundColor: 'rgba(27, 142, 116, 0.16)',
+                            tension: 0.35,
+                            fill: false
+                        },
+                        {
+                            label: 'Tournees',
+                            data: {{ stats.charts.monthly_activity.datasets[2].values|json_encode|raw }},
+                            borderColor: chartPalette.warning,
+                            backgroundColor: 'rgba(198, 125, 16, 0.16)',
+                            tension: 0.35,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: defaultScales
+                }
+            });
+
             createChart('marketsScoreChart', {
                 type: 'bar',
                 data: {
@@ -340,7 +511,15 @@
                     indexAxis: 'y',
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true, max: 100 } }
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: chartPalette.dark, font: { size: 11 } },
+                            grid: { color: 'rgba(17, 24, 39, 0.08)' }
+                        },
+                        y: defaultScales.x
+                    }
                 }
             });
         };

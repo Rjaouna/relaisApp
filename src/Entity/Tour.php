@@ -24,6 +24,10 @@ class Tour
     #[ORM\Column(length: 120)]
     private ?string $city = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Zone $zone = null;
+
     #[ORM\Column]
     private ?\DateTimeImmutable $scheduledFor = null;
 
@@ -41,6 +45,12 @@ class Tour
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $notes = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $closureRequestedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $archivedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'tours')]
     #[ORM\JoinColumn(nullable: false)]
@@ -86,6 +96,22 @@ class Tour
     public function setCity(string $city): static
     {
         $this->city = $city;
+
+        return $this;
+    }
+
+    public function getZone(): ?Zone
+    {
+        return $this->zone;
+    }
+
+    public function setZone(?Zone $zone): static
+    {
+        $this->zone = $zone;
+
+        if ($zone?->getCity()?->getName()) {
+            $this->city = $zone->getCity()?->getName();
+        }
 
         return $this;
     }
@@ -170,6 +196,30 @@ class Tour
     public function setCommercial(?Commercial $commercial): static
     {
         $this->commercial = $commercial;
+
+        return $this;
+    }
+
+    public function getClosureRequestedAt(): ?\DateTimeImmutable
+    {
+        return $this->closureRequestedAt;
+    }
+
+    public function setClosureRequestedAt(?\DateTimeImmutable $closureRequestedAt): static
+    {
+        $this->closureRequestedAt = $closureRequestedAt;
+
+        return $this;
+    }
+
+    public function getArchivedAt(): ?\DateTimeImmutable
+    {
+        return $this->archivedAt;
+    }
+
+    public function setArchivedAt(?\DateTimeImmutable $archivedAt): static
+    {
+        $this->archivedAt = $archivedAt;
 
         return $this;
     }

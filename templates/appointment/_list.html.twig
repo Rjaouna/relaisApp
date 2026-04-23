@@ -1,0 +1,63 @@
+{% set commercial_mode = is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Client</th>
+                {% if not commercial_mode %}
+                    <th>Commercial</th>
+                {% endif %}
+                <th>Date du RDV</th>
+                <th>Source</th>
+                <th>Statut</th>
+                <th class="text-end">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_client_show', {id: appointment.client.id}) }}">{{ appointment.client.name }}</a>
+                        <div class="small text-body-secondary">{{ appointment.client.city }}</div>
+                    </td>
+                    {% if not commercial_mode %}
+                        <td>
+                            <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_commercial_show', {id: appointment.commercial.id}) }}">{{ appointment.commercial.fullName }}</a>
+                        </td>
+                    {% endif %}
+                    <td>
+                        <div class="fw-semibold">{{ appointment.scheduledAt|date('d/m/Y H:i') }}</div>
+                        <div class="small text-body-secondary">{{ appointment.scheduledAt < date() ? 'Rendez-vous passe' : 'A venir' }}</div>
+                    </td>
+                    <td>
+                        {% if appointment.visit %}
+                            <a class="text-decoration-none app-quick-link" href="{{ path('app_visit_show', {id: appointment.visit.id}) }}">Visite #{{ appointment.visit.id }}</a>
+                        {% else %}
+                            <span class="text-body-secondary">Automatique</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill {{ appointment.status == 'programme' ? 'text-bg-primary' : (appointment.status == 'realise' ? 'text-bg-success' : 'text-bg-secondary') }}">
+                            {{ appointment.status|replace({'_': ' '})|title }}
+                        </span>
+                        {% if appointment.notifiedAt %}
+                            <div class="small text-body-secondary mt-1">Notif. envoyee</div>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_appointment_show', {id: appointment.id}) }}" class="btn btn-outline-secondary rounded-pill">Consulter</a>
+                            {% if appointment.status != 'annule' %}
+                                <a href="{{ path('app_appointment_reschedule', {id: appointment.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_appointment_reschedule', {id: appointment.id}) }}">Reporter</a>
+                                <a href="{{ path('app_appointment_cancel', {id: appointment.id}) }}" class="btn btn-outline-danger rounded-pill" data-crud-modal-url="{{ path('app_appointment_cancel', {id: appointment.id}) }}">Annuler</a>
+                            {% endif %}
+                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-crud-post-url="{{ path('app_appointment_notify', {id: appointment.id}) }}" data-crud-refresh-url="{{ path('app_appointment_list') }}">Notifier</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="{{ commercial_mode ? 5 : 6 }}" class="text-center py-4 text-body-secondary">Aucun rendez-vous disponible.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

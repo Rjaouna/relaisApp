@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Repartition des clients{% endblock %}
+
+{% block body %}
+    <div class="d-flex flex-column gap-4">
+        <div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                    <div>
+                        <span class="badge rounded-pill text-bg-warning">Etape obligatoire</span>
+                        <h1 class="h3 mt-3 mb-1">Repartir les clients des zones partagees</h1>
+                        <p class="text-body-secondary mb-0">Le systeme a detecte des zones couvertes par plusieurs commerciaux. Chaque client doit etre attribue explicitement avant la generation finale.</p>
+                    </div>
+                    <a href="{{ path('app_tour_generation_prepare') }}" class="btn btn-outline-secondary rounded-pill px-4">Retour a la preparation</a>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="d-flex flex-column gap-4">
+            {% for conflict in conflicts %}
+                <div class="card border-0 shadow-sm rounded-5">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <div class="text-body-secondary small text-uppercase mb-2">Zone partagee</div>
+                                <h2 class="h5 mb-1">{{ conflict.zoneName }}</h2>
+                                <div class="small text-body-secondary">{{ conflict.cityName }}</div>
+                            </div>
+                            <span class="badge rounded-pill text-bg-warning">{{ conflict.clients|length }} client{{ conflict.clients|length > 1 ? 's' : '' }} a arbitrer</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Ville</th>
+                                        <th>Statut</th>
+                                        <th>Commercial cible</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for client in conflict.clients %}
+                                        <tr>
+                                            <td class="fw-semibold">{{ client.name }}</td>
+                                            <td>{{ client.city ?: 'Non definie' }}</td>
+                                            <td>{{ client.status|replace({'_': ' '})|title }}</td>
+                                            <td>
+                                                <select class="form-select" name="client_assignments[{{ client.id }}]" required>
+                                                    <option value="">Choisir un commercial</option>
+                                                    {% for commercial in conflict.commercials %}
+                                                        <option value="{{ commercial.id }}" {{ client.selectedCommercialId == commercial.id ? 'selected' : '' }}>
+                                                            {{ commercial.fullName }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-5">
+                    <div class="card-body p-5 text-center text-body-secondary">
+                        Aucun conflit restant. Tu peux generer les tournees.
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                <button type="submit" class="btn btn-primary rounded-pill px-4">Valider la repartition et generer</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

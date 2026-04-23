@@ -1,3 +1,4 @@
+{% set history_mode = history_mode|default(false) %}
 <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
@@ -27,6 +28,9 @@
                     </td>
                     <td>
                         <div>{{ visit.scheduledAt|date('d/m/Y H:i') }}</div>
+                        {% if history_mode %}
+                            <div class="small text-body-secondary mt-1">Creee le {{ visit.createdAt|date('d/m/Y H:i') }}</div>
+                        {% endif %}
                         {% if isOverduePlannedVisit %}
                             <span class="badge rounded-pill text-bg-danger mt-2">En retard</span>
                         {% elseif isPastVisit %}
@@ -43,8 +47,10 @@
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
                             <a href="{{ path('app_visit_show', {id: visit.id}) }}" class="btn btn-outline-secondary rounded-pill">Voir</a>
-                            <a href="{{ path('app_visit_edit', {id: visit.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_visit_edit', {id: visit.id}) }}">Editer</a>
-                            <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_visit_delete', {id: visit.id}) }}" data-crud-refresh-url="{{ path('app_visit_list') }}" data-crud-confirm="Supprimer cette visite ?">Supprimer</button>
+                            {% if not history_mode %}
+                                <a href="{{ path('app_visit_edit', {id: visit.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_visit_edit', {id: visit.id}) }}">Editer</a>
+                                <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_visit_delete', {id: visit.id}) }}" data-crud-refresh-url="{{ path('app_visit_list') }}" data-crud-confirm="Supprimer cette visite ?">Supprimer</button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>

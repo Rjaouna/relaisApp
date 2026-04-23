@@ -1,0 +1,28 @@
+{% if pendingClosureTours is not empty %}
+    <div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+        <div class="card-body p-3 p-lg-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+                <div>
+                    <div class="app-section-kicker text-warning mb-2">Notifications</div>
+                    <h2 class="h5 mb-1">Tournées en demande de clôture</h2>
+                    <p class="text-body-secondary mb-0 small">Des commerciaux attendent un contrôle administratif avant fermeture définitive.</p>
+                </div>
+                <span class="badge rounded-pill text-bg-warning">{{ pendingClosureTours|length }} a traiter</span>
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                {% for tour in pendingClosureTours %}
+                    <a href="{{ path('app_tour_show', {id: tour.id}) }}" class="card border-0 bg-body-tertiary rounded-4 text-reset text-decoration-none">
+                        <div class="card-body p-3 d-flex flex-column flex-lg-row justify-content-between gap-2 align-items-lg-center">
+                            <div>
+                                <div class="fw-semibold">{{ tour.name }}</div>
+                                <div class="small text-body-secondary">{{ tour.commercial.fullName }} - {{ tour.city }} - demande le {{ tour.closureRequestedAt|date('d/m/Y H:i') }}</div>
+                            </div>
+                            <span class="btn btn-sm btn-outline-warning rounded-pill">Controler la tournee</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}

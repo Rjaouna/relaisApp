@@ -36,13 +36,14 @@ security:
         - { path: ^/dashboard, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
         - { path: ^/parametres/choix, roles: [ROLE_ADMIN] }
         - { path: ^/marches, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
-        - { path: ^/objectifs, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
+        - { path: ^/objectifs, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_COMMERCIAL] }
         - { path: ^/zones, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
         - { path: ^/commerciaux, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
         - { path: ^/clients, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
         - { path: ^/visites/[0-9]+/outcome$, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_COMMERCIAL] }
         - { path: ^/visites, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
         - { path: ^/tournees, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_COMMERCIAL] }
+        - { path: ^/rdv, roles: [ROLE_ADMIN, ROLE_DIRECTION, ROLE_COMMERCIAL] }
         - { path: ^/offres, roles: [ROLE_ADMIN, ROLE_DIRECTION] }
         - { path: ^/fournisseurs, roles: [ROLE_ADMIN, ROLE_ACHAT] }
         - { path: ^/consultations-fournisseurs, roles: [ROLE_ADMIN, ROLE_ACHAT] }

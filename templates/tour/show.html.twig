@@ -4,7 +4,10 @@
 
 {% block body %}
     {% set commercial_mode = is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+    {% set admin_review_mode = is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
     {% set is_new_tour = tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and tour.completedVisits == 0 %}
+    {% set closure_requested = tour.closureRequestedAt %}
+    {% set review_pending = reviewSummary.pending > 0 %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <div class="text-body-secondary small text-uppercase mb-2">{{ commercial_mode ? 'Tournee terrain' : 'Detail tournee' }}</div>
@@ -16,12 +19,20 @@
             </div>
         </div>
         <div class="d-flex gap-2">
-            {% if tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') and tour.status != constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
-                <form method="post" action="{{ path('app_tour_close', {id: tour.id}) }}">
-                    <button type="submit" class="btn btn-success rounded-pill px-4">
-                        <i class="bi bi-check2-circle me-2"></i>Cloturer la tournee
+            {% if commercial_mode and tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') and tour.status != constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
+                {% if not closure_requested %}
+                    <button type="button" class="btn btn-primary rounded-pill px-4" data-crud-post-url="{{ path('app_tour_request_close', {id: tour.id}) }}" data-crud-reload="true">
+                        <i class="bi bi-send-check me-2"></i>Demander la fermeture
                     </button>
-                </form>
+                {% else %}
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" disabled>
+                        <i class="bi bi-hourglass-split me-2"></i>Controle admin en attente
+                    </button>
+                {% endif %}
+            {% elseif admin_review_mode and closure_requested and tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                <button type="button" class="btn btn-success rounded-pill px-4" {{ review_pending ? 'disabled' : '' }} data-crud-post-url="{{ path('app_tour_close', {id: tour.id}) }}" data-crud-reload="true">
+                    <i class="bi bi-shield-check me-2"></i>Cloturer apres controle
+                </button>
             {% endif %}
             <a href="{{ path('app_tour_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
         </div>
@@ -37,12 +48,52 @@
             </div>
         </div>
     {% endif %}
+    {% if admin_review_mode and closure_requested %}
+        <div class="alert alert-primary border-0 rounded-5 shadow-sm mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="fw-semibold mb-1">Controle administratif de la tournee</div>
+                    <div class="small">Verifie les visites du commercial puis valide ou rejette chaque compte rendu avec un commentaire.</div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="badge rounded-pill text-bg-warning">{{ reviewSummary.pending }} en attente</span>
+                    <span class="badge rounded-pill text-bg-success">{{ reviewSummary.validated }} validee(s)</span>
+                    <span class="badge rounded-pill text-bg-danger">{{ reviewSummary.rejected }} rejetee(s)</span>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if closure_requested and tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+        <div class="alert {{ review_pending ? 'alert-warning' : 'alert-success' }} border-0 rounded-5 shadow-sm mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="fw-semibold mb-1">{{ review_pending ? 'Controle administratif en attente' : 'Controle termine - cloture possible' }}</div>
+                    <div class="small">
+                        Demande envoyee le {{ closure_requested|date('d/m/Y H:i') }}.
+                        {% if review_pending %}
+                            L administration doit encore controler les visites avant la cloture finale.
+                        {% else %}
+                            Toutes les visites sont controlees. L administration peut maintenant cloturer la tournee.
+                        {% endif %}
+                    </div>
+                </div>
+                {% if admin_review_mode and not review_pending %}
+                    <button type="button" class="btn btn-success rounded-pill px-4" data-crud-post-url="{{ path('app_tour_close', {id: tour.id}) }}" data-crud-reload="true">
+                        <i class="bi bi-shield-check me-2"></i>Valider la cloture
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
     <div class="row g-4">
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm rounded-5 h-100">
                 <div class="card-body p-4">
                     <div class="d-flex flex-wrap gap-2 mb-3">
                         <span class="badge rounded-pill text-bg-light">{{ tour.city }}</span>
+                        {% if tour.zone %}
+                            <span class="badge rounded-pill text-bg-light">{{ tour.zone.name }}</span>
+                        {% endif %}
                         {% set show_status_badge = 'text-bg-light' %}
                         {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
                             {% set show_status_badge = 'text-bg-success' %}
@@ -59,6 +110,10 @@
                         {% endif %}
                         {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
                             <span class="badge rounded-pill text-bg-success">Commercial a termine sa tournee</span>
+                        {% elseif closure_requested %}
+                            <span class="badge rounded-pill {{ review_pending ? 'text-bg-warning' : 'text-bg-success' }}">
+                                {{ review_pending ? 'Controle admin en attente' : 'Prete a cloturer' }}
+                            </span>
                         {% endif %}
                     </div>
                     <p class="text-body-secondary">{{ tour.commercial.fullName }}</p>
@@ -69,7 +124,9 @@
                         <dd class="col-sm-8">
                             {{ tour.status|replace({'_': ' '})|title }}
                             {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
-                                <span class="small text-success fw-semibold ms-2">Tournee cloturee par le commercial</span>
+                                <span class="small text-success fw-semibold ms-2">Tournee cloturee apres controle admin</span>
+                            {% elseif closure_requested %}
+                                <span class="small text-warning fw-semibold ms-2">Fermeture demandee - controle admin</span>
                             {% endif %}
                         </dd>
                         <dt class="col-sm-4">Avancement</dt>
@@ -110,6 +167,7 @@
                                     <th>Type</th>
                                     <th>Statut</th>
                                     <th>Resultat</th>
+                                    <th>Controle admin</th>
                                     <th class="text-end">Action</th>
                                 </tr>
                             </thead>
@@ -117,6 +175,18 @@
                                 {% for visit in visits %}
                                     {% set is_refused_client = visit.client.status == constant('App\\Entity\\Client::STATUS_REFUSED') %}
                                     {% set is_new_visit = visit.status == constant('App\\Entity\\Visit::STATUS_PLANNED') and not visit.result %}
+                                    {% set review_badge_class = 'text-bg-secondary' %}
+                                    {% set review_label = 'Non controlee' %}
+                                    {% if visit.adminReviewStatus == constant('App\\Entity\\Visit::REVIEW_PENDING') %}
+                                        {% set review_badge_class = 'text-bg-warning' %}
+                                        {% set review_label = 'En attente' %}
+                                    {% elseif visit.adminReviewStatus == constant('App\\Entity\\Visit::REVIEW_VALIDATED') %}
+                                        {% set review_badge_class = 'text-bg-success' %}
+                                        {% set review_label = 'Validee' %}
+                                    {% elseif visit.adminReviewStatus == constant('App\\Entity\\Visit::REVIEW_REJECTED') %}
+                                        {% set review_badge_class = 'text-bg-danger' %}
+                                        {% set review_label = 'Rejetee' %}
+                                    {% endif %}
                                     <tr class="{{ is_refused_client ? 'table-danger' : '' }}" data-tour-stop data-destination="{{ [visit.client.address, visit.client.city]|filter(v => v)|join(', ')|e('html_attr') }}" data-client-name="{{ visit.client.name|e('html_attr') }}">
                                         <td>
                                             <div class="fw-semibold d-flex flex-wrap align-items-center gap-2">
@@ -145,20 +215,39 @@
                                                 {{ visit.result ? visit.result|replace({'_': ' '})|title : 'A renseigner' }}
                                             {% endif %}
                                         </td>
+                                        <td>
+                                            <span class="badge rounded-pill {{ review_badge_class }}">{{ review_label }}</span>
+                                            {% if visit.adminReviewComment %}
+                                                <div class="small text-body-secondary mt-1">{{ visit.adminReviewComment }}</div>
+                                            {% endif %}
+                                        </td>
                                         <td class="text-end">
                                             <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
                                                 <a href="https://www.waze.com/ul?q={{ [visit.client.address, visit.client.city]|filter(v => v)|join(', ')|url_encode }}&navigate=yes" target="_blank" rel="noopener" class="btn btn-sm {{ is_refused_client ? 'btn-outline-danger' : 'btn-outline-secondary' }} rounded-pill px-3">
                                                     <i class="bi bi-sign-turn-right me-1"></i>Waze
                                                 </a>
-                                                <a href="{{ path('app_visit_outcome', {id: visit.id, tour: tour.id}) }}" class="btn btn-sm {{ is_refused_client ? 'btn-danger' : 'btn-primary' }} rounded-pill px-3">
-                                                    {{ visit.result ? 'Mettre a jour' : 'Renseigner' }}
-                                                </a>
+                                                {% if commercial_mode %}
+                                                    <a href="{{ path('app_visit_outcome', {id: visit.id, tour: tour.id}) }}" class="btn btn-sm {{ is_refused_client ? 'btn-danger' : 'btn-primary' }} rounded-pill px-3">
+                                                        {{ visit.result ? 'Mettre a jour' : 'Renseigner' }}
+                                                    </a>
+                                                {% elseif admin_review_mode and closure_requested and visit.result %}
+                                                    <a href="{{ path('app_visit_review', {id: visit.id, tour: tour.id}) }}" class="btn btn-sm {{ visit.adminReviewStatus == constant('App\\Entity\\Visit::REVIEW_REJECTED') ? 'btn-outline-danger' : 'btn-outline-primary' }} rounded-pill px-3">
+                                                        {{ visit.adminReviewStatus == constant('App\\Entity\\Visit::REVIEW_VALIDATED') ? 'Revoir' : 'Controler' }}
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ path('app_visit_show', {id: visit.id}) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Voir</a>
+                                                {% endif %}
+                                                {% if admin_review_mode and not closure_requested and tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                                                    <a href="{{ path('app_tour_move_visit', {id: tour.id, visit: visit.id}) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-crud-modal-url="{{ path('app_tour_move_visit', {id: tour.id, visit: visit.id}) }}">
+                                                        Deplacer
+                                                    </a>
+                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>
                                 {% else %}
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-body-secondary">Aucun client planifie sur cette tournee.</td>
+                                        <td colspan="8" class="text-center py-4 text-body-secondary">Aucun client planifie sur cette tournee.</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>

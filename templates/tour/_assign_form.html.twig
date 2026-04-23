@@ -1,0 +1,44 @@
+<div class="modal-header">
+    <h5 class="modal-title">Assigner la tournee</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+
+{% if assignmentLocked %}
+    <div class="modal-body">
+        <div class="alert alert-warning border-0 rounded-4 mb-0">
+            Cette tournee ne peut plus etre reattribuee. Seules les tournees programmees peuvent changer de commercial.
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+    </div>
+{% else %}
+    {{ form_start(form, {
+        action: path('app_tour_assign', {id: tour.id}),
+        attr: {
+            'data-crud-ajax-form': true,
+            'data-crud-refresh-url': path('app_tour_list')
+        }
+    }) }}
+        <div class="modal-body">
+            <div class="alert alert-light border-0 rounded-4 mb-4">
+                <div class="fw-semibold mb-1">Reaffectation de tournee</div>
+                <div class="small text-body-secondary">
+                    La tournee sera transferee au nouveau commercial et les clients rattaches a cette tournee suivront cette reaffectation.
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="small text-body-secondary mb-1">Tournee concernee</div>
+                <div class="fw-semibold">{{ tour.name }}</div>
+                <div class="small text-body-secondary">{{ tour.city }} - {{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</div>
+            </div>
+
+            {{ form_row(form.commercial) }}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-primary">Assigner</button>
+        </div>
+    {{ form_end(form) }}
+{% endif %}

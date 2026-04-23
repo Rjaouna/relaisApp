@@ -25,6 +25,13 @@ class Commercial
     #[ORM\JoinColumn(nullable: true)]
     private ?Zone $zone = null;
 
+    /**
+     * @var Collection<int, Zone>
+     */
+    #[ORM\ManyToMany(targetEntity: Zone::class, inversedBy: 'assignedCommercials')]
+    #[ORM\JoinTable(name: 'commercial_zone_assignment')]
+    private Collection $zones;
+
     #[ORM\Column]
     private int $salesTarget = 0;
 
@@ -71,6 +78,7 @@ class Commercial
         $this->updatedAt = new \DateTimeImmutable();
         $this->tours = new ArrayCollection();
         $this->objectives = new ArrayCollection();
+        $this->zones = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -90,6 +98,20 @@ class Commercial
 
     public function getZoneLabel(): string
     {
+        return $this->getZonesSummary();
+    }
+
+    public function getZonesSummary(): string
+    {
+        $labels = array_map(
+            static fn (Zone $zone): string => $zone->getName() ?? 'Zone',
+            $this->getZones()->toArray()
+        );
+
+        if ($labels !== []) {
+            return implode(', ', $labels);
+        }
+
         return $this->zone?->getName() ?? ($this->city ?? 'Non definie');
     }
 
@@ -214,6 +236,38 @@ class Commercial
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    /**
+     * @return Collection<int, Zone>
+     */
+    public function getZones(): Collection
+    {
+        return $this->zones;
+    }
+
+    public function addZone(Zone $zone): static
+    {
+        if (!$this->zones->contains($zone)) {
+            $this->zones->add($zone);
+        }
+
+        if ($this->zone === null) {
+            $this->zone = $zone;
+        }
+
+        return $this;
+    }
+
+    public function removeZone(Zone $zone): static
+    {
+        $this->zones->removeElement($zone);
+
+        if ($this->zone?->getId() === $zone->getId()) {
+            $this->zone = $this->zones->first() ?: null;
+        }
+
+        return $this;
     }
 
     public function getUser(): ?User

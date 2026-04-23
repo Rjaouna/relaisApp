@@ -24,16 +24,22 @@ class CommercialController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
+        $commercials = $this->commercialCrudService->getListing();
+
         return $this->render('commercial/index.html.twig', [
-            'commercials' => $this->commercialCrudService->getListing(),
+            'commercials' => $commercials,
+            'assignedClientCounts' => $this->commercialCrudService->getAssignedClientCounts($commercials),
         ]);
     }
 
     #[Route('/list', name: 'list', methods: ['GET'])]
     public function list(): Response
     {
+        $commercials = $this->commercialCrudService->getListing();
+
         return $this->render('commercial/_list.html.twig', [
-            'commercials' => $this->commercialCrudService->getListing(),
+            'commercials' => $commercials,
+            'assignedClientCounts' => $this->commercialCrudService->getAssignedClientCounts($commercials),
         ]);
     }
 
@@ -59,6 +65,7 @@ class CommercialController extends AbstractController
             'isOwnCommercialView' => $isOwnCommercialView,
             'showManagerMetrics' => !$isOwnCommercialView || $this->isGranted('ROLE_ADMIN') || $this->isGranted('ROLE_DIRECTION'),
             'operationalSummary' => $this->commercialWorkflowService->getOperationalSummary($commercial),
+            'assignedClients' => $this->commercialCrudService->getAssignedClients($commercial),
         ]);
     }
 

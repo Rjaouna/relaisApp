@@ -1,0 +1,24 @@
+<div class="modal-header">
+    <h5 class="modal-title">Annuler le RDV</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+<form method="post" action="{{ path('app_appointment_cancel', {id: appointment.id}) }}" data-crud-ajax-form data-crud-refresh-url="{{ path('app_appointment_list') }}">
+    <div class="modal-body">
+        {% if error %}
+            <div class="alert alert-danger rounded-4">{{ error }}</div>
+        {% endif %}
+        <div class="d-flex flex-column gap-3">
+            <div class="alert alert-warning rounded-4 mb-0">
+                Le rendez-vous avec <strong>{{ appointment.client.name }}</strong> sera passe en statut annule.
+            </div>
+            <div>
+                <label class="form-label">Commentaire</label>
+                <textarea class="form-control" name="note" rows="4" placeholder="Precise la raison de l annulation...">{{ appointment.note }}</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Retour</button>
+        <button type="submit" class="btn btn-danger">Confirmer l annulation</button>
+    </div>
+</form>

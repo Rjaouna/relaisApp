@@ -38,14 +38,12 @@ class CommercialWorkflowService
             return [];
         }
 
-        $tours = $this->tourRepository->findForCommercial($commercial);
-        foreach ($tours as $tour) {
-            $visits = $this->visitRepository->findForTour($tour);
-            $tour->setPlannedVisits(count($visits));
-            $tour->setCompletedVisits(count(array_filter($visits, static fn (Visit $visit): bool => $visit->getStatus() === Visit::STATUS_COMPLETED)));
-        }
+        $tours = $this->hydrateToursForCommercial($commercial);
 
-        return $tours;
+        return array_values(array_filter(
+            $tours,
+            fn (Tour $tour): bool => !$this->isArchivedForCommercial($tour)
+        ));
     }
 
     public function getVisitsForTour(Tour $tour): array
@@ -72,7 +70,10 @@ class CommercialWorkflowService
      */
     public function getOperationalSummary(Commercial $commercial): array
     {
-        $tours = $this->tourRepository->findForCommercial($commercial);
+        $tours = array_values(array_filter(
+            $this->hydrateToursForCommercial($commercial),
+            fn (Tour $tour): bool => !$this->isArchivedForCommercial($tour)
+        ));
         $today = new \DateTimeImmutable('today');
         $tomorrow = $today->modify('+1 day');
         $nextVisit = $this->visitRepository->findNextPlannedForCommercial($commercial);
@@ -91,5 +92,49 @@ class CommercialWorkflowService
             'critical_clients' => count($criticalClients),
             'next_visit' => $nextVisit,
         ];
+    }
+
+    /**
+     * @return Tour[]
+     */
+    private function hydrateToursForCommercial(Commercial $commercial): array
+    {
+        $tours = $this->tourRepository->findForCommercial($commercial);
+
+        foreach ($tours as $tour) {
+            $visits = $this->visitRepository->findForTour($tour);
+            $tour->setPlannedVisits(count($visits));
+            $tour->setCompletedVisits(count(array_filter($visits, static fn (Visit $visit): bool => $visit->getStatus() === Visit::STATUS_COMPLETED)));
+        }
+
+        return $tours;
+    }
+
+    private function isArchivedForCommercial(Tour $tour): bool
+    {
+        if ($tour->getArchivedAt() instanceof \DateTimeImmutable) {
+            return true;
+        }
+
+        if ($tour->getStatus() !== Tour::STATUS_COMPLETED) {
+            return false;
+        }
+
+        $reviewableVisits = array_values(array_filter(
+            $this->visitRepository->findForTour($tour),
+            static fn (Visit $visit): bool => $visit->getStatus() === Visit::STATUS_COMPLETED && $visit->getResult() !== null
+        ));
+
+        if ($reviewableVisits === []) {
+            return false;
+        }
+
+        foreach ($reviewableVisits as $visit) {
+            if (!in_array($visit->getAdminReviewStatus(), [Visit::REVIEW_VALIDATED, Visit::REVIEW_REJECTED], true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

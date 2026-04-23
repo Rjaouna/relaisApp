@@ -29,6 +29,7 @@ class DashboardService
             'offers_in_progress' => $offerStats['in_progress'],
             'revenue' => $offerStats['revenue'],
             'tour_status' => $tourOverview,
+            'pending_closure_tours' => $this->tourCrudService->getPendingClosureTours(),
             ...$this->decisionSupportService->getExecutiveMetrics(),
         ];
     }

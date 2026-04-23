@@ -27,6 +27,7 @@ class VisitRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('visit')
             ->leftJoin('visit.client', 'client')
             ->addSelect('client')
+            ->andWhere('visit.archivedAt IS NULL')
             ->orderBy('visit.scheduledAt', 'ASC')
             ->setMaxResults(10)
             ->getQuery()
@@ -50,22 +51,13 @@ class VisitRepository extends ServiceEntityRepository
      */
     public function findForTour(Tour $tour): array
     {
-        $start = $tour->getScheduledFor()?->setTime(0, 0, 0) ?? new \DateTimeImmutable('today midnight');
-        $end = $start->modify('+1 day');
-
         return $this->createQueryBuilder('visit')
             ->leftJoin('visit.client', 'client')
             ->addSelect('client')
-            ->andWhere('client.assignedCommercial = :commercial')
-            ->andWhere('client.city = :city')
-            ->andWhere('visit.scheduledAt >= :start')
-            ->andWhere('visit.scheduledAt < :end')
-            ->setParameter('commercial', $tour->getCommercial())
-            ->setParameter('city', $tour->getCity())
-            ->setParameter('start', $start)
-            ->setParameter('end', $end)
+            ->andWhere('visit.tour = :tour')
+            ->setParameter('tour', $tour)
             ->orderBy('visit.priority', 'DESC')
-            ->addOrderBy('visit.scheduledAt', 'ASC')
+            ->addOrderBy('visit.createdAt', 'ASC')
             ->getQuery()
             ->getResult();
     }
@@ -74,6 +66,7 @@ class VisitRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('visit')
             ->andWhere('visit.client = :client')
+            ->andWhere('visit.archivedAt IS NULL')
             ->setParameter('client', $client)
             ->orderBy('visit.scheduledAt', 'DESC')
             ->addOrderBy('visit.id', 'DESC')
@@ -96,6 +89,7 @@ class VisitRepository extends ServiceEntityRepository
         $queryBuilder = $this->createQueryBuilder('visit')
             ->select('IDENTITY(visit.client) AS clientId')
             ->andWhere('visit.status = :status')
+            ->andWhere('visit.archivedAt IS NULL')
             ->setParameter('status', Visit::STATUS_PLANNED)
             ->groupBy('visit.client');
 
@@ -117,6 +111,7 @@ class VisitRepository extends ServiceEntityRepository
             ->select('COUNT(visit.id)')
             ->andWhere('visit.client = :client')
             ->andWhere('visit.status = :status')
+            ->andWhere('visit.archivedAt IS NULL')
             ->setParameter('client', $client)
             ->setParameter('status', Visit::STATUS_PLANNED);
 
@@ -134,19 +129,29 @@ class VisitRepository extends ServiceEntityRepository
      *
      * @return Visit[]
      */
-    public function findPlannedForTourGeneration(array $clientStatuses): array
+    public function findPlannedForTourGeneration(array $clientStatuses, array $zoneIds = []): array
     {
         $queryBuilder = $this->createQueryBuilder('visit')
             ->leftJoin('visit.client', 'client')
             ->addSelect('client')
+            ->leftJoin('client.zone', 'zone')
+            ->addSelect('zone')
             ->andWhere('visit.status = :status')
+            ->andWhere('visit.archivedAt IS NULL')
+            ->andWhere('visit.tour IS NULL')
             ->setParameter('status', Visit::STATUS_PLANNED)
-            ->orderBy('visit.scheduledAt', 'ASC');
+            ->orderBy('visit.createdAt', 'ASC');
 
         if ($clientStatuses !== []) {
             $queryBuilder
                 ->andWhere('client.status IN (:clientStatuses)')
                 ->setParameter('clientStatuses', $clientStatuses);
+        }
+
+        if ($zoneIds !== []) {
+            $queryBuilder
+                ->andWhere('zone.id IN (:zoneIds)')
+                ->setParameter('zoneIds', $zoneIds);
         }
 
         return $queryBuilder->getQuery()->getResult();
@@ -159,6 +164,7 @@ class VisitRepository extends ServiceEntityRepository
             ->leftJoin('visit.client', 'client')
             ->andWhere('client.assignedCommercial = :commercial')
             ->andWhere('visit.status = :status')
+            ->andWhere('visit.archivedAt IS NULL')
             ->setParameter('commercial', $commercial)
             ->setParameter('status', Visit::STATUS_PLANNED)
             ->getQuery()
@@ -172,6 +178,7 @@ class VisitRepository extends ServiceEntityRepository
             ->leftJoin('visit.client', 'client')
             ->andWhere('client.assignedCommercial = :commercial')
             ->andWhere('visit.status = :status')
+            ->andWhere('visit.archivedAt IS NULL')
             ->setParameter('commercial', $commercial)
             ->setParameter('status', Visit::STATUS_COMPLETED)
             ->getQuery()
@@ -185,12 +192,41 @@ class VisitRepository extends ServiceEntityRepository
             ->addSelect('client')
             ->andWhere('client.assignedCommercial = :commercial')
             ->andWhere('visit.status = :status')
+            ->andWhere('visit.archivedAt IS NULL')
             ->setParameter('commercial', $commercial)
             ->setParameter('status', Visit::STATUS_PLANNED)
             ->orderBy('visit.scheduledAt', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * @return Visit[]
+     */
+    public function findForListing(bool $archived = false): array
+    {
+        $queryBuilder = $this->createQueryBuilder('visit')
+            ->leftJoin('visit.client', 'client')
+            ->addSelect('client')
+            ->andWhere($archived ? 'visit.archivedAt IS NOT NULL' : 'visit.archivedAt IS NULL');
+
+        if ($archived) {
+            return $queryBuilder
+                ->orderBy('visit.archivedAt', 'DESC')
+                ->addOrderBy('visit.scheduledAt', 'DESC')
+                ->getQuery()
+                ->getResult();
+        }
+
+        return $queryBuilder
+            ->addSelect('(CASE WHEN visit.status = :plannedStatus AND visit.result IS NULL THEN 0 ELSE 1 END) AS HIDDEN newPriority')
+            ->setParameter('plannedStatus', Visit::STATUS_PLANNED)
+            ->orderBy('newPriority', 'ASC')
+            ->addOrderBy('visit.createdAt', 'DESC')
+            ->addOrderBy('visit.scheduledAt', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     public function countCompletedForCommercialInPeriod(Commercial $commercial, \DateTimeImmutable $start, \DateTimeImmutable $end): int
@@ -204,6 +240,62 @@ class VisitRepository extends ServiceEntityRepository
             ->andWhere('visit.scheduledAt < :end')
             ->setParameter('commercial', $commercial)
             ->setParameter('status', Visit::STATUS_COMPLETED)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countValidatedForCommercialInPeriod(Commercial $commercial, \DateTimeImmutable $start, \DateTimeImmutable $end): int
+    {
+        return (int) $this->createQueryBuilder('visit')
+            ->select('COUNT(visit.id)')
+            ->leftJoin('visit.client', 'client')
+            ->andWhere('client.assignedCommercial = :commercial')
+            ->andWhere('visit.status = :status')
+            ->andWhere('visit.adminReviewStatus = :reviewStatus')
+            ->andWhere('((visit.adminReviewedAt IS NOT NULL AND visit.adminReviewedAt >= :start AND visit.adminReviewedAt < :end) OR (visit.adminReviewedAt IS NULL AND visit.scheduledAt >= :start AND visit.scheduledAt < :end))')
+            ->setParameter('commercial', $commercial)
+            ->setParameter('status', Visit::STATUS_COMPLETED)
+            ->setParameter('reviewStatus', Visit::REVIEW_VALIDATED)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countValidatedByResultForCommercialInPeriod(Commercial $commercial, string $result, \DateTimeImmutable $start, \DateTimeImmutable $end): int
+    {
+        return (int) $this->createQueryBuilder('visit')
+            ->select('COUNT(visit.id)')
+            ->leftJoin('visit.client', 'client')
+            ->andWhere('client.assignedCommercial = :commercial')
+            ->andWhere('visit.status = :status')
+            ->andWhere('visit.adminReviewStatus = :reviewStatus')
+            ->andWhere('visit.result = :result')
+            ->andWhere('((visit.adminReviewedAt IS NOT NULL AND visit.adminReviewedAt >= :start AND visit.adminReviewedAt < :end) OR (visit.adminReviewedAt IS NULL AND visit.scheduledAt >= :start AND visit.scheduledAt < :end))')
+            ->setParameter('commercial', $commercial)
+            ->setParameter('status', Visit::STATUS_COMPLETED)
+            ->setParameter('reviewStatus', Visit::REVIEW_VALIDATED)
+            ->setParameter('result', $result)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countValidatedDistinctClientsForCommercialInPeriod(Commercial $commercial, \DateTimeImmutable $start, \DateTimeImmutable $end): int
+    {
+        return (int) $this->createQueryBuilder('visit')
+            ->select('COUNT(DISTINCT client.id)')
+            ->leftJoin('visit.client', 'client')
+            ->andWhere('client.assignedCommercial = :commercial')
+            ->andWhere('visit.status = :status')
+            ->andWhere('visit.adminReviewStatus = :reviewStatus')
+            ->andWhere('((visit.adminReviewedAt IS NOT NULL AND visit.adminReviewedAt >= :start AND visit.adminReviewedAt < :end) OR (visit.adminReviewedAt IS NULL AND visit.scheduledAt >= :start AND visit.scheduledAt < :end))')
+            ->setParameter('commercial', $commercial)
+            ->setParameter('status', Visit::STATUS_COMPLETED)
+            ->setParameter('reviewStatus', Visit::REVIEW_VALIDATED)
             ->setParameter('start', $start)
             ->setParameter('end', $end)
             ->getQuery()

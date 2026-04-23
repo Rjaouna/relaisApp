@@ -14,6 +14,10 @@ class Visit
     public const STATUS_PENDING = 'en_attente';
     public const STATUS_CANCELLED = 'annulee';
 
+    public const REVIEW_PENDING = 'en_attente';
+    public const REVIEW_VALIDATED = 'validee';
+    public const REVIEW_REJECTED = 'rejetee';
+
     public const RESULT_ABSENT = 'absent';
     public const RESULT_NOT_INTERESTED = 'pas_interesse';
     public const RESULT_APPOINTMENT_BOOKED = 'rdv_pris';
@@ -29,6 +33,10 @@ class Visit
     #[ORM\ManyToOne(inversedBy: 'visits')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Client $client = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Tour $tour = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $scheduledAt = null;
@@ -56,6 +64,21 @@ class Visit
 
     #[ORM\Column(nullable: true)]
     private ?int $interestLevel = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $appointmentScheduledAt = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $adminReviewStatus = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $adminReviewComment = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $adminReviewedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $archivedAt = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -115,6 +138,14 @@ class Visit
         ];
     }
 
+    public static function reviewStatusChoices(): array
+    {
+        return [
+            'Valider la visite' => self::REVIEW_VALIDATED,
+            'Rejeter la visite' => self::REVIEW_REJECTED,
+        ];
+    }
+
     public function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
@@ -133,6 +164,18 @@ class Visit
     public function setClient(?Client $client): static
     {
         $this->client = $client;
+
+        return $this;
+    }
+
+    public function getTour(): ?Tour
+    {
+        return $this->tour;
+    }
+
+    public function setTour(?Tour $tour): static
+    {
+        $this->tour = $tour;
 
         return $this;
     }
@@ -250,8 +293,68 @@ class Visit
         return $this->createdAt;
     }
 
+    public function getAppointmentScheduledAt(): ?\DateTimeImmutable
+    {
+        return $this->appointmentScheduledAt;
+    }
+
+    public function setAppointmentScheduledAt(?\DateTimeImmutable $appointmentScheduledAt): static
+    {
+        $this->appointmentScheduledAt = $appointmentScheduledAt;
+
+        return $this;
+    }
+
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function getAdminReviewStatus(): ?string
+    {
+        return $this->adminReviewStatus;
+    }
+
+    public function setAdminReviewStatus(?string $adminReviewStatus): static
+    {
+        $this->adminReviewStatus = $adminReviewStatus;
+
+        return $this;
+    }
+
+    public function getAdminReviewComment(): ?string
+    {
+        return $this->adminReviewComment;
+    }
+
+    public function setAdminReviewComment(?string $adminReviewComment): static
+    {
+        $this->adminReviewComment = $adminReviewComment;
+
+        return $this;
+    }
+
+    public function getAdminReviewedAt(): ?\DateTimeImmutable
+    {
+        return $this->adminReviewedAt;
+    }
+
+    public function setAdminReviewedAt(?\DateTimeImmutable $adminReviewedAt): static
+    {
+        $this->adminReviewedAt = $adminReviewedAt;
+
+        return $this;
+    }
+
+    public function getArchivedAt(): ?\DateTimeImmutable
+    {
+        return $this->archivedAt;
+    }
+
+    public function setArchivedAt(?\DateTimeImmutable $archivedAt): static
+    {
+        $this->archivedAt = $archivedAt;
+
+        return $this;
     }
 }

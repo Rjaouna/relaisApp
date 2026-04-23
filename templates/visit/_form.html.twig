@@ -15,7 +15,15 @@
     <div class="modal-body">
         <div class="row g-3">
             <div class="col-md-6">{{ form_row(form.client, { attr: form.client.vars.attr|merge({'data-visit-client': true}) }) }}</div>
-            <div class="col-md-6">{{ form_row(form.scheduledAt) }}</div>
+            {% if form.scheduledAt is defined %}
+                <div class="col-md-6">{{ form_row(form.scheduledAt) }}</div>
+            {% else %}
+                <div class="col-md-6">
+                    <label class="form-label">Date de creation</label>
+                    <div class="form-control bg-body-tertiary">{{ visit.createdAt|date('d/m/Y H:i') }}</div>
+                    <div class="form-text">La date de visite est reprise automatiquement a la creation pour simplifier la generation des tournees.</div>
+                </div>
+            {% endif %}
             <div class="col-md-4">{% include '_partials/_reference_option_field.html.twig' with { field: form.type, category: 'visit_type' } %}</div>
             <div class="col-md-4">{% include '_partials/_reference_option_field.html.twig' with { field: form.priority, category: 'visit_priority' } %}</div>
             {% if visit.id %}
@@ -29,6 +37,9 @@
                 </div>
             {% endif %}
             <div class="col-md-6" data-visit-result-wrap>{% include '_partials/_reference_option_field.html.twig' with { field: form.result, category: 'visit_result' } %}</div>
+            <div class="col-md-6 d-none" data-appointment-inline-wrap>
+                {{ form_row(form.appointmentScheduledAt, { attr: form.appointmentScheduledAt.vars.attr|merge({ 'data-appointment-inline': true }) }) }}
+            </div>
             <div class="col-12">{% include '_partials/_interest_level_field.html.twig' with { field: form.interestLevel } %}</div>
             <div class="col-12">{{ form_row(form.objective, { attr: form.objective.vars.attr|merge({'data-visit-prefill-field': 'objective'}) }) }}</div>
             <div class="col-12">{{ form_row(form.report, { attr: form.report.vars.attr|merge({'data-visit-prefill-field': 'report'}) }) }}</div>

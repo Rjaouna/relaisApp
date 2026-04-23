@@ -20,13 +20,33 @@ class ObjectiveCrudService
     public function getListing(): array
     {
         return $this->objectivePerformanceService->hydrateObjectives(
-            $this->objectiveRepository->findBy([], ['periodLabel' => 'DESC'])
+            $this->objectiveRepository->findValidForListing()
+        );
+    }
+
+    public function getListingForCommercial(Commercial $commercial): array
+    {
+        return $this->objectivePerformanceService->hydrateObjectives(
+            $this->objectiveRepository->findForCommercial($commercial)
         );
     }
 
     public function hydrate(Objective $objective): Objective
     {
         return $this->objectivePerformanceService->hydrateObjective($objective);
+    }
+
+    public function belongsToCommercial(Objective $objective, Commercial $commercial): bool
+    {
+        return $objective->getCommercial()?->getId() === $commercial->getId();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getInsights(Objective $objective): array
+    {
+        return $this->objectivePerformanceService->buildObjectiveInsights($objective);
     }
 
     public function save(Objective $objective): void

@@ -62,10 +62,6 @@ class VisitType extends AbstractType
                     ? 'Les clients qui ont deja une visite prevue sont retires de la liste.'
                     : null,
             ])
-            ->add('scheduledAt', DateTimeType::class, [
-                'label' => 'Date',
-                'widget' => 'single_text',
-            ])
             ->add('type', ChoiceType::class, [
                 'label' => 'Type',
                 'choices' => $this->referenceOptionCrudService->getChoices(ReferenceOption::CATEGORY_VISIT_TYPE, Visit::typeChoices()),
@@ -81,6 +77,14 @@ class VisitType extends AbstractType
                 'placeholder' => 'Selectionner un resultat',
                 'attr' => [
                     'data-visit-result' => true,
+                ],
+            ])
+            ->add('appointmentScheduledAt', DateTimeType::class, [
+                'label' => 'Date du rendez-vous',
+                'required' => false,
+                'widget' => 'single_text',
+                'attr' => [
+                    'data-appointment-field' => true,
                 ],
             ])
             ->add('objective', TextareaType::class, [
@@ -108,6 +112,13 @@ class VisitType extends AbstractType
                 ],
                 'expanded' => true,
             ]);
+
+        if ((bool) $options['show_scheduled_at']) {
+            $builder->add('scheduledAt', DateTimeType::class, [
+                'label' => 'Date de la visite',
+                'widget' => 'single_text',
+            ]);
+        }
 
         if ($showStatus) {
             $builder->add('status', ChoiceType::class, [
@@ -154,6 +165,7 @@ class VisitType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Visit::class,
             'show_status' => true,
+            'show_scheduled_at' => true,
             'current_visit' => null,
         ]);
     }

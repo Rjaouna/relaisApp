@@ -61,7 +61,7 @@ class ObjectivePerformanceService
         $commercial = $objective->getCommercial();
 
         $objective
-            ->setVisitsActual($this->visitRepository->countCompletedForCommercialInPeriod($commercial, $start, $end))
+            ->setVisitsActual($this->visitRepository->countValidatedForCommercialInPeriod($commercial, $start, $end))
             ->setNewClientsActual($this->clientRepository->countConvertedForCommercialInPeriod($commercial, $start, $end))
             ->setSalesActual((int) round($this->offerRepository->sumAcceptedForCommercialInPeriod($commercial, $start, $end)));
 
@@ -92,6 +92,67 @@ class ObjectivePerformanceService
         }
 
         $this->entityManager->flush();
+    }
+
+    public function syncAllObjectivesForCommercial(?Commercial $commercial): void
+    {
+        if (!$commercial instanceof Commercial) {
+            return;
+        }
+
+        foreach ($this->objectiveRepository->findForCommercial($commercial) as $objective) {
+            $this->hydrateObjective($objective);
+            $this->entityManager->persist($objective);
+        }
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function buildObjectiveInsights(Objective $objective): array
+    {
+        $period = $this->resolvePeriodRange($objective->getPeriodLabel());
+        $commercial = $objective->getCommercial();
+
+        if ($period === null || !$commercial instanceof Commercial) {
+            return [
+                'treated_clients' => 0,
+                'validated_visits' => 0,
+                'results' => $this->getEmptyResults(),
+            ];
+        }
+
+        [$start, $end] = $period;
+
+        return [
+            'treated_clients' => $this->visitRepository->countValidatedDistinctClientsForCommercialInPeriod($commercial, $start, $end),
+            'validated_visits' => $this->visitRepository->countValidatedForCommercialInPeriod($commercial, $start, $end),
+            'results' => [
+                'commande_confirmee' => $this->visitRepository->countValidatedByResultForCommercialInPeriod($commercial, 'commande_confirmee', $start, $end),
+                'devis_envoye' => $this->visitRepository->countValidatedByResultForCommercialInPeriod($commercial, 'devis_envoye', $start, $end),
+                'rdv_pris' => $this->visitRepository->countValidatedByResultForCommercialInPeriod($commercial, 'rdv_pris', $start, $end),
+                'a_relancer' => $this->visitRepository->countValidatedByResultForCommercialInPeriod($commercial, 'a_relancer', $start, $end),
+                'pas_interesse' => $this->visitRepository->countValidatedByResultForCommercialInPeriod($commercial, 'pas_interesse', $start, $end),
+                'absent' => $this->visitRepository->countValidatedByResultForCommercialInPeriod($commercial, 'absent', $start, $end),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function getEmptyResults(): array
+    {
+        return [
+            'commande_confirmee' => 0,
+            'devis_envoye' => 0,
+            'rdv_pris' => 0,
+            'a_relancer' => 0,
+            'pas_interesse' => 0,
+            'absent' => 0,
+        ];
     }
 
     /**

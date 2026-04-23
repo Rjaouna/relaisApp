@@ -20,6 +20,19 @@ class ObjectiveRepository extends ServiceEntityRepository
     /**
      * @return Objective[]
      */
+    public function findValidForListing(): array
+    {
+        return $this->createQueryBuilder('objective')
+            ->innerJoin('objective.commercial', 'commercial')
+            ->addSelect('commercial')
+            ->orderBy('objective.periodLabel', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Objective[]
+     */
     public function findForCommercial(Commercial $commercial): array
     {
         return $this->createQueryBuilder('objective')

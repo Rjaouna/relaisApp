@@ -4,7 +4,8 @@
             <tr>
                 <th>Commercial</th>
                 <th>Ville</th>
-                <th>Zone</th>
+                <th>Zones</th>
+                <th>Clients attribues</th>
                 <th>Objectifs</th>
                 <th>Charge</th>
                 <th class="text-end">Actions</th>
@@ -18,7 +19,12 @@
                         <div class="small text-body-secondary">{{ commercial.user ? commercial.user.email : 'Aucun compte lie' }}</div>
                     </td>
                     <td><span class="badge rounded-pill text-bg-light">{{ commercial.city }}</span></td>
-                    <td>{{ commercial.zone ? commercial.zone.name : 'Non definie' }}</td>
+                    <td>{{ commercial.zonesSummary }}</td>
+                    <td>
+                        <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis">
+                            {{ assignedClientCounts[commercial.id] ?? 0 }} client{{ (assignedClientCounts[commercial.id] ?? 0) > 1 ? 's' : '' }}
+                        </span>
+                    </td>
                     <td>
                         <div class="small text-body-secondary">CA {{ commercial.salesTarget }}</div>
                         <div class="small text-body-secondary">Visites {{ commercial.visitsTarget }}</div>
@@ -34,7 +40,7 @@
                     </td>
                 </tr>
             {% else %}
-                <tr><td colspan="6" class="text-center py-4 text-body-secondary">Aucun commercial disponible.</td></tr>
+                <tr><td colspan="7" class="text-center py-4 text-body-secondary">Aucun commercial disponible.</td></tr>
             {% endfor %}
         </tbody>
     </table>

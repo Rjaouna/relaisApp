@@ -7,7 +7,11 @@
         <div class="col-12 col-xxl-10">
             <div class="card border-0 shadow-sm rounded-5">
                 <div class="card-body p-4 p-lg-5">
-                    {% include 'tour/_form.html.twig' %}
+                    {% if customContent is defined %}
+                        {{ customContent|raw }}
+                    {% else %}
+                        {% include 'tour/_form.html.twig' %}
+                    {% endif %}
                 </div>
             </div>
         </div>

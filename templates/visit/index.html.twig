@@ -3,23 +3,123 @@
 {% block title %}Visites{% endblock %}
 
 {% block body %}
-    <div class="card border-0 shadow-sm rounded-5 mb-4">
-        <div class="card-body p-4 p-lg-5">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                <div>
-                    <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Activite terrain</span>
-                    <h1 class="h3 mb-1">Mes visites</h1>
-                    <p class="text-body-secondary mb-0">Suivez le planning, les statuts et les comptes rendus de visite.</p>
+<div class="card border-0 shadow-sm rounded-5 mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Activite terrain</span>
+                <h1 class="h3 mb-1">Mes visites</h1>
+                <p class="text-body-secondary mb-0">Suivez le planning, les statuts et les comptes rendus de visite.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ path('app_visit_history') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-clock-history me-2"></i>Historique
+                    <span class="badge rounded-pill text-bg-light text-dark ms-2">{{ archivedVisitsCount }}</span>
+                </a>
+                <a href="{{ path('app_visit_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_visit_new') }}">
+                    <i class="bi bi-plus-lg me-2"></i>Ajouter
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card-body p-4">
+                <div class="text-body-secondary small text-uppercase mb-2">Visites actives</div>
+                <div class="display-6 fw-semibold mb-0">{{ insights.kpis.active }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card-body p-4">
+                <div class="text-body-secondary small text-uppercase mb-2">Prevues</div>
+                <div class="display-6 fw-semibold mb-0">{{ insights.kpis.planned }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card-body p-4">
+                <div class="text-body-secondary small text-uppercase mb-2">Realisees</div>
+                <div class="display-6 fw-semibold mb-0">{{ insights.kpis.completed }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card-body p-4">
+                <div class="text-body-secondary small text-uppercase mb-2">Historique archive</div>
+                <div class="display-6 fw-semibold mb-0">{{ insights.kpis.archived }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4"
+     data-visit-insights
+     data-visit-clients='{{ insights.charts.clients|json_encode|e('html_attr') }}'
+     data-visit-cities='{{ insights.charts.cities|json_encode|e('html_attr') }}'
+     data-visit-results='{{ insights.charts.results|json_encode|e('html_attr') }}'>
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card-body p-4">
+                <div class="text-body-secondary small text-uppercase mb-2">Top clients</div>
+                <h2 class="h5 mb-3">Clients les plus visites</h2>
+
+                <div class="visit-chart-wrapper">
+                    <canvas id="visitClientsChart"></canvas>
                 </div>
-                <a href="{{ path('app_visit_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_visit_new') }}"><i class="bi bi-plus-lg me-2"></i>Ajouter</a>
+
+                <div class="small text-body-secondary d-none mt-3" data-visit-chart-empty="visitClientsChart">
+                    Aucune visite exploitable pour ce graphique.
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-5 overflow-hidden" data-list-search-scope>
-        {% include '_partials/_listing_search.html.twig' with { placeholder: 'Rechercher un client, un type ou un statut de visite...' } %}
-        <div class="card-body p-0" data-crud-list>
-            {% include 'visit/_list.html.twig' with { visits: visits } %}
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card-body p-4">
+                <div class="text-body-secondary small text-uppercase mb-2">Repartition geographique</div>
+                <h2 class="h5 mb-3">Visites par ville</h2>
+
+                <div class="visit-chart-wrapper">
+                    <canvas id="visitCitiesChart"></canvas>
+                </div>
+
+                <div class="small text-body-secondary d-none mt-3" data-visit-chart-empty="visitCitiesChart">
+                    Aucune visite exploitable pour ce graphique.
+                </div>
+            </div>
         </div>
     </div>
+
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card-body p-4">
+                <div class="text-body-secondary small text-uppercase mb-2">Resultats terrain</div>
+                <h2 class="h5 mb-3">Visites par resultat</h2>
+
+                <div class="visit-chart-wrapper">
+                    <canvas id="visitResultsChart"></canvas>
+                </div>
+
+                <div class="small text-body-secondary d-none mt-3" data-visit-chart-empty="visitResultsChart">
+                    Aucune visite exploitable pour ce graphique.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-5 overflow-hidden" data-list-search-scope>
+    {% include '_partials/_listing_search.html.twig' with { placeholder: 'Rechercher un client, un type ou un statut de visite...' } %}
+    <div class="card-body p-0" data-crud-list>
+        {% include 'visit/_list.html.twig' with { visits: visits } %}
+    </div>
+</div>
 {% endblock %}

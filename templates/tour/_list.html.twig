@@ -1,4 +1,7 @@
 {% set commercial_mode = is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+{% set open_tours = tours|filter(t => t.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') and not t.archivedAt) %}
+{% set closed_tours = tours|filter(t => t.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') and not t.archivedAt) %}
+{% set archived_tours = tours|filter(t => t.archivedAt) %}
 <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
@@ -15,10 +18,110 @@
             </tr>
         </thead>
         <tbody>
-            {% for tour in tours %}
+            {% for tour in open_tours %}
                 {% set critical_count = tourCriticalCounts[tour.id ?? 0]|default(0) %}
                 {% set is_new_tour = tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and tour.completedVisits == 0 %}
-                <tr>
+                {% set review_pending = tour.closureRequestedAt and tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                <tr data-tour-row-id="{{ tour.id }}" class="{{ review_pending ? 'table-warning' : '' }}">
+                    <td>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
+                            {% if is_new_tour %}
+                                <span class="badge rounded-pill text-bg-primary">New</span>
+                            {% endif %}
+                            {% if review_pending %}
+                                <span class="badge rounded-pill text-bg-warning">Controle</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-body-secondary">{{ tour.routeSummary ?: 'Aucun itineraire defini' }}</div>
+                        <div class="small mt-2 {{ review_pending ? 'text-warning fw-semibold' : 'text-body-secondary' }}">
+                            Etat actuel : {{ review_pending ? 'En attente de controle admin' : tour.status|replace({'_': ' '})|title }}
+                        </div>
+                        {% if critical_count > 0 %}
+                            <div class="mt-2">
+                                <span class="badge rounded-pill text-bg-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ critical_count }} client(s) refuse(s)
+                                </span>
+                            </div>
+                        {% endif %}
+                    </td>
+                    {% if not commercial_mode %}
+                        <td>
+                            {% if tour.commercial %}
+                                <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: tour.commercial.id}) }}">{{ tour.commercial.fullName }}</a>
+                            {% else %}
+                                Non assigne
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                    <td>{{ tour.city }}</td>
+                    <td>{{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</td>
+                    <td>
+                        {% set status_badge = review_pending ? 'text-bg-warning' : 'text-bg-light' %}
+                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_IN_PROGRESS') and not review_pending %}
+                            {% set status_badge = 'text-bg-primary' %}
+                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
+                            {% set status_badge = 'text-bg-secondary' %}
+                        {% elseif critical_count > 0 %}
+                            {% set status_badge = 'text-bg-danger' %}
+                        {% endif %}
+                        <span class="badge rounded-pill {{ status_badge }}">
+                            {{ review_pending ? 'Controle admin' : tour.status|replace({'_': ' '})|title }}
+                        </span>
+                        {% if review_pending %}
+                            <div class="small text-warning fw-semibold mt-2">Fermeture demandee</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
+                        <div class="progress mt-2" style="height: 0.4rem;">
+                            <div class="progress-bar {{ review_pending ? 'bg-warning' : '' }}" style="width: {{ tour.plannedVisits > 0 ? (tour.completedVisits / tour.plannedVisits * 100) : 0 }}%"></div>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('app_tour_show', {id: tour.id}) }}" class="btn btn-outline-secondary rounded-pill">{{ commercial_mode ? 'Choisir' : 'Voir' }}</a>
+                            {% if commercial_mode %}
+                                {% if tour.plannedVisits > 0 and tour.completedVisits >= tour.plannedVisits and not review_pending %}
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-primary rounded-pill"
+                                        data-crud-post-url="{{ path('app_tour_request_close', {id: tour.id}) }}"
+                                        data-crud-refresh-url="{{ path('app_tour_list') }}"
+                                    >
+                                        Demander la cloture
+                                    </button>
+                                {% elseif review_pending %}
+                                    <button type="button" class="btn btn-outline-warning rounded-pill" disabled>Controle admin</button>
+                                {% endif %}
+                            {% else %}
+                                {% if tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and not review_pending %}
+                                    <a href="{{ path('app_tour_assign', {id: tour.id}) }}" class="btn btn-outline-secondary rounded-pill" data-crud-modal-url="{{ path('app_tour_assign', {id: tour.id}) }}">Assigner</a>
+                                {% else %}
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill" disabled title="La reattribution n est possible que sur une tournee programmee sans demande de fermeture.">Assigner</button>
+                                {% endif %}
+                                {% if tour.status == constant('App\\Entity\\Tour::STATUS_IN_PROGRESS') or review_pending %}
+                                    <button type="button" class="btn btn-outline-primary rounded-pill" disabled title="Une tournee en cours ou en attente de controle ne peut plus etre modifiee.">Editer</button>
+                                {% else %}
+                                    <a href="{{ path('app_tour_edit', {id: tour.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_tour_edit', {id: tour.id}) }}">Editer</a>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-danger rounded-pill" disabled title="La tournee doit etre cloturee apres controle admin avant archivage.">Archiver</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+
+            {% if closed_tours is not empty %}
+                <tr class="table-light">
+                    <td colspan="{{ commercial_mode ? 6 : 7 }}" class="fw-semibold text-body-secondary py-3">Tournees cloturees</td>
+                </tr>
+            {% endif %}
+
+            {% for tour in closed_tours %}
+                {% set critical_count = tourCriticalCounts[tour.id ?? 0]|default(0) %}
+                {% set is_new_tour = tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and tour.completedVisits == 0 %}
+                <tr data-tour-row-id="{{ tour.id }}">
                     <td>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
@@ -77,19 +180,67 @@
                         <div class="btn-group btn-group-sm">
                             <a href="{{ path('app_tour_show', {id: tour.id}) }}" class="btn btn-outline-secondary rounded-pill">{{ commercial_mode ? 'Choisir' : 'Voir' }}</a>
                             {% if not commercial_mode %}
-                                <a href="{{ path('app_tour_edit', {id: tour.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_tour_edit', {id: tour.id}) }}">Editer</a>
+                                <button type="button" class="btn btn-outline-secondary rounded-pill" disabled title="La tournee est deja cloturee.">Assigner</button>
+                                <button type="button" class="btn btn-outline-primary rounded-pill" disabled title="La tournee est deja cloturee.">Editer</button>
                                 {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
-                                    <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_tour_delete', {id: tour.id}) }}" data-crud-refresh-url="{{ path('app_tour_list') }}" data-crud-confirm="Supprimer {{ tour.name }} ?">Supprimer</button>
-                                {% else %}
-                                    <button type="button" class="btn btn-outline-danger rounded-pill" disabled title="La tournee doit etre cloturee avant suppression.">Supprimer</button>
+                                    <button type="button" class="btn btn-outline-danger rounded-pill" data-crud-delete-url="{{ path('app_tour_archive', {id: tour.id}) }}" data-crud-refresh-url="{{ path('app_tour_list') }}" data-crud-confirm="Archiver {{ tour.name }} ?">Archiver</button>
                                 {% endif %}
                             {% endif %}
                         </div>
                     </td>
                 </tr>
-            {% else %}
-                <tr><td colspan="{{ commercial_mode ? 6 : 7 }}" class="text-center py-4 text-body-secondary">Aucune tournee disponible.</td></tr>
             {% endfor %}
+
+            {% if archived_tours is not empty %}
+                <tr class="table-light">
+                    <td colspan="{{ commercial_mode ? 6 : 7 }}" class="fw-semibold text-body-secondary py-3">Historique archive</td>
+                </tr>
+            {% endif %}
+
+            {% for tour in archived_tours %}
+                {% set critical_count = tourCriticalCounts[tour.id ?? 0]|default(0) %}
+                <tr data-tour-row-id="{{ tour.id }}" class="table-secondary">
+                    <td>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
+                            <span class="badge rounded-pill text-bg-secondary">Archivee</span>
+                        </div>
+                        <div class="small text-body-secondary">{{ tour.routeSummary ?: 'Aucun itineraire defini' }}</div>
+                        {% if critical_count > 0 %}
+                            <div class="mt-2">
+                                <span class="badge rounded-pill text-bg-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ critical_count }} client(s) refuse(s)
+                                </span>
+                            </div>
+                        {% endif %}
+                    </td>
+                    {% if not commercial_mode %}
+                        <td>
+                            {% if tour.commercial %}
+                                <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: tour.commercial.id}) }}">{{ tour.commercial.fullName }}</a>
+                            {% else %}
+                                Non assigne
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                    <td>{{ tour.city }}</td>
+                    <td>{{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</td>
+                    <td><span class="badge rounded-pill text-bg-secondary">Archivee</span></td>
+                    <td>
+                        <div class="fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
+                        <div class="progress mt-2" style="height: 0.4rem;">
+                            <div class="progress-bar bg-secondary" style="width: {{ tour.plannedVisits > 0 ? (tour.completedVisits / tour.plannedVisits * 100) : 0 }}%"></div>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ path('app_tour_show', {id: tour.id}) }}" class="btn btn-outline-secondary rounded-pill btn-sm">Voir</a>
+                    </td>
+                </tr>
+            {% endfor %}
+
+            {% if open_tours is empty and closed_tours is empty and archived_tours is empty %}
+                <tr><td colspan="{{ commercial_mode ? 6 : 7 }}" class="text-center py-4 text-body-secondary">Aucune tournee disponible.</td></tr>
+            {% endif %}
         </tbody>
     </table>
 </div>

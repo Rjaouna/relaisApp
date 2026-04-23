@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Commercial;
 use App\Entity\Tour;
+use App\Entity\Zone;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -54,5 +55,39 @@ class TourRepository extends ServiceEntityRepository
             ->setParameter('status', $status)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    public function findReusableForGeneration(Commercial $commercial, Zone $zone): ?Tour
+    {
+        return $this->createQueryBuilder('tour')
+            ->andWhere('tour.commercial = :commercial')
+            ->andWhere('tour.zone = :zone')
+            ->andWhere('tour.archivedAt IS NULL')
+            ->andWhere('tour.closureRequestedAt IS NULL')
+            ->andWhere('tour.status = :status')
+            ->setParameter('commercial', $commercial)
+            ->setParameter('zone', $zone)
+            ->setParameter('status', Tour::STATUS_PROGRAMMED)
+            ->orderBy('tour.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @return Tour[]
+     */
+    public function findPendingClosureRequests(): array
+    {
+        return $this->createQueryBuilder('tour')
+            ->leftJoin('tour.commercial', 'commercial')
+            ->addSelect('commercial')
+            ->andWhere('tour.closureRequestedAt IS NOT NULL')
+            ->andWhere('tour.status != :completed')
+            ->andWhere('tour.archivedAt IS NULL')
+            ->setParameter('completed', Tour::STATUS_COMPLETED)
+            ->orderBy('tour.closureRequestedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

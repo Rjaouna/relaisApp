@@ -53,12 +53,13 @@ class CommercialType extends AbstractType
                 'choices' => $cityChoices,
                 'placeholder' => 'Selectionner une ville',
             ])
-            ->add('zone', EntityType::class, [
-                'label' => 'Zone',
+            ->add('zones', EntityType::class, [
+                'label' => 'Zones',
                 'class' => Zone::class,
-                'choice_label' => 'name',
+                'choice_label' => static fn (Zone $zone): string => sprintf('%s - %s', $zone->getName(), $zone->getCity()?->getName() ?? 'Ville'),
                 'required' => false,
-                'placeholder' => 'Selectionner une zone',
+                'multiple' => true,
+                'help' => 'Tu peux rattacher plusieurs zones au meme commercial pour preparer des tournees partagees ou des couvertures transverses.',
             ])
             ->add('user', EntityType::class, [
                 'label' => 'Compte utilisateur',

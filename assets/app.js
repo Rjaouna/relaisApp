@@ -39,6 +39,11 @@ const getClientImportModalInstance = () => {
     return modalElement ? bootstrap.Modal.getOrCreateInstance(modalElement) : null;
 };
 
+let tourLiveRefreshIntervalId = null;
+let dashboardPendingClosureIntervalId = null;
+const VISIT_RESULT_APPOINTMENT_BOOKED = 'rdv_pris';
+let chartJsLoaderPromise = null;
+
 const refreshCrudList = async (url) => {
     const target = document.querySelector('[data-crud-list]');
 
@@ -57,6 +62,280 @@ const refreshCrudList = async (url) => {
     }
 
     target.innerHTML = await response.text();
+};
+
+const ensureChartJsLoaded = async () => {
+    if (typeof window !== 'undefined' && typeof window.Chart !== 'undefined') {
+        return window.Chart;
+    }
+
+    if (chartJsLoaderPromise) {
+        return chartJsLoaderPromise;
+    }
+
+    chartJsLoaderPromise = new Promise((resolve, reject) => {
+        const existingScript = document.querySelector('script[data-chartjs-loader]');
+        if (existingScript) {
+            existingScript.addEventListener('load', () => resolve(window.Chart), { once: true });
+            existingScript.addEventListener('error', () => reject(new Error('Unable to load Chart.js.')), { once: true });
+
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+        script.async = true;
+        script.dataset.chartjsLoader = 'true';
+        script.addEventListener('load', () => resolve(window.Chart), { once: true });
+        script.addEventListener('error', () => reject(new Error('Unable to load Chart.js.')), { once: true });
+        document.head.appendChild(script);
+    });
+
+    return chartJsLoaderPromise;
+};
+
+const parseJsonDataset = (value, fallback = {}) => {
+    try {
+        return value ? JSON.parse(value) : fallback;
+    } catch {
+        return fallback;
+    }
+};
+
+const setVisitChartEmptyState = (canvasId, hasData) => {
+    const canvas = document.getElementById(canvasId);
+    const emptyState = document.querySelector(`[data-visit-chart-empty="${canvasId}"]`);
+
+    if (canvas) {
+        canvas.classList.toggle('d-none', !hasData);
+    }
+
+    if (emptyState) {
+        emptyState.classList.toggle('d-none', hasData);
+    }
+};
+
+const destroyChartIfExists = (canvasId) => {
+    if (typeof window === 'undefined' || typeof window.Chart === 'undefined') {
+        return null;
+    }
+
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        return null;
+    }
+
+    const existingChart = window.Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
+    return canvas;
+};
+
+const bindVisitInsightsCharts = async () => {
+    const container = document.querySelector('[data-visit-insights]');
+    if (!container) {
+        return;
+    }
+
+    await ensureChartJsLoaded();
+
+    const chartPalette = {
+        primary: '#4bc2c4',
+        secondary: '#2d6464',
+        dark: '#111827',
+        soft: '#bfe9ea',
+        accent: '#88d7d8',
+        warning: '#f59e0b',
+    };
+
+    const clientsData = parseJsonDataset(container.dataset.visitClients, { labels: [], values: [] });
+    const citiesData = parseJsonDataset(container.dataset.visitCities, { labels: [], values: [] });
+    const resultsData = parseJsonDataset(container.dataset.visitResults, { labels: [], values: [] });
+
+    const renderChart = (canvasId, type, dataset, options = {}) => {
+        const labels = Array.isArray(dataset.labels) ? dataset.labels : [];
+        const values = Array.isArray(dataset.values) ? dataset.values : [];
+        const hasData = labels.length > 0 && values.some((value) => Number(value) > 0);
+
+        setVisitChartEmptyState(canvasId, hasData);
+        if (!hasData) {
+            destroyChartIfExists(canvasId);
+            return;
+        }
+
+        const canvas = destroyChartIfExists(canvasId);
+        if (!canvas) {
+            return;
+        }
+
+        new window.Chart(canvas, {
+            type,
+            data: {
+                labels,
+                datasets: [dataset.dataset],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                ...options,
+            },
+        });
+    };
+
+    renderChart('visitClientsChart', 'bar', {
+        labels: clientsData.labels,
+        values: clientsData.values,
+        dataset: {
+            data: clientsData.values,
+            backgroundColor: chartPalette.primary,
+            borderRadius: 12,
+        },
+    }, {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+    });
+
+    renderChart('visitCitiesChart', 'doughnut', {
+        labels: citiesData.labels,
+        values: citiesData.values,
+        dataset: {
+            data: citiesData.values,
+            backgroundColor: [chartPalette.primary, chartPalette.secondary, chartPalette.dark, chartPalette.accent, chartPalette.soft, chartPalette.warning],
+        },
+    }, {
+        plugins: { legend: { position: 'bottom' } },
+    });
+
+    renderChart('visitResultsChart', 'polarArea', {
+        labels: resultsData.labels,
+        values: resultsData.values,
+        dataset: {
+            data: resultsData.values,
+            backgroundColor: [chartPalette.primary, chartPalette.secondary, chartPalette.dark, chartPalette.accent, chartPalette.soft, chartPalette.warning],
+        },
+    }, {
+        plugins: { legend: { position: 'bottom' } },
+    });
+};
+
+const extractTourRowIds = (scope) => Array.from(
+    scope.querySelectorAll('[data-tour-row-id]'),
+    (row) => row.dataset.tourRowId,
+);
+
+const refreshTourListSilently = async (container) => {
+    const url = container?.dataset.tourLiveRefreshUrl;
+    const target = container?.querySelector('[data-crud-list]');
+
+    if (!url || !target) {
+        return;
+    }
+
+    const previousIds = extractTourRowIds(target);
+    const response = await fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    if (!response.ok) {
+        return;
+    }
+
+    const html = await response.text();
+    target.innerHTML = html;
+
+    const nextIds = extractTourRowIds(target);
+    const hasNewTour = nextIds.some((id) => !previousIds.includes(id));
+
+    if (hasNewTour && typeof window !== 'undefined') {
+        const title = document.title;
+        document.title = `Nouvelle tournee - ${title}`;
+        window.setTimeout(() => {
+            document.title = title;
+        }, 4000);
+    }
+};
+
+const stopTourLiveRefresh = () => {
+    if (tourLiveRefreshIntervalId !== null) {
+        window.clearInterval(tourLiveRefreshIntervalId);
+        tourLiveRefreshIntervalId = null;
+    }
+};
+
+const stopDashboardPendingClosureRefresh = () => {
+    if (dashboardPendingClosureIntervalId !== null) {
+        window.clearInterval(dashboardPendingClosureIntervalId);
+        dashboardPendingClosureIntervalId = null;
+    }
+};
+
+const bindTourLiveRefresh = () => {
+    stopTourLiveRefresh();
+
+    const container = document.querySelector('[data-tour-live-refresh-url]');
+    if (!container) {
+        return;
+    }
+
+    const interval = Number.parseInt(container.dataset.tourLiveRefreshInterval || '15000', 10);
+    if (!Number.isFinite(interval) || interval < 5000) {
+        return;
+    }
+
+    tourLiveRefreshIntervalId = window.setInterval(async () => {
+        if (document.hidden) {
+            return;
+        }
+
+        const modalOpen = document.querySelector('.modal.show');
+        if (modalOpen) {
+            return;
+        }
+
+        await refreshTourListSilently(container);
+    }, interval);
+};
+
+const refreshDashboardPendingClosures = async () => {
+    const container = document.querySelector('[data-dashboard-pending-closures-url]');
+    const url = container?.dataset.dashboardPendingClosuresUrl;
+
+    if (!container || !url) {
+        return;
+    }
+
+    const response = await fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    if (!response.ok) {
+        return;
+    }
+
+    container.innerHTML = await response.text();
+};
+
+const bindDashboardPendingClosureRefresh = () => {
+    stopDashboardPendingClosureRefresh();
+
+    const container = document.querySelector('[data-dashboard-pending-closures-url]');
+    if (!container) {
+        return;
+    }
+
+    dashboardPendingClosureIntervalId = window.setInterval(async () => {
+        if (document.hidden) {
+            return;
+        }
+
+        await refreshDashboardPendingClosures();
+    }, 10000);
 };
 
 const zoneCodeFromName = (value) => value
@@ -130,6 +409,121 @@ const bindVisitStatusLock = (scope = document) => {
     syncStatusLock();
 };
 
+const formatAppointmentPreview = (value) => {
+    if (!value) {
+        return 'Aucune date definie.';
+    }
+
+    const [datePart, timePart = ''] = String(value).split('T');
+    const normalizedDate = datePart.split('-').reverse().join('/');
+
+    return `${normalizedDate} ${timePart.slice(0, 5)}`.trim();
+};
+
+const bindAppointmentScheduling = (scope = document) => {
+    const resultField = scope.querySelector('[data-visit-result]');
+    if (!resultField || resultField.dataset.appointmentBound === 'true') {
+        return;
+    }
+
+    const inlineWrap = scope.querySelector('[data-appointment-inline-wrap]');
+    const inlineField = scope.querySelector('[data-appointment-inline]');
+    const sourceField = scope.querySelector('[data-appointment-modal-source]');
+    const summary = scope.querySelector('[data-appointment-summary]');
+    const summaryText = scope.querySelector('[data-appointment-summary-text]');
+    const openButton = scope.querySelector('[data-appointment-open-modal]');
+    const form = scope.querySelector('[data-appointment-modal-form]') || scope.closest('form');
+    const modalElement = document.getElementById('appointmentSchedulingModal');
+    const modalInput = modalElement?.querySelector('[data-appointment-modal-input]');
+    const confirmButton = modalElement?.querySelector('[data-appointment-modal-confirm]');
+    const modalInstance = modalElement ? bootstrap.Modal.getOrCreateInstance(modalElement) : null;
+
+    const targetField = sourceField || inlineField;
+
+    const syncState = () => {
+        const isAppointmentResult = resultField.value === VISIT_RESULT_APPOINTMENT_BOOKED;
+
+        inlineWrap?.classList.toggle('d-none', !isAppointmentResult);
+        summary?.classList.toggle('d-none', !isAppointmentResult);
+
+        if (!isAppointmentResult && targetField) {
+            targetField.value = '';
+        }
+
+        if (!isAppointmentResult && modalInput) {
+            modalInput.value = '';
+            modalInput.classList.remove('is-invalid');
+        }
+
+        if (summaryText) {
+            summaryText.textContent = formatAppointmentPreview(targetField?.value);
+        }
+    };
+
+    const openSchedulingModal = () => {
+        if (!modalInstance || !sourceField || resultField.value !== VISIT_RESULT_APPOINTMENT_BOOKED) {
+            return;
+        }
+
+        modalInput.value = sourceField.value ?? '';
+        modalInput.classList.remove('is-invalid');
+        modalInstance.show();
+        window.setTimeout(() => modalInput.focus(), 150);
+    };
+
+    resultField.addEventListener('change', () => {
+        const hadValue = !!targetField?.value;
+        syncState();
+
+        if (!hadValue) {
+            openSchedulingModal();
+        }
+    });
+
+    openButton?.addEventListener('click', () => {
+        openSchedulingModal();
+    });
+
+    confirmButton?.addEventListener('click', () => {
+        if (!targetField || !modalInput) {
+            return;
+        }
+
+        if (!modalInput.value) {
+            modalInput.classList.add('is-invalid');
+            modalInput.focus();
+
+            return;
+        }
+
+        targetField.value = modalInput.value;
+        targetField.dispatchEvent(new Event('change', { bubbles: true }));
+        syncState();
+        modalInstance?.hide();
+    });
+
+    if (form && form.dataset.appointmentSubmitBound !== 'true') {
+        form.addEventListener('submit', (event) => {
+            if (resultField.value !== VISIT_RESULT_APPOINTMENT_BOOKED) {
+                return;
+            }
+
+            if (targetField?.value) {
+                return;
+            }
+
+            event.preventDefault();
+            openSchedulingModal();
+            modalInput?.classList.add('is-invalid');
+        });
+
+        form.dataset.appointmentSubmitBound = 'true';
+    }
+
+    resultField.dataset.appointmentBound = 'true';
+    syncState();
+};
+
 const setFieldValue = (form, fieldName, value) => {
     const directField = form.querySelector(`[name$="[${fieldName}]"]`);
     if (directField && directField.type !== 'radio') {
@@ -153,11 +547,12 @@ const setFieldValue = (form, fieldName, value) => {
 };
 
 const applyVisitPrefill = (form, fields) => {
-    ['type', 'priority', 'status', 'result', 'objective', 'report', 'nextAction', 'interestLevel'].forEach((fieldName) => {
+    ['type', 'priority', 'status', 'result', 'appointmentScheduledAt', 'objective', 'report', 'nextAction', 'interestLevel'].forEach((fieldName) => {
         setFieldValue(form, fieldName, fields[fieldName] ?? null);
     });
 
     bindVisitStatusLock(form);
+    bindAppointmentScheduling(form);
 };
 
 const loadVisitPrefill = async (form, clientId) => {
@@ -217,6 +612,45 @@ const bindVisitClientPrefill = (scope = document) => {
     });
 
     clientField.dataset.visitPrefillBound = 'true';
+};
+
+const bindVisitBatchSelection = (scope = document) => {
+    const form = scope.querySelector('[data-visit-batch-form]');
+    if (!form || form.dataset.visitBatchBound === 'true') {
+        return;
+    }
+
+    const checkboxes = () => Array.from(form.querySelectorAll('[data-visit-batch-checkbox]'));
+    const counter = form.querySelector('[data-visit-batch-selected-count]');
+
+    const syncCount = () => {
+        if (counter) {
+            counter.textContent = String(checkboxes().filter((checkbox) => checkbox.checked).length);
+        }
+    };
+
+    form.querySelector('[data-visit-batch-select-all]')?.addEventListener('click', () => {
+        checkboxes().forEach((checkbox) => {
+            checkbox.checked = true;
+        });
+        syncCount();
+    });
+
+    form.querySelector('[data-visit-batch-deselect-all]')?.addEventListener('click', () => {
+        checkboxes().forEach((checkbox) => {
+            checkbox.checked = false;
+        });
+        syncCount();
+    });
+
+    form.addEventListener('change', (event) => {
+        if (event.target.closest('[data-visit-batch-checkbox]')) {
+            syncCount();
+        }
+    });
+
+    form.dataset.visitBatchBound = 'true';
+    syncCount();
 };
 
 const openCityModal = async (url) => {
@@ -996,6 +1430,27 @@ const bindObjectivePlanning = (scope = document) => {
     void sync();
 };
 
+const bindTourMoveMode = (scope = document) => {
+    const form = scope.querySelector('[data-tour-move-mode]')?.closest('form');
+    const modeField = form?.querySelector('[data-tour-move-mode]');
+    const existingWrap = form?.querySelector('[data-tour-move-existing]');
+    const newWrap = form?.querySelector('[data-tour-move-new]');
+
+    if (!form || !modeField || form.dataset.tourMoveBound === 'true') {
+        return;
+    }
+
+    const syncMode = () => {
+        const useNewTour = modeField.value === 'new';
+        existingWrap?.classList.toggle('d-none', useNewTour);
+        newWrap?.classList.toggle('d-none', !useNewTour);
+    };
+
+    modeField.addEventListener('change', syncMode);
+    form.dataset.tourMoveBound = 'true';
+    syncMode();
+};
+
 const openCrudModal = async (url) => {
     const response = await fetch(url, {
         headers: {
@@ -1015,9 +1470,12 @@ const openCrudModal = async (url) => {
     modalBody.innerHTML = await response.text();
     bindZoneCodeAutofill(modalBody);
     bindVisitStatusLock(modalBody);
+    bindAppointmentScheduling(modalBody);
     bindVisitClientPrefill(modalBody);
     bindOfferItems(modalBody);
     bindObjectivePlanning(modalBody);
+    bindVisitBatchSelection(modalBody);
+    bindTourMoveMode(modalBody);
     getModalInstance()?.show();
 };
 
@@ -1048,15 +1506,23 @@ const submitCrudForm = async (form) => {
             modalBody.innerHTML = payload.form;
             bindZoneCodeAutofill(modalBody);
             bindVisitStatusLock(modalBody);
+            bindAppointmentScheduling(modalBody);
             bindVisitClientPrefill(modalBody);
             bindOfferItems(modalBody);
             bindObjectivePlanning(modalBody);
+            bindVisitBatchSelection(modalBody);
+            bindTourMoveMode(modalBody);
         }
 
         return;
     }
 
     getModalInstance()?.hide();
+    if (form.dataset.crudReload === 'true') {
+        window.location.reload();
+        return;
+    }
+
     await refreshCrudList(form.dataset.crudRefreshUrl);
 };
 
@@ -1249,23 +1715,71 @@ document.addEventListener('click', async (event) => {
 document.addEventListener('DOMContentLoaded', () => {
     bindZoneCodeAutofill(document);
     bindVisitStatusLock(document);
+    bindAppointmentScheduling(document);
     bindVisitClientPrefill(document);
     bindLiveSearch();
     bindOfferItems(document);
     bindFlashAlerts();
     bindObjectivePlanning(document);
+    bindTourLiveRefresh();
+    void bindVisitInsightsCharts();
+    bindVisitBatchSelection(document);
+    bindDashboardPendingClosureRefresh();
+    bindTourMoveMode(document);
 });
 
 document.addEventListener('turbo:before-cache', () => {
     resetNavigationOverlays();
+    stopTourLiveRefresh();
+    stopDashboardPendingClosureRefresh();
 });
 
 document.addEventListener('turbo:load', () => {
     bindZoneCodeAutofill(document);
     bindVisitStatusLock(document);
+    bindAppointmentScheduling(document);
     bindVisitClientPrefill(document);
     bindOfferItems(document);
     bindFlashAlerts();
     bindObjectivePlanning(document);
+    bindTourLiveRefresh();
     resetNavigationOverlays();
+    void bindVisitInsightsCharts();
+    bindVisitBatchSelection(document);
+    bindDashboardPendingClosureRefresh();
+    bindTourMoveMode(document);
+});
+
+document.addEventListener('click', async (event) => {
+    const trigger = event.target.closest('[data-crud-post-url]');
+    if (!trigger) {
+        return;
+    }
+
+    event.preventDefault();
+
+    if (trigger.dataset.crudConfirm && !window.confirm(trigger.dataset.crudConfirm)) {
+        return;
+    }
+
+    const response = await fetch(trigger.dataset.crudPostUrl, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json') ? await response.json() : null;
+    if (!response.ok) {
+        throw new Error(payload?.message || 'Action impossible.');
+    }
+
+    if (trigger.dataset.crudRefreshUrl) {
+        await refreshCrudList(trigger.dataset.crudRefreshUrl);
+    }
+
+    if (trigger.dataset.crudReload === 'true') {
+        window.location.reload();
+    }
 });

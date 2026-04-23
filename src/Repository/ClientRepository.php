@@ -50,6 +50,26 @@ class ClientRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return Client[]
+     */
+    public function findAvailableForVisitPlanning(): array
+    {
+        return $this->createQueryBuilder('client')
+            ->leftJoin(
+                'client.visits',
+                'visit',
+                'WITH',
+                'visit.archivedAt IS NULL AND visit.status IN (:openStatuses)'
+            )
+            ->groupBy('client.id')
+            ->having('COUNT(visit.id) = 0')
+            ->setParameter('openStatuses', ['prevue', 'en_attente'])
+            ->orderBy('client.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function countAssigned(): int
     {
         return (int) $this->createQueryBuilder('client')
@@ -67,6 +87,19 @@ class ClientRepository extends ServiceEntityRepository
             ->setParameter('commercial', $commercial)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * @return Client[]
+     */
+    public function findForCommercial(Commercial $commercial): array
+    {
+        return $this->createQueryBuilder('client')
+            ->andWhere('client.assignedCommercial = :commercial')
+            ->setParameter('commercial', $commercial)
+            ->orderBy('client.name', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     public function countNewActiveForCommercialInPeriod(Commercial $commercial, \DateTimeImmutable $start, \DateTimeImmutable $end): int
@@ -92,10 +125,11 @@ class ClientRepository extends ServiceEntityRepository
             ->innerJoin('client.visits', 'visit')
             ->andWhere('client.assignedCommercial = :commercial')
             ->andWhere('visit.result = :result')
-            ->andWhere('visit.scheduledAt >= :start')
-            ->andWhere('visit.scheduledAt < :end')
+            ->andWhere('visit.adminReviewStatus = :reviewStatus')
+            ->andWhere('((visit.adminReviewedAt IS NOT NULL AND visit.adminReviewedAt >= :start AND visit.adminReviewedAt < :end) OR (visit.adminReviewedAt IS NULL AND visit.scheduledAt >= :start AND visit.scheduledAt < :end))')
             ->setParameter('commercial', $commercial)
             ->setParameter('result', 'commande_confirmee')
+            ->setParameter('reviewStatus', 'validee')
             ->setParameter('start', $start)
             ->setParameter('end', $end)
             ->getQuery()

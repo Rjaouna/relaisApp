@@ -28,40 +28,40 @@
 
         <div class="collapse navbar-collapse order-xl-2" id="mainNavigation">
             <ul class="navbar-nav mx-auto mb-3 mb-xl-0 app-nav-menu">
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
+                {% if menu_group_visible('pilotage') and (is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION')) %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') in ['app_dashboard'] or app.request.attributes.get('_route') starts with 'app_stats_' or app.request.attributes.get('_route') starts with 'app_market_' or app.request.attributes.get('_route') starts with 'app_objective_' or app.request.attributes.get('_route') starts with 'app_weekly_meeting_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bar-chart-line fs-5"></i>
                             <span class="small mt-1">Pilotage</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_dashboard') }}">Dashboard</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_stats_index') }}">Statistiques</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_market_index') }}">Marche</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_objective_index') }}">Objectifs</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_weekly_meeting_index') }}">Reunions</a></li>
+                            {% if menu_visible('pilotage_dashboard') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_dashboard') }}">Dashboard</a></li>{% endif %}
+                            {% if menu_visible('pilotage_stats') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_stats_index') }}">Statistiques</a></li>{% endif %}
+                            {% if menu_visible('pilotage_market') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_market_index') }}">Marche</a></li>{% endif %}
+                            {% if menu_visible('pilotage_objectives') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_objective_index') }}">Objectifs</a></li>{% endif %}
+                            {% if menu_visible('pilotage_meetings') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_weekly_meeting_index') }}">Reunions</a></li>{% endif %}
                         </ul>
                     </li>
                 {% endif %}
 
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
+                {% if menu_group_visible('commercial') and (is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION')) %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_client_' or app.request.attributes.get('_route') starts with 'app_visit_' or app.request.attributes.get('_route') starts with 'app_commercial_' or app.request.attributes.get('_route') starts with 'app_offer_' or app.request.attributes.get('_route') starts with 'app_field_feedback_' or app.request.attributes.get('_route') starts with 'app_customer_satisfaction_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-people fs-5"></i>
                             <span class="small mt-1">Commercial</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_client_index') }}">Clients</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_commercial_index') }}">Commerciaux</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_visit_index') }}">Visites</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_offer_index') }}">Offres</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_field_feedback_index') }}">Retours terrain</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_customer_satisfaction_index') }}">Satisfaction</a></li>
+                            {% if menu_visible('commercial_clients') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_client_index') }}">Clients</a></li>{% endif %}
+                            {% if menu_visible('commercial_team') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_commercial_index') }}">Commerciaux</a></li>{% endif %}
+                            {% if menu_visible('commercial_visits') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_visit_index') }}">Visites</a></li>{% endif %}
+                            {% if menu_visible('commercial_offers') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_offer_index') }}">Offres</a></li>{% endif %}
+                            {% if menu_visible('commercial_feedback') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_field_feedback_index') }}">Retours terrain</a></li>{% endif %}
+                            {% if menu_visible('commercial_satisfaction') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_customer_satisfaction_index') }}">Satisfaction</a></li>{% endif %}
                         </ul>
                     </li>
                 {% endif %}
 
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') or is_granted('ROLE_COMMERCIAL') %}
+                {% if menu_group_visible('tournees') and (is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') or is_granted('ROLE_COMMERCIAL')) %}
                     <li class="nav-item">
                         <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_tour_' ? 'active' : '' }}" href="{{ path('app_tour_index') }}">
                             <i class="bi bi-signpost-split fs-5"></i>
@@ -70,7 +70,25 @@
                     </li>
                 {% endif %}
 
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_ACHAT') %}
+                {% if menu_group_visible('rdv') and (is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') or is_granted('ROLE_COMMERCIAL')) %}
+                    <li class="nav-item">
+                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_appointment_' ? 'active' : '' }}" href="{{ path('app_appointment_index') }}">
+                            <i class="bi bi-calendar-event fs-5"></i>
+                            <span class="small mt-1">{{ is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') ? 'Mes RDV' : 'RDV' }}</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if menu_visible('pilotage_objectives') and is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+                    <li class="nav-item">
+                        <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_objective_' ? 'active' : '' }}" href="{{ path('app_objective_index') }}">
+                            <i class="bi bi-bullseye fs-5"></i>
+                            <span class="small mt-1">Objectifs</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if menu_group_visible('achats') and (is_granted('ROLE_ADMIN') or is_granted('ROLE_ACHAT')) %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_supplier_' or app.request.attributes.get('_route') starts with 'app_supplier_consultation_' or app.request.attributes.get('_route') starts with 'app_product_' or app.request.attributes.get('_route') starts with 'app_supply_order_' or app.request.attributes.get('_route') starts with 'app_product_launch_project_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-box-seam fs-5"></i>
@@ -78,17 +96,17 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
                             {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION') %}
-                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supplier_index') }}">Fournisseurs</a></li>
-                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_product_index') }}">Produits</a></li>
-                                <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_product_launch_project_index') }}">Lancements</a></li>
+                                {% if menu_visible('achats_suppliers') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supplier_index') }}">Fournisseurs</a></li>{% endif %}
+                                {% if menu_visible('achats_products') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_product_index') }}">Produits</a></li>{% endif %}
+                                {% if menu_visible('achats_launches') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_product_launch_project_index') }}">Lancements</a></li>{% endif %}
                             {% endif %}
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supplier_consultation_index') }}">Consultations</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supply_order_index') }}">Imports</a></li>
+                            {% if menu_visible('achats_consultations') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supplier_consultation_index') }}">Consultations</a></li>{% endif %}
+                            {% if menu_visible('achats_imports') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_supply_order_index') }}">Imports</a></li>{% endif %}
                         </ul>
                     </li>
                 {% endif %}
 
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_LOGISTIQUE') %}
+                {% if menu_group_visible('livraisons') and (is_granted('ROLE_ADMIN') or is_granted('ROLE_LOGISTIQUE')) %}
                     <li class="nav-item">
                         <a class="nav-link rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_delivery_' ? 'active' : '' }}" href="{{ path('app_delivery_index') }}">
                             <i class="bi bi-truck-flatbed fs-5"></i>
@@ -97,18 +115,19 @@
                     </li>
                 {% endif %}
 
-                {% if is_granted('ROLE_ADMIN') %}
+                {% if menu_group_visible('parametrage') and is_granted('ROLE_ADMIN') %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') starts with 'app_settings_' or app.request.attributes.get('_route') starts with 'app_user_' or app.request.attributes.get('_route') starts with 'app_city_' or app.request.attributes.get('_route') starts with 'app_zone_' or app.request.attributes.get('_route') starts with 'app_reference_option_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-sliders fs-5"></i>
                             <span class="small mt-1">Parametrage</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_settings_index') }}">Vue generale</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_user_index') }}">Utilisateurs</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_city_index') }}">Villes</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_zone_index') }}">Zones</a></li>
-                            <li><a class="dropdown-item" data-turbo="false" href="{{ path('app_reference_option_index') }}">Choix</a></li>
+                            {% if menu_visible('parametrage_home') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_settings_index') }}">Vue generale</a></li>{% endif %}
+                            {% if menu_visible('parametrage_users') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_user_index') }}">Utilisateurs</a></li>{% endif %}
+                            {% if menu_visible('parametrage_cities') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_city_index') }}">Villes</a></li>{% endif %}
+                            {% if menu_visible('parametrage_zones') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_zone_index') }}">Zones</a></li>{% endif %}
+                            {% if menu_visible('parametrage_choices') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_reference_option_index') }}">Choix</a></li>{% endif %}
+                            {% if menu_visible('parametrage_menu') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_settings_menu') }}">Gestion du menu</a></li>{% endif %}
                         </ul>
                     </li>
                 {% endif %}

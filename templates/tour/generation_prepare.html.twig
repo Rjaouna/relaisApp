@@ -1,0 +1,177 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Preparation des tournees{% endblock %}
+
+{% block body %}
+    <div class="d-flex flex-column gap-4">
+        <div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                    <div>
+                        <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-3">Preparation obligatoire</span>
+                        <h1 class="h3 mb-1">Ajuster les zones avant generation</h1>
+                        <p class="text-body-secondary mb-0">Verifie les statuts inclus, decide quelles zones participent a la session, puis choisis le commercial responsable avant toute creation de tournee.</p>
+                    </div>
+                    <a href="{{ path('app_tour_index') }}" class="btn btn-outline-secondary rounded-pill px-4">Retour aux tournees</a>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="d-flex flex-column gap-4">
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4">
+                    <div class="text-body-secondary small text-uppercase mb-2">Perimetre</div>
+                    <h2 class="h5 mb-3">Statuts client a inclure</h2>
+                    <div class="row g-3">
+                        {% for label, value in tourGenerationStatusChoices %}
+                            <div class="col-md-6 col-xl-3">
+                                <label class="card border-0 bg-body-tertiary rounded-4 h-100">
+                                    <div class="card-body d-flex align-items-center gap-3">
+                                        <input class="form-check-input mt-0" type="checkbox" name="client_statuses[]" value="{{ value }}" {{ value in generation.statuses ? 'checked' : '' }}>
+                                        <div>
+                                            <div class="fw-semibold">{{ label }}</div>
+                                            <div class="small text-body-secondary">{{ value|replace({'_': ' '})|title }}</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {% for column in generation.columns %}
+                    <div class="col-xl-4">
+                        <div class="card border-0 shadow-sm rounded-5 h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="text-body-secondary small text-uppercase mb-2">Commercial</div>
+                                        <h2 class="h5 mb-1">{{ column.commercial.fullName }}</h2>
+                                        <div class="small text-body-secondary">{{ column.commercial.city }}</div>
+                                    </div>
+                                    <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis">
+                                        {{ column.zones|length }} zone{{ column.zones|length > 1 ? 's' : '' }}
+                                    </span>
+                                </div>
+
+                                <div class="d-flex flex-column gap-3">
+                                    {% for zone in column.zones %}
+                                        <div class="card border-0 bg-body-tertiary rounded-4">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                                    <div>
+                                                        <div class="fw-semibold">{{ zone.zoneName }}</div>
+                                                        <div class="small text-body-secondary">{{ zone.cityName }}</div>
+                                                    </div>
+                                                    <span class="badge rounded-pill text-bg-light">{{ zone.clientCount }} client{{ zone.clientCount > 1 ? 's' : '' }}</span>
+                                                </div>
+                                                <div class="row g-2">
+                                                    <div class="col-12">
+                                                        <label class="form-label small text-uppercase text-body-secondary">Responsable de la generation</label>
+                                                        <select class="form-select" name="zones[{{ zone.id }}][commercialId]">
+                                                            <option value="">A arbitrer</option>
+                                                            {% for choice in generation.commercialChoices %}
+                                                                <option value="{{ choice.id }}" {{ zone.commercialId == choice.id ? 'selected' : '' }}>{{ choice.fullName }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" name="zones[{{ zone.id }}][included]" id="zone_included_{{ zone.id }}" {{ zone.included ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="zone_included_{{ zone.id }}">Inclure cette zone dans la generation</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-body-secondary small">Aucune zone actuellement dirigee vers ce commercial pour cette generation.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if generation.unassignedZones is not empty %}
+                <div class="card border-0 shadow-sm rounded-5">
+                    <div class="card-body p-4">
+                        <div class="text-warning small text-uppercase mb-2">A arbitrer</div>
+                        <h2 class="h5 mb-3">Zones partagees ou non decidees</h2>
+                        <div class="row g-3">
+                            {% for zone in generation.unassignedZones %}
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="card border border-warning-subtle bg-warning-subtle rounded-4 h-100">
+                                        <div class="card-body">
+                                            <div class="fw-semibold">{{ zone.zoneName }}</div>
+                                            <div class="small text-body-secondary mb-3">{{ zone.cityName }}</div>
+                                            <div class="small text-body-secondary mb-2">{{ zone.clientCount }} client{{ zone.clientCount > 1 ? 's' : '' }} a repartir</div>
+                                            <select class="form-select" name="zones[{{ zone.id }}][commercialId]">
+                                                <option value="">Choisir un responsable</option>
+                                                {% for choice in generation.commercialChoices %}
+                                                    <option value="{{ choice.id }}" {{ zone.commercialId == choice.id ? 'selected' : '' }}>{{ choice.fullName }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="form-check form-switch mt-3">
+                                                <input class="form-check-input" type="checkbox" name="zones[{{ zone.id }}][included]" id="zone_unassigned_{{ zone.id }}" {{ zone.included ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="zone_unassigned_{{ zone.id }}">Garder la zone dans la session</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if generation.excludedZones is not empty %}
+                <div class="card border-0 shadow-sm rounded-5">
+                    <div class="card-body p-4">
+                        <div class="text-body-secondary small text-uppercase mb-2">Zones exclues</div>
+                        <h2 class="h5 mb-3">Retirees de la generation en cours</h2>
+                        <div class="row g-3">
+                            {% for zone in generation.excludedZones %}
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="card border-0 bg-body-tertiary rounded-4 h-100">
+                                        <div class="card-body">
+                                            <div class="fw-semibold">{{ zone.zoneName }}</div>
+                                            <div class="small text-body-secondary">{{ zone.cityName }}</div>
+                                            <div class="small text-body-secondary mt-2">{{ zone.clientCount }} client{{ zone.clientCount > 1 ? 's' : '' }}</div>
+                                            <input type="hidden" name="zones[{{ zone.id }}][commercialId]" value="{{ zone.commercialId }}">
+                                            <div class="form-check form-switch mt-3">
+                                                <input class="form-check-input" type="checkbox" name="zones[{{ zone.id }}][included]" id="zone_excluded_{{ zone.id }}">
+                                                <label class="form-check-label" for="zone_excluded_{{ zone.id }}">Reintegrer cette zone</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                <div class="small text-body-secondary">
+                    {% if generation.hasConflicts %}
+                        Des zones partagées demandent encore une repartition client par client avant la generation finale.
+                    {% else %}
+                        La repartition est propre. Tu peux lancer la generation des tournees.
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2 flex-wrap justify-content-lg-end">
+                    <button type="submit" name="action" value="save" class="btn btn-outline-secondary rounded-pill px-4">Enregistrer la preparation</button>
+                    {% if generation.hasConflicts %}
+                        <button type="submit" name="action" value="conflicts" class="btn btn-outline-primary rounded-pill px-4">Repartir les clients</button>
+                    {% else %}
+                        <button type="submit" name="action" value="finalize" class="btn btn-primary rounded-pill px-4">Generer les tournees</button>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

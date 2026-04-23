@@ -1,0 +1,60 @@
+<div class="modal-header">
+    <h5 class="modal-title">Reaffecter {{ visit.client.name }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+<form
+    method="post"
+    action="{{ path('app_tour_move_visit', {id: tour.id, visit: visit.id}) }}"
+    data-crud-ajax-form
+    data-crud-refresh-url="{{ path('app_tour_list') }}"
+    data-crud-reload="true"
+>
+    <div class="modal-body">
+        <div class="d-flex flex-column gap-3">
+            {% if moveError %}
+                <div class="alert alert-danger rounded-4 mb-0">{{ moveError }}</div>
+            {% endif %}
+
+            <div class="card border-0 bg-body-tertiary rounded-4">
+                <div class="card-body p-3">
+                    <div class="text-body-secondary small text-uppercase mb-2">Client concerne</div>
+                    <div class="fw-semibold">{{ visit.client.name }}</div>
+                    <div class="small text-body-secondary">{{ visit.client.city }} - {{ visit.client.zone ? visit.client.zone.name : 'Sans zone' }}</div>
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">Envoyer vers</label>
+                <select class="form-select" name="mode" data-tour-move-mode>
+                    <option value="existing">Une tournee ouverte existante</option>
+                    <option value="new">Une nouvelle tournee</option>
+                </select>
+            </div>
+
+            <div data-tour-move-existing>
+                <label class="form-label">Tournee cible</label>
+                <select class="form-select" name="target_tour_id">
+                    <option value="">Choisir une tournee</option>
+                    {% for target in targets %}
+                        <option value="{{ target.id }}">{{ target.name }} - {{ target.commercial.fullName }} - {{ target.city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-none" data-tour-move-new>
+                <label class="form-label">Commercial de la nouvelle tournee</label>
+                <select class="form-select" name="commercial_id">
+                    <option value="">Choisir un commercial</option>
+                    {% for commercial in commercials %}
+                        <option value="{{ commercial.id }}">{{ commercial.fullName }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">La nouvelle tournee sera creee en statut programmee sur la zone du client.</div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Valider le deplacement</button>
+    </div>
+</form>

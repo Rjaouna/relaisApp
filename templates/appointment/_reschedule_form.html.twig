@@ -1,0 +1,25 @@
+<div class="modal-header">
+    <h5 class="modal-title">Reporter le RDV</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+<form method="post" action="{{ path('app_appointment_reschedule', {id: appointment.id}) }}" data-crud-ajax-form data-crud-refresh-url="{{ path('app_appointment_list') }}">
+    <div class="modal-body">
+        {% if error %}
+            <div class="alert alert-danger rounded-4">{{ error }}</div>
+        {% endif %}
+        <div class="d-flex flex-column gap-3">
+            <div>
+                <label class="form-label">Nouvelle date</label>
+                <input type="datetime-local" class="form-control" name="scheduled_at" value="{{ appointment.scheduledAt|date('Y-m-d\\TH:i') }}" required>
+            </div>
+            <div>
+                <label class="form-label">Commentaire</label>
+                <textarea class="form-control" name="note" rows="4" placeholder="Explique la raison du report...">{{ appointment.note }}</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Reprogrammer</button>
+    </div>
+</form>

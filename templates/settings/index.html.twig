@@ -77,6 +77,20 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card app-settings-card border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <span class="badge rounded-pill text-bg-light">{{ menuCount }} menu(x) actif(s)</span>
+                            <span class="app-user-panel-icon"><i class="bi bi-layout-text-sidebar"></i></span>
+                        </div>
+                        <h2 class="h4 fw-bold">Gestion du menu</h2>
+                        <p class="text-body-secondary flex-grow-1">Choisis les rubriques principales a afficher dans l application sans toucher au code.</p>
+                        <a href="{{ path('app_settings_menu') }}" class="btn btn-primary">Ouvrir</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 {% endblock %}

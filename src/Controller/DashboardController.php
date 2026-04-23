@@ -2,13 +2,14 @@
 
 namespace App\Controller;
 
-use App\Service\DecisionSupportService;
 use App\Service\DashboardService;
 use App\Service\OfferService;
+use App\Service\TourGenerationWorkflowService;
 use App\Service\VisitService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/dashboard', name: 'app_dashboard')]
@@ -18,7 +19,8 @@ class DashboardController extends AbstractController
         private readonly DashboardService $dashboardService,
         private readonly VisitService $visitService,
         private readonly OfferService $offerService,
-        private readonly DecisionSupportService $decisionSupportService,
+        private readonly \App\Service\DecisionSupportService $decisionSupportService,
+        private readonly TourGenerationWorkflowService $tourGenerationWorkflowService,
     ) {
     }
 
@@ -53,9 +55,16 @@ class DashboardController extends AbstractController
     #[Route('/generate-tours', name: '_generate_tours', methods: ['POST'])]
     public function generateTours(): RedirectResponse
     {
-        $count = $this->decisionSupportService->generateToursFromVisits();
-        $this->addFlash('success', sprintf('%d tournee(s) generee(s) automatiquement.', $count));
+        $this->tourGenerationWorkflowService->start();
 
-        return $this->redirectToRoute('app_dashboard');
+        return $this->redirectToRoute('app_tour_generation_prepare');
+    }
+
+    #[Route('/pending-closures', name: '_pending_closures', methods: ['GET'])]
+    public function pendingClosures(): Response
+    {
+        return $this->render('dashboard/_pending_closures.html.twig', [
+            'pendingClosureTours' => $this->dashboardService->buildOverview()['pending_closure_tours'],
+        ]);
     }
 }

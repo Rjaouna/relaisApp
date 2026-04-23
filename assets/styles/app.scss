@@ -765,6 +765,17 @@ h6,
     height: 100% !important;
 }
 
+.visit-chart-wrapper {
+    position: relative;
+    min-height: 18rem;
+    max-height: 18rem;
+}
+
+.visit-chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 @media (max-width: 1199.98px) {
     .app-nav-menu {
         margin-top: 1rem;

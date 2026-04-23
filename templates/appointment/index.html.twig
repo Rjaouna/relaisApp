@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rendez-vous{% endblock %}
+
+{% block body %}
+    {% set commercial_mode = is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+    <div class="card border-0 shadow-sm rounded-5 mb-4 overflow-hidden">
+        <div class="card-body p-4 p-lg-5 {{ commercial_mode ? 'bg-dark text-white' : 'bg-white' }}">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="badge rounded-pill {{ commercial_mode ? 'text-bg-light text-dark' : 'text-bg-primary-subtle text-primary-emphasis' }} mb-3">
+                        {{ commercial_mode ? 'Suivi terrain' : 'Pilotage commercial' }}
+                    </span>
+                    <h1 class="h3 mb-1">{{ commercial_mode ? 'Mes rendez-vous' : 'Rendez-vous commerciaux' }}</h1>
+                    <p class="{{ commercial_mode ? 'text-white-50' : 'text-body-secondary' }} mb-0">
+                        {{ commercial_mode ? 'Retrouve tous les rendez-vous pris depuis tes visites, avec le client, la date et le contexte de suivi.' : 'Consulte tous les rendez-vous pris par les commerciaux et suis facilement les prochains points de contact.' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-5 overflow-hidden" data-list-search-scope>
+        {% include '_partials/_listing_search.html.twig' with { placeholder: commercial_mode ? 'Rechercher un rendez-vous...' : 'Rechercher un rendez-vous, un client ou un commercial...' } %}
+        <div class="card-body p-0" data-crud-list>
+            {% include 'appointment/_list.html.twig' with { appointments: appointments } %}
+        </div>
+    </div>
+{% endblock %}

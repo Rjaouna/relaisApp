@@ -22,9 +22,21 @@
 
             <div class="card border-0 shadow-sm rounded-5">
                 <div class="card-body p-4 p-lg-5">
-                    {{ form_start(form) }}
+                    {{ form_start(form, { attr: { 'data-appointment-modal-form': true } }) }}
                         <div class="row g-3">
                             <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.result, category: 'visit_result' } %}</div>
+                            <div class="col-md-6 d-none">
+                                {{ form_row(form.appointmentScheduledAt, { attr: form.appointmentScheduledAt.vars.attr|merge({ 'data-appointment-modal-source': true }) }) }}
+                            </div>
+                            <div class="col-12 d-none" data-appointment-summary>
+                                <div class="alert alert-info border-0 rounded-4 mb-0">
+                                    <div class="fw-semibold mb-1">Rendez-vous programme</div>
+                                    <div class="small text-body-secondary" data-appointment-summary-text>Aucune date definie.</div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill mt-3" data-appointment-open-modal>
+                                        <i class="bi bi-calendar-event me-2"></i>Modifier la date du rendez-vous
+                                    </button>
+                                </div>
+                            </div>
                             <div class="col-12">{% include '_partials/_interest_level_field.html.twig' with { field: form.interestLevel } %}</div>
                             <div class="col-12">{{ form_row(form.report) }}</div>
                             <div class="col-12">{{ form_row(form.nextAction) }}</div>
@@ -34,6 +46,30 @@
                             <button type="submit" class="btn btn-primary rounded-pill px-4">Enregistrer le resultat</button>
                         </div>
                     {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="appointmentSchedulingModal" tabindex="-1" aria-labelledby="appointmentSchedulingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-5">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <div class="text-body-secondary small text-uppercase mb-1">Rendez-vous a programmer</div>
+                        <h2 class="h5 mb-0" id="appointmentSchedulingModalLabel">Choisir la date du RDV</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p class="text-body-secondary mb-3">Le rendez-vous sera automatiquement ajoute dans la rubrique <strong>RDV</strong> avec le client, le commercial et la visite source.</p>
+                    <label class="form-label" for="appointmentSchedulingModalInput">Date et heure du rendez-vous</label>
+                    <input type="datetime-local" class="form-control" id="appointmentSchedulingModalInput" data-appointment-modal-input>
+                    <div class="form-text">Choisis directement le prochain point de contact avec ce client.</div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" data-appointment-modal-confirm>Valider le rendez-vous</button>
                 </div>
             </div>
         </div>

@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion du menu{% endblock %}
+
+{% block body %}
+    <section class="d-flex flex-column gap-4">
+        <div class="app-page-hero rounded-5 p-4 p-lg-5">
+            <div class="row g-4 align-items-end">
+                <div class="col-lg-8">
+                    <div class="app-section-kicker text-secondary mb-3">Parametrage</div>
+                    <h1 class="display-6 fw-bold mb-3">Pilotage des menus visibles</h1>
+                    <p class="text-body-secondary mb-0">Active ou masque les rubriques et leurs sous-menus. Si un parent est decoche, tous ses sous-menus sont desactives automatiquement.</p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="rounded-5 p-4 h-100" style="background: linear-gradient(135deg, rgba(75, 194, 196, 0.14), rgba(45, 100, 100, 0.1));">
+                        <div class="small text-uppercase text-body-secondary mb-2">Rubriques gerables</div>
+                        <div class="h2 fw-bold mb-0">{{ menuItems|length }}</div>
+                        <div class="small text-body-secondary mt-2">Controle centralise des familles de navigation.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{ form_start(form) }}
+            <div class="row g-4">
+                {% for item in menuItems %}
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card app-settings-card border-0 h-100 p-0 overflow-hidden" data-menu-group>
+                            <div class="card-body p-4 d-flex flex-column gap-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="app-user-panel-icon"><i class="bi {{ item.icon }}"></i></span>
+                                    <span class="badge rounded-pill {{ item.enabled ? 'text-bg-success' : 'text-bg-light' }}">{{ item.enabled ? 'Visible' : 'Masque' }}</span>
+                                </div>
+                                <div>
+                                    <h2 class="h4 fw-bold mb-2">{{ item.label }}</h2>
+                                    <p class="text-body-secondary mb-0">{{ item.description }}</p>
+                                </div>
+
+                                <div class="form-check form-switch mt-auto">
+                                    {{ form_widget(form.visibleMenus[item.form_index], { attr: { class: 'form-check-input', 'data-menu-parent': 'true' } }) }}
+                                    <span class="form-check-label ms-2">Afficher cette rubrique</span>
+                                </div>
+
+                                <div class="pt-2 border-top">
+                                    <div class="small text-uppercase text-body-secondary mb-3">Sous-menus</div>
+                                    <div class="d-flex flex-column gap-2">
+                                        {% for child in item.children %}
+                                            <div class="form-check" data-menu-child-row>
+                                                {{ form_widget(form.visibleMenus[child.form_index], { attr: { class: 'form-check-input', 'data-menu-child': 'true' } }) }}
+                                                <span class="form-check-label ms-2">{{ child.label }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{{ path('app_settings_index') }}" class="btn btn-outline-secondary">Retour</a>
+                <button type="submit" class="btn btn-primary">Enregistrer la configuration</button>
+            </div>
+        {{ form_end(form) }}
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-menu-group]').forEach((group) => {
+                const parent = group.querySelector('[data-menu-parent]');
+                const children = group.querySelectorAll('[data-menu-child]');
+
+                if (!parent) {
+                    return;
+                }
+
+                const syncChildren = () => {
+                    children.forEach((child) => {
+                        child.disabled = !parent.checked;
+                        child.closest('[data-menu-child-row]')?.classList.toggle('opacity-50', !parent.checked);
+
+                        if (!parent.checked) {
+                            child.checked = false;
+                        }
+                    });
+                };
+
+                parent.addEventListener('change', syncChildren);
+                syncChildren();
+            });
+        });
+    </script>
+{% endblock %}

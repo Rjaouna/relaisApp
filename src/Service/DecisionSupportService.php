@@ -214,11 +214,18 @@ class DecisionSupportService
         usort($commercials, static fn (Commercial $left, Commercial $right): int => $left->getCommercialLoad() <=> $right->getCommercialLoad());
 
         foreach ($commercials as $commercial) {
-            $zoneName = $commercial->getZone()?->getName();
+            $zoneNames = array_map(
+                static fn (\App\Entity\Zone $zone): string => $zone->getName() ?? '',
+                $commercial->getZones()->toArray()
+            );
+
+            if ($zoneNames === [] && $commercial->getZone()?->getName()) {
+                $zoneNames = [$commercial->getZone()?->getName() ?? ''];
+            }
 
             if (
                 $commercial->getCity() === $client->getCity()
-                || ($zoneName !== null && $zoneName === ($client->getZone()?->getName() ?: $client->getCity()))
+                || in_array(($client->getZone()?->getName() ?: $client->getCity()), $zoneNames, true)
             ) {
                 return $commercial;
             }

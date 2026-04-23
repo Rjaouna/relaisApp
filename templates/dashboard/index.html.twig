@@ -4,6 +4,10 @@
 
 {% block body %}
     <section class="d-flex flex-column gap-3">
+        <div data-dashboard-pending-closures-url="{{ path('app_dashboard_pending_closures') }}">
+            {% include 'dashboard/_pending_closures.html.twig' with { pendingClosureTours: overview.pending_closure_tours } %}
+        </div>
+
         <div class="app-page-hero app-page-hero-dark rounded-5 p-3 p-lg-4">
             <div class="position-relative">
                 <div class="row g-3 align-items-end">

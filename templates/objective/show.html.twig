@@ -10,7 +10,7 @@
         </div>
         <div class="d-flex gap-2">
             <a href="{{ path('app_objective_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
-            <a href="{{ path('app_objective_edit', {id: objective.id}) }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_objective_edit', {id: objective.id}) }}">Modifier</a>
+            <span class="badge rounded-pill text-bg-light align-self-center">Lecture seule</span>
         </div>
     </div>
     <div class="row g-4">
@@ -19,7 +19,7 @@
                 <div class="card-body p-4">
                     <div class="text-body-secondary mb-3">{{ objective.commercial.fullName }}</div>
                     <div class="alert alert-light border-0 rounded-4 mb-4">
-                        Les valeurs realisees sont calculees automatiquement a partir des visites, des offres acceptees et des nouveaux clients de la periode.
+                        Les valeurs realisees sont calculees a partir des visites validees par l'administration apres cloture des tournees.
                     </div>
                     <dl class="row mb-0">
                         <dt class="col-sm-4">CA</dt>
@@ -31,12 +31,85 @@
                     </dl>
                 </div>
             </div>
+
+            <div class="card border-0 shadow-sm rounded-5 mt-4">
+                <div class="card-body p-4">
+                    <div class="text-body-secondary small text-uppercase mb-2">Controle de la periode</div>
+                    <h2 class="h5 mb-4">Synthese des visites validees</h2>
+                    <div class="row g-3">
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body">
+                                    <div class="text-body-secondary small text-uppercase mb-2">Clients traites</div>
+                                    <div class="display-6 fw-semibold mb-0">{{ insights.treated_clients }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body">
+                                    <div class="text-body-secondary small text-uppercase mb-2">Visites validees</div>
+                                    <div class="display-6 fw-semibold mb-0">{{ insights.validated_visits }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body">
+                                    <div class="text-body-secondary small text-uppercase mb-2">Commandes confirmees</div>
+                                    <div class="display-6 fw-semibold mb-0 text-success">{{ insights.results.commande_confirmee }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body">
+                                    <div class="text-body-secondary small text-uppercase mb-2">Devis envoyes</div>
+                                    <div class="display-6 fw-semibold mb-0">{{ insights.results.devis_envoye }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body">
+                                    <div class="text-body-secondary small text-uppercase mb-2">RDV pris</div>
+                                    <div class="display-6 fw-semibold mb-0">{{ insights.results.rdv_pris }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-4">
+                            <div class="app-stat-card card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body">
+                                    <div class="text-body-secondary small text-uppercase mb-2">A relancer</div>
+                                    <div class="display-6 fw-semibold mb-0">{{ insights.results.a_relancer }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="d-flex justify-content-between border rounded-4 px-3 py-2">
+                                <span class="text-body-secondary">Pas interesses</span>
+                                <strong>{{ insights.results.pas_interesse }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex justify-content-between border rounded-4 px-3 py-2">
+                                <span class="text-body-secondary">Absents</span>
+                                <strong>{{ insights.results.absent }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-5 h-100">
                 <div class="card-body p-4">
                     <div class="text-body-secondary small text-uppercase mb-2">Commercial</div>
                     <div class="fw-semibold">{{ objective.commercial.fullName }}</div>
+                    <div class="text-body-secondary mt-2">Cette fiche sert de reference de performance apres controle administratif des visites.</div>
                 </div>
             </div>
         </div>

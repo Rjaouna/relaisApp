@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Controle visite{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5 overflow-hidden mb-4">
+                <div class="card-body bg-dark text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <div class="text-white-50 small text-uppercase mb-2">Controle administratif</div>
+                            <h1 class="h3 mb-1">{{ visit.client.name }}</h1>
+                            <p class="text-white-50 mb-0">
+                                {{ visit.scheduledAt|date('d/m/Y H:i') }} - {{ visit.result ? visit.result|replace({'_': ' '})|title : 'Sans resultat' }}
+                            </p>
+                        </div>
+                        <a href="{{ tourId ? path('app_tour_show', {id: tourId}) : path('app_visit_show', {id: visit.id}) }}" class="btn btn-outline-light rounded-pill">Retour</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-5">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="alert alert-light border-0 rounded-4 mb-4">
+                        Valide ou rejette cette visite apres verification du resultat saisi par le commercial. Le commentaire servira de retour terrain.
+                    </div>
+                    {{ form_start(form) }}
+                        <div class="row g-3">
+                            <div class="col-12">{{ form_row(form.adminReviewStatus) }}</div>
+                            <div class="col-12">{{ form_row(form.adminReviewComment) }}</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ tourId ? path('app_tour_show', {id: tourId}) : path('app_visit_show', {id: visit.id}) }}" class="btn btn-outline-secondary rounded-pill px-4">Annuler</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">Enregistrer le controle</button>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

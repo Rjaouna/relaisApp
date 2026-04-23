@@ -44,11 +44,18 @@ class Zone
     #[ORM\OneToMany(mappedBy: 'zone', targetEntity: Commercial::class)]
     private Collection $commercials;
 
+    /**
+     * @var Collection<int, Commercial>
+     */
+    #[ORM\ManyToMany(targetEntity: Commercial::class, mappedBy: 'zones')]
+    private Collection $assignedCommercials;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
         $this->commercials = new ArrayCollection();
+        $this->assignedCommercials = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -63,7 +70,7 @@ class Zone
 
     public function getCommercialsCount(): int
     {
-        return $this->commercials->count();
+        return max($this->commercials->count(), $this->assignedCommercials->count());
     }
 
     public function getId(): ?int
@@ -147,5 +154,13 @@ class Zone
     public function getCommercials(): Collection
     {
         return $this->commercials;
+    }
+
+    /**
+     * @return Collection<int, Commercial>
+     */
+    public function getAssignedCommercials(): Collection
+    {
+        return $this->assignedCommercials;
     }
 }

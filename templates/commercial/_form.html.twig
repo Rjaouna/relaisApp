@@ -13,7 +13,7 @@
         <div class="row g-3">
             <div class="col-md-6">{{ form_row(form.fullName) }}</div>
             <div class="col-md-6">{% include '_partials/_city_select_field.html.twig' with { field: form.city } %}</div>
-            <div class="col-md-6">{{ form_row(form.zone) }}</div>
+            <div class="col-12">{{ form_row(form.zones) }}</div>
             <div class="col-md-6">{{ form_row(form.user) }}</div>
             <div class="col-md-6">{{ form_row(form.isActive) }}</div>
             <div class="col-md-4">{{ form_row(form.salesTarget) }}</div>
