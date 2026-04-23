@@ -56,6 +56,11 @@ class Tour
         ];
     }
 
+    public function touch(): void
+    {
+        // Kept for service-level consistency with other entities.
+    }
+
     public function getId(): ?int
     {
         return $this->id;
