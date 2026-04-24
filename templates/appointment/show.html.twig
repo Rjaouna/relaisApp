@@ -3,13 +3,13 @@
 {% block title %}Detail rendez-vous{% endblock %}
 
 {% block body %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
             <div class="text-body-secondary small text-uppercase mb-2">Fiche rendez-vous</div>
             <h1 class="h2 mb-1">{{ appointment.client.name }}</h1>
             <p class="text-body-secondary mb-0">{{ appointment.scheduledAt|date('d/m/Y H:i') }}</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="app-mobile-actions justify-content-start justify-content-lg-end">
             <a href="{{ path('app_appointment_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
             {% if appointment.visit %}
                 <a href="{{ path('app_visit_show', {id: appointment.visit.id}) }}" class="btn btn-primary rounded-pill px-4">Voir la visite source</a>
@@ -21,6 +21,21 @@
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm rounded-5">
                 <div class="card-body p-4">
+                    <div class="app-mobile-actions mb-4">
+                        {% if appointment.client.phone %}
+                            <a href="tel:{{ appointment.client.phone|replace({' ': ''}) }}" class="btn btn-primary rounded-pill">
+                                <i class="bi bi-telephone me-2"></i>Appeler
+                            </a>
+                        {% endif %}
+                        {% if appointment.client.address %}
+                            <a href="https://www.waze.com/ul?q={{ [appointment.client.address, appointment.client.city]|filter(v => v)|join(', ')|url_encode }}&navigate=yes" target="_blank" rel="noopener" class="btn btn-outline-secondary rounded-pill">
+                                <i class="bi bi-sign-turn-right me-2"></i>Itineraire
+                            </a>
+                        {% endif %}
+                        <a href="{{ path('app_client_show', {id: appointment.client.id}) }}" class="btn btn-outline-dark rounded-pill">
+                            <i class="bi bi-person-vcard me-2"></i>Fiche client
+                        </a>
+                    </div>
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Client</dt>
                         <dd class="col-sm-8">{{ appointment.client.name }}</dd>

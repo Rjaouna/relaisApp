@@ -1,5 +1,65 @@
 {% set commercial_mode = is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
-<div class="table-responsive">
+
+<div class="d-md-none p-3">
+    <div class="d-flex flex-column gap-3">
+        {% for appointment in appointments %}
+            <div class="app-mobile-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div class="min-w-0">
+                        <a class="fw-semibold text-decoration-none app-quick-link d-inline-block mb-1" href="{{ path('app_client_show', {id: appointment.client.id}) }}">{{ appointment.client.name }}</a>
+                        <div class="small text-body-secondary">{{ appointment.client.city }}</div>
+                    </div>
+                    <span class="badge rounded-pill {{ appointment.status == 'programme' ? 'text-bg-primary' : (appointment.status == 'realise' ? 'text-bg-success' : 'text-bg-secondary') }}">
+                        {{ appointment.status|replace({'_': ' '})|title }}
+                    </span>
+                </div>
+
+                <div class="app-mobile-meta-grid mb-3">
+                    {% if not commercial_mode %}
+                        <div>
+                            <div class="app-mobile-meta-label">Commercial</div>
+                            <div class="fw-semibold">{{ appointment.commercial.fullName }}</div>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <div class="app-mobile-meta-label">Date du RDV</div>
+                        <div class="fw-semibold">{{ appointment.scheduledAt|date('d/m/Y H:i') }}</div>
+                        <div class="small text-body-secondary">{{ appointment.scheduledAt < date() ? 'Rendez-vous passe' : 'A venir' }}</div>
+                    </div>
+                    <div>
+                        <div class="app-mobile-meta-label">Source</div>
+                        {% if appointment.visit %}
+                            <a class="app-quick-link fw-semibold" href="{{ path('app_visit_show', {id: appointment.visit.id}) }}">Visite #{{ appointment.visit.id }}</a>
+                        {% else %}
+                            <span class="text-body-secondary">Automatique</span>
+                        {% endif %}
+                    </div>
+                    {% if appointment.notifiedAt %}
+                        <div>
+                            <div class="app-mobile-meta-label">Notification</div>
+                            <div class="fw-semibold text-success">Envoyee</div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="app-mobile-actions">
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ path('app_appointment_show', {id: appointment.id}) }}" class="btn btn-outline-secondary rounded-pill">Consulter</a>
+                        {% if appointment.status != 'annule' %}
+                            <a href="{{ path('app_appointment_reschedule', {id: appointment.id}) }}" class="btn btn-outline-primary rounded-pill" data-crud-modal-url="{{ path('app_appointment_reschedule', {id: appointment.id}) }}">Reporter</a>
+                            <a href="{{ path('app_appointment_cancel', {id: appointment.id}) }}" class="btn btn-outline-danger rounded-pill" data-crud-modal-url="{{ path('app_appointment_cancel', {id: appointment.id}) }}">Annuler</a>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-crud-post-url="{{ path('app_appointment_notify', {id: appointment.id}) }}" data-crud-refresh-url="{{ path('app_appointment_list') }}">Notifier</button>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-body-secondary">Aucun rendez-vous disponible.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="table-responsive d-none d-md-block">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
             <tr>

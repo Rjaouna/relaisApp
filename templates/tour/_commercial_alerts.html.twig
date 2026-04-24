@@ -4,8 +4,8 @@
             <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
                 <div>
                     <div class="app-section-kicker text-warning mb-2">Notification terrain</div>
-                    <h2 class="h5 mb-1">Tournées prêtes pour demande de clôture</h2>
-                    <p class="text-body-secondary mb-0 small">Certaines tournées sont terminées mais attendent encore votre demande de clôture.</p>
+                    <h2 class="h5 mb-1">Tournees pretes pour demande de cloture</h2>
+                    <p class="text-body-secondary mb-0 small">Certaines tournees sont terminees mais attendent encore votre demande de cloture.</p>
                 </div>
                 <span class="badge rounded-pill text-bg-warning">{{ readyToCloseTours|length }} a finaliser</span>
             </div>
@@ -18,7 +18,7 @@
                                 <div class="fw-semibold">{{ tour.name }}</div>
                                 <div class="small text-body-secondary">{{ tour.city }} · {{ tour.completedVisits }}/{{ tour.plannedVisits }} client(s) traites</div>
                             </div>
-                            <span class="btn btn-sm btn-outline-warning rounded-pill">Demander la clôture</span>
+                            <span class="btn btn-sm btn-outline-warning rounded-pill">Demander la cloture</span>
                         </div>
                     </a>
                 {% endfor %}
