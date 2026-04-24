@@ -26,6 +26,7 @@ class VisitOutcomeType extends AbstractType
                 'label' => 'Resultat de la visite',
                 'choices' => $this->referenceOptionCrudService->getChoices(ReferenceOption::CATEGORY_VISIT_RESULT, Visit::resultChoices()),
                 'placeholder' => 'Selectionner un resultat',
+                'help' => 'Si tu choisis RDV pris, une date de rendez-vous te sera demandee juste apres.',
                 'attr' => [
                     'data-visit-result' => true,
                 ],

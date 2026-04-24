@@ -21,6 +21,7 @@ class DecisionSupportService
         Client::STATUS_POTENTIAL,
         Client::STATUS_IN_PROGRESS,
         Client::STATUS_ACTIVE,
+        Client::STATUS_LOYAL,
     ];
 
     public function __construct(
@@ -88,7 +89,10 @@ class DecisionSupportService
 
             $market = $existingMarkets[$city] ?? new Market();
             $revenue = array_reduce($offers, static fn (float $carry, $offer): float => $carry + (float) $offer->getAmount(), 0.0);
-            $activeClients = array_filter($clients, static fn (Client $client): bool => $client->getStatus() === Client::STATUS_ACTIVE);
+            $activeClients = array_filter($clients, static fn (Client $client): bool => in_array($client->getStatus(), [
+                Client::STATUS_ACTIVE,
+                Client::STATUS_LOYAL,
+            ], true));
             $coverageScore = min(100, (int) round((count($activeClients) / max(count($clients), 1)) * 100));
             $competitionScore = max(20, 100 - (count($clients) * 3));
             $globalScore = (int) round(($coverageScore + $competitionScore + min(100, $revenue / 1000)) / 3);

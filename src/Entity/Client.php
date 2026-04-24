@@ -19,6 +19,7 @@ class Client
     public const STATUS_POTENTIAL = 'potentiel';
     public const STATUS_IN_PROGRESS = 'en_cours';
     public const STATUS_ACTIVE = 'actif';
+    public const STATUS_LOYAL = 'client_fidele';
     public const STATUS_REFUSED = 'refuse';
 
     public const SEGMENT_STANDARD = 'standard';
@@ -129,6 +130,7 @@ class Client
             'Potentiel' => self::STATUS_POTENTIAL,
             'En cours' => self::STATUS_IN_PROGRESS,
             'Actif' => self::STATUS_ACTIVE,
+            'Client fidele' => self::STATUS_LOYAL,
             'Refuse' => self::STATUS_REFUSED,
         ];
     }

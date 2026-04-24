@@ -73,7 +73,8 @@ class AppFixtures extends Fixture
                 ['Potentiel', Client::STATUS_POTENTIAL, 10],
                 ['En cours', Client::STATUS_IN_PROGRESS, 20],
                 ['Actif', Client::STATUS_ACTIVE, 30],
-                ['Refuse', Client::STATUS_REFUSED, 40],
+                ['Client fidele', Client::STATUS_LOYAL, 40],
+                ['Refuse', Client::STATUS_REFUSED, 50],
             ],
             ReferenceOption::CATEGORY_CLIENT_SEGMENT => [
                 ['Standard', Client::SEGMENT_STANDARD, 10],
@@ -118,9 +119,10 @@ class AppFixtures extends Fixture
                 ['Absent', Visit::RESULT_ABSENT, 10],
                 ['Pas interesse', Visit::RESULT_NOT_INTERESTED, 20],
                 ['RDV pris', Visit::RESULT_APPOINTMENT_BOOKED, 30],
-                ['Devis envoye', Visit::RESULT_QUOTE_SENT, 40],
-                ['Commande confirmee', Visit::RESULT_ORDER_CONFIRMED, 50],
-                ['A relancer', Visit::RESULT_FOLLOW_UP, 60],
+                ['Client confirme', Visit::RESULT_CLIENT_CONFIRMED, 40],
+                ['Devis envoye', Visit::RESULT_QUOTE_SENT, 50],
+                ['Commande confirmee', Visit::RESULT_ORDER_CONFIRMED, 60],
+                ['A relancer', Visit::RESULT_FOLLOW_UP, 70],
             ],
             ReferenceOption::CATEGORY_OFFER_STATUS => [
                 ['En cours', 'en_cours', 10],

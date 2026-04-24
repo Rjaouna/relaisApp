@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Client;
+use App\Entity\Tour;
 use App\Entity\Visit;
 use App\Repository\ClientRepository;
 use App\Repository\VisitRepository;
@@ -148,6 +149,44 @@ class VisitCrudService
         );
     }
 
+    public function reviewAllForTour(Tour $tour, string $decision, ?string $comment = null): int
+    {
+        if (!in_array($decision, [Visit::REVIEW_VALIDATED, Visit::REVIEW_REJECTED], true)) {
+            throw new \LogicException('Decision de controle invalide.');
+        }
+
+        $reviewed = 0;
+        $commercial = $tour->getCommercial();
+
+        foreach ($this->visitRepository->findForTour($tour) as $visit) {
+            if ($visit->getResult() === null || $visit->getStatus() !== Visit::STATUS_COMPLETED) {
+                continue;
+            }
+
+            if (in_array($visit->getAdminReviewStatus(), [Visit::REVIEW_VALIDATED, Visit::REVIEW_REJECTED], true)) {
+                continue;
+            }
+
+            $visit
+                ->setAdminReviewStatus($decision)
+                ->setAdminReviewComment($comment ?: null)
+                ->setAdminReviewedAt(new \DateTimeImmutable());
+
+            $visit->touch();
+            $this->entityManager->persist($visit);
+            ++$reviewed;
+        }
+
+        if ($reviewed === 0) {
+            throw new \LogicException('Aucune visite en attente de controle n a ete trouvee sur cette tournee.');
+        }
+
+        $this->entityManager->flush();
+        $this->objectivePerformanceService->syncAllObjectivesForCommercial($commercial);
+
+        return $reviewed;
+    }
+
     public function delete(Visit $visit): void
     {
         $this->entityManager->remove($visit);
@@ -190,6 +229,7 @@ class VisitCrudService
         $currentStatus = $client->getStatus();
         $nextStatus = match ($result) {
             Visit::RESULT_NOT_INTERESTED => Client::STATUS_REFUSED,
+            Visit::RESULT_CLIENT_CONFIRMED,
             Visit::RESULT_ORDER_CONFIRMED => Client::STATUS_ACTIVE,
             Visit::RESULT_APPOINTMENT_BOOKED,
             Visit::RESULT_QUOTE_SENT,

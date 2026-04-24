@@ -899,14 +899,20 @@ const bindAppointmentScheduling = (scope = document) => {
         if (summaryText) {
             summaryText.textContent = formatAppointmentPreview(targetField?.value);
         }
+
+        if (openButton) {
+            openButton.innerHTML = targetField?.value
+                ? '<i class="bi bi-calendar-event me-2"></i>Modifier le RDV'
+                : '<i class="bi bi-calendar-event me-2"></i>Programmer le RDV';
+        }
     };
 
     const openSchedulingModal = () => {
-        if (!modalInstance || !sourceField || resultField.value !== VISIT_RESULT_APPOINTMENT_BOOKED) {
+        if (!modalInstance || !targetField || resultField.value !== VISIT_RESULT_APPOINTMENT_BOOKED) {
             return;
         }
 
-        modalInput.value = sourceField.value ?? '';
+        modalInput.value = targetField.value ?? '';
         modalInput.classList.remove('is-invalid');
         modalInstance.show();
         window.setTimeout(() => modalInput.focus(), 150);

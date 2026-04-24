@@ -55,6 +55,7 @@
                         <dd class="col-sm-8">
                             {% if visit.appointmentScheduledAt %}
                                 {{ visit.appointmentScheduledAt|date('d/m/Y H:i') }}
+                                <a href="{{ path('app_appointment_index') }}" class="btn btn-sm btn-outline-primary rounded-pill ms-2">Voir les RDV</a>
                             {% else %}
                                 Aucun rendez-vous defini
                             {% endif %}

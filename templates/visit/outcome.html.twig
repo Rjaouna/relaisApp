@@ -29,12 +29,26 @@
                                 {{ form_row(form.appointmentScheduledAt, { attr: form.appointmentScheduledAt.vars.attr|merge({ 'data-appointment-modal-source': true }) }) }}
                             </div>
                             <div class="col-12 d-none" data-appointment-summary>
-                                <div class="alert alert-info border-0 rounded-4 mb-0">
-                                    <div class="fw-semibold mb-1">Rendez-vous programme</div>
-                                    <div class="small text-body-secondary" data-appointment-summary-text>Aucune date definie.</div>
-                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill mt-3" data-appointment-open-modal>
-                                        <i class="bi bi-calendar-event me-2"></i>Modifier la date du rendez-vous
-                                    </button>
+                                <div class="alert alert-primary border-0 rounded-4 mb-0 shadow-sm">
+                                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                                        <div>
+                                            <div class="fw-semibold mb-1">Prise de rendez-vous activee</div>
+                                            <div class="small text-body-secondary" data-appointment-summary-text>Aucune date definie.</div>
+                                            {% if form.appointmentScheduledAt.vars.errors|length > 0 %}
+                                                <div class="text-danger small mt-2">{{ form_errors(form.appointmentScheduledAt) }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-sm btn-primary rounded-pill" data-appointment-open-modal>
+                                                <i class="bi bi-calendar-event me-2"></i>Programmer le RDV
+                                            </button>
+                                            {% if is_granted('ROLE_COMMERCIAL') and not is_granted('ROLE_ADMIN') and not is_granted('ROLE_DIRECTION') %}
+                                                <a href="{{ path('app_appointment_index') }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                    <i class="bi bi-list-ul me-2"></i>Mes RDV
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12">{% include '_partials/_interest_level_field.html.twig' with { field: form.interestLevel } %}</div>

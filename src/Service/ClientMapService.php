@@ -308,7 +308,10 @@ class ClientMapService
             return 'danger';
         }
 
-        if ($latestVisit?->getResult() === Visit::RESULT_ORDER_CONFIRMED || $client->getStatus() === Client::STATUS_ACTIVE) {
+        if (
+            $latestVisit?->getResult() === Visit::RESULT_ORDER_CONFIRMED
+            || in_array($client->getStatus(), [Client::STATUS_ACTIVE, Client::STATUS_LOYAL], true)
+        ) {
             return 'success';
         }
 

@@ -30,9 +30,15 @@
                     </button>
                 {% endif %}
             {% elseif admin_review_mode and closure_requested and tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
-                <button type="button" class="btn btn-success rounded-pill px-4" {{ review_pending ? 'disabled' : '' }} data-crud-post-url="{{ path('app_tour_close', {id: tour.id}) }}" data-crud-reload="true">
-                    <i class="bi bi-shield-check me-2"></i>Cloturer apres controle
-                </button>
+                {% if review_pending %}
+                    <a href="#tour-review-section" class="btn btn-warning rounded-pill px-4">
+                        <i class="bi bi-clipboard-check me-2"></i>Controler les visites
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-success rounded-pill px-4" data-crud-post-url="{{ path('app_tour_close', {id: tour.id}) }}" data-crud-reload="true">
+                        <i class="bi bi-shield-check me-2"></i>Cloturer apres controle
+                    </button>
+                {% endif %}
             {% endif %}
             <a href="{{ path('app_tour_index') }}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Retour</a>
         </div>
@@ -59,6 +65,14 @@
                     <span class="badge rounded-pill text-bg-warning">{{ reviewSummary.pending }} en attente</span>
                     <span class="badge rounded-pill text-bg-success">{{ reviewSummary.validated }} validee(s)</span>
                     <span class="badge rounded-pill text-bg-danger">{{ reviewSummary.rejected }} rejetee(s)</span>
+                    {% if review_pending %}
+                        <button type="button" class="btn btn-sm btn-success rounded-pill" data-crud-post-url="{{ path('app_tour_review_all', {id: tour.id}) }}" data-crud-reload="true" data-crud-confirm="Valider toutes les visites en attente sur cette tournee ?">
+                            <i class="bi bi-check2-all me-2"></i>Valider toutes les visites
+                        </button>
+                        <a href="#tour-review-section" class="btn btn-sm btn-warning rounded-pill">
+                            <i class="bi bi-clipboard-check me-2"></i>Ouvrir le controle
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -87,7 +101,7 @@
     {% endif %}
     <div class="row g-4">
         <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-5 h-100">
+            <div class="card border-0 shadow-sm rounded-5 h-100" id="tour-review-section">
                 <div class="card-body p-4">
                     <div class="d-flex flex-wrap gap-2 mb-3">
                         <span class="badge rounded-pill text-bg-light">{{ tour.city }}</span>

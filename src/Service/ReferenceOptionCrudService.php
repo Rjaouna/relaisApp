@@ -31,6 +31,12 @@ class ReferenceOptionCrudService
             $choices[$option->getLabel() ?? 'Option'] = $option->getValue() ?? '';
         }
 
+        foreach ($fallbackChoices as $label => $value) {
+            if (!in_array($value, $choices, true)) {
+                $choices[$label] = $value;
+            }
+        }
+
         return $choices;
     }
 

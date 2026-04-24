@@ -21,6 +21,7 @@ class Visit
     public const RESULT_ABSENT = 'absent';
     public const RESULT_NOT_INTERESTED = 'pas_interesse';
     public const RESULT_APPOINTMENT_BOOKED = 'rdv_pris';
+    public const RESULT_CLIENT_CONFIRMED = 'client_confirme';
     public const RESULT_QUOTE_SENT = 'devis_envoye';
     public const RESULT_ORDER_CONFIRMED = 'commande_confirmee';
     public const RESULT_FOLLOW_UP = 'a_relancer';
@@ -132,6 +133,7 @@ class Visit
             'Absent' => self::RESULT_ABSENT,
             'Pas interesse' => self::RESULT_NOT_INTERESTED,
             'RDV pris' => self::RESULT_APPOINTMENT_BOOKED,
+            'Client confirme' => self::RESULT_CLIENT_CONFIRMED,
             'Devis envoye' => self::RESULT_QUOTE_SENT,
             'Commande confirmee' => self::RESULT_ORDER_CONFIRMED,
             'A relancer' => self::RESULT_FOLLOW_UP,

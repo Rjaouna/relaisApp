@@ -31,7 +31,10 @@ class ClientCrudService
                 Client::STATUS_POTENTIAL,
                 Client::STATUS_IN_PROGRESS,
             ], true))),
-            'confirmed' => array_values(array_filter($clients, static fn (Client $client): bool => $client->getStatus() === Client::STATUS_ACTIVE)),
+            'confirmed' => array_values(array_filter($clients, static fn (Client $client): bool => in_array($client->getStatus(), [
+                Client::STATUS_ACTIVE,
+                Client::STATUS_LOYAL,
+            ], true))),
             'refused' => array_values(array_filter($clients, static fn (Client $client): bool => $client->getStatus() === Client::STATUS_REFUSED)),
         ];
     }
@@ -56,6 +59,7 @@ class ClientCrudService
         return [
             'total' => $this->clientRepository->count([]),
             'active' => $this->clientRepository->countByStatus(Client::STATUS_ACTIVE),
+            'loyal' => $this->clientRepository->countByStatus(Client::STATUS_LOYAL),
             'potential' => $this->clientRepository->countByStatus(Client::STATUS_POTENTIAL),
             'in_progress' => $this->clientRepository->countByStatus(Client::STATUS_IN_PROGRESS),
             'prospection' => count($grouped['prospection']),

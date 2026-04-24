@@ -12,6 +12,7 @@ use App\Service\CommercialWorkflowService;
 use App\Service\DecisionSupportService;
 use App\Service\TourGenerationWorkflowService;
 use App\Service\TourCrudService;
+use App\Service\VisitCrudService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,6 +29,7 @@ class TourController extends AbstractController
         private readonly CommercialWorkflowService $commercialWorkflowService,
         private readonly DecisionSupportService $decisionSupportService,
         private readonly TourGenerationWorkflowService $tourGenerationWorkflowService,
+        private readonly VisitCrudService $visitCrudService,
     ) {
     }
 
@@ -55,6 +57,7 @@ class TourController extends AbstractController
                 Client::STATUS_POTENTIAL => 'Priorise la prospection pure.',
                 Client::STATUS_IN_PROGRESS => 'Inclut les clients en maturation commerciale.',
                 Client::STATUS_ACTIVE => 'Ajoute les clients deja confirmes.',
+                Client::STATUS_LOYAL => 'Inclut les clients deja fidelises pour les tournees de suivi.',
                 Client::STATUS_REFUSED => 'Inclut les clients refuses si besoin de suivi.',
             ],
             'readyToCloseTours' => [],
@@ -443,6 +446,44 @@ class TourController extends AbstractController
                 ? 'La tournee a ete cloturee apres controle administratif.'
                 : 'Impossible de cloturer cette tournee avant la fin du controle admin.'
         );
+
+        return $this->redirectToRoute('app_tour_show', ['id' => $tour->getId()]);
+    }
+
+    #[Route('/{id}/review-all', name: 'review_all', methods: ['POST'])]
+    public function reviewAll(Request $request, Tour $tour): Response
+    {
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_DIRECTION')) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $count = $this->visitCrudService->reviewAllForTour(
+                $tour,
+                Visit::REVIEW_VALIDATED,
+                'Validation administrative globale de la tournee.'
+            );
+        } catch (\LogicException $exception) {
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $exception->getMessage(),
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            $this->addFlash('warning', $exception->getMessage());
+
+            return $this->redirectToRoute('app_tour_show', ['id' => $tour->getId()]);
+        }
+
+        if ($request->isXmlHttpRequest()) {
+            return $this->json([
+                'success' => true,
+                'message' => sprintf('%d visite(s) ont ete validee(s) automatiquement.', $count),
+            ]);
+        }
+
+        $this->addFlash('success', sprintf('%d visite(s) ont ete validee(s) automatiquement.', $count));
 
         return $this->redirectToRoute('app_tour_show', ['id' => $tour->getId()]);
     }
