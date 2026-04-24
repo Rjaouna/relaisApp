@@ -4,9 +4,12 @@ namespace App\Controller;
 
 use App\Entity\Client;
 use App\Form\ClientType;
+use App\Service\ClientGeocodingService;
+use App\Service\ClientMapService;
 use App\Service\ClientCrudService;
 use App\Service\ClientImportService;
 use App\Service\DecisionSupportService;
+use App\Service\VisitCrudService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +24,9 @@ class ClientController extends AbstractController
         private readonly ClientCrudService $clientCrudService,
         private readonly ClientImportService $clientImportService,
         private readonly DecisionSupportService $decisionSupportService,
+        private readonly VisitCrudService $visitCrudService,
+        private readonly ClientMapService $clientMapService,
+        private readonly ClientGeocodingService $clientGeocodingService,
     ) {
     }
 
@@ -41,6 +47,64 @@ class ClientController extends AbstractController
         return $this->render('client/_sections.html.twig', [
             'groupedClients' => $this->clientCrudService->getGroupedListings(),
             'counters' => $this->clientCrudService->getCounters(),
+        ]);
+    }
+
+    #[Route('/carte', name: 'map', methods: ['GET'])]
+    public function map(): Response
+    {
+        return $this->render('client/map.html.twig', [
+            'mapConfig' => $this->clientMapService->getPageConfig(),
+            'initialPayload' => $this->clientMapService->buildMapPayload(),
+        ]);
+    }
+
+    #[Route('/carte/data', name: 'map_data', methods: ['GET'])]
+    public function mapData(Request $request): JsonResponse
+    {
+        return $this->json($this->clientMapService->buildMapPayload($request->query->all()));
+    }
+
+    #[Route('/carte/geocode-missing', name: 'map_geocode_missing', methods: ['POST'])]
+    public function mapGeocodeMissing(): JsonResponse
+    {
+        $missingClients = $this->clientMapService->getClientsWithoutCoordinates();
+        if ($missingClients === []) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Tous les clients ont deja des coordonnees exploitables.',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        $result = $this->clientGeocodingService->geocodeMissingClients($missingClients);
+
+        return $this->json([
+            'success' => true,
+            'message' => sprintf(
+                '%d client(s) ont ete geolocalise(s). %d client(s) restent sans coordonnees exploitables.',
+                $result['updated'],
+                $result['skipped']
+            ),
+            'summary' => $result,
+        ]);
+    }
+
+    #[Route('/{id}/carte/planifier-visite', name: 'map_plan_visit', methods: ['POST'])]
+    public function mapPlanVisit(Request $request, Client $client): JsonResponse
+    {
+        $result = $this->visitCrudService->createBatch([$client->getId() ?? 0]);
+        $created = (int) ($result['created'] ?? 0);
+
+        if ($created < 1) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Impossible de creer une nouvelle visite pour ce client tant qu une visite ouverte existe deja.',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        return $this->json([
+            'success' => true,
+            'message' => 'La visite a ete preparee pour ce client.',
         ]);
     }
 

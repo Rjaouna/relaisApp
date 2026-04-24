@@ -1,0 +1,225 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carte des clients{% endblock %}
+
+{% block body %}
+    <section
+        class="d-flex flex-column gap-4"
+        data-client-map-page
+        data-client-map-data-url="{{ path('app_client_map_data') }}"
+        data-client-map-initial='{{ initialPayload|json_encode|e('html_attr') }}'
+    >
+        <div class="app-page-hero rounded-5 p-4 p-lg-5">
+            <div class="row g-4 align-items-end">
+                <div class="col-xl-8">
+                    <div class="app-section-kicker text-secondary mb-3">Pilotage geographique</div>
+                    <h1 class="display-6 fw-bold mb-3">Carte des implantations clients au Maroc</h1>
+                    <p class="text-body-secondary mb-0">Visualise la couverture commerciale, repere les concentrations et prepare plus proprement les visites et les tournees.</p>
+                </div>
+                <div class="col-xl-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="card border-0 h-100">
+                                <div class="card-body p-3">
+                                    <div class="small text-uppercase text-body-secondary mb-2">Clients affiches</div>
+                                    <div class="h3 fw-bold mb-0" data-client-map-count>{{ initialPayload.summary.localized }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card border-0 h-100">
+                                <div class="card-body p-3">
+                                    <div class="small text-uppercase text-body-secondary mb-2">Non localisables</div>
+                                    <div class="h3 fw-bold mb-0" data-client-map-unlocalized-count>{{ initialPayload.summary.non_localizable }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary w-100 rounded-pill"
+                                data-client-map-geocode-url="{{ path('app_client_map_geocode_missing') }}"
+                                {{ initialPayload.summary.missing_coordinates < 1 ? 'disabled' : '' }}
+                            >
+                                <i class="bi bi-geo-alt me-2"></i>Generer les coordonnees manquantes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-3">
+                <div class="card border-0 shadow-sm rounded-5 h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="app-section-kicker text-secondary mb-2">Filtres</div>
+                                <h2 class="h5 mb-0">Lecture terrain</h2>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-client-map-reset>
+                                Reinitialiser
+                            </button>
+                        </div>
+
+                        <form class="d-flex flex-column gap-3" data-client-map-filters>
+                            <div>
+                                <label class="form-label">Recherche</label>
+                                <input
+                                    type="search"
+                                    class="form-control"
+                                    name="search"
+                                    placeholder="Nom, ville, adresse..."
+                                >
+                            </div>
+
+                            <div>
+                                <label class="form-label">Commercial</label>
+                                <select class="form-select" name="commercial">
+                                    <option value="">Tous les commerciaux</option>
+                                    {% for commercial in mapConfig.filters.commercials %}
+                                        <option value="{{ commercial.id }}">{{ commercial.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Zone</label>
+                                <select class="form-select" name="zone">
+                                    <option value="">Toutes les zones</option>
+                                    {% for zone in mapConfig.filters.zones %}
+                                        <option value="{{ zone.id }}">{{ zone.city }} - {{ zone.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Ville</label>
+                                <select class="form-select" name="city">
+                                    <option value="">Toutes les villes</option>
+                                    {% for city in mapConfig.filters.cities %}
+                                        <option value="{{ city.name }}">{{ city.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label">Type</label>
+                                    <select class="form-select" name="type">
+                                        <option value="">Tous</option>
+                                        {% for type in mapConfig.filters.types %}
+                                            <option value="{{ type.id }}">{{ type.label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Statut client</label>
+                                    <select class="form-select" name="status">
+                                        <option value="">Tous</option>
+                                        {% for status in mapConfig.filters.statuses %}
+                                            <option value="{{ status.id }}">{{ status.label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-top">
+                                <div class="small text-uppercase text-body-secondary mb-3">Preparation terrain</div>
+                                <div class="d-flex flex-column gap-2">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="has_active_visit" value="1">
+                                        <span class="form-check-label">Avec visite active</span>
+                                    </label>
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="has_planned_visit" value="1">
+                                        <span class="form-check-label">Avec visite prevue</span>
+                                    </label>
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="assigned_to_tour" value="1">
+                                        <span class="form-check-label">Deja dans une tournee</span>
+                                    </label>
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="without_tour" value="1">
+                                        <span class="form-check-label">Sans tournee</span>
+                                    </label>
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="without_visit" value="1">
+                                        <span class="form-check-label">Sans visite</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-9">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-5 overflow-hidden">
+                            <div class="card-body p-0">
+                                <div class="app-client-map-shell">
+                                    <div class="app-client-map-stage position-relative">
+                                        <div class="app-client-map-canvas" data-client-map-canvas></div>
+                                        <div class="app-client-map-loading d-none" data-client-map-loading>
+                                            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+                                            <span>Chargement de la carte...</span>
+                                        </div>
+                                    </div>
+
+                                    <aside class="app-client-map-sidebar">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <div class="app-section-kicker text-secondary mb-2">Lecture operationnelle</div>
+                                                <h2 class="h5 mb-0">Client selectionne</h2>
+                                            </div>
+                                            <span class="badge rounded-pill text-bg-light" data-client-map-sidebar-badge>Carte</span>
+                                        </div>
+
+                                        <div class="app-client-map-selected" data-client-map-selected>
+                                            <div class="text-body-secondary small">Clique sur un marqueur ou une ligne pour consulter le detail du client.</div>
+                                        </div>
+
+                                        <div class="pt-4 mt-4 border-top">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <div class="app-section-kicker text-secondary mb-2">Clients visibles</div>
+                                                <h2 class="h6 mb-0">Lecture rapide</h2>
+                                            </div>
+                                            <span class="badge rounded-pill text-bg-light" data-client-map-visible-count>{{ initialPayload.summary.localized }}</span>
+                                        </div>
+                                            <div class="app-client-map-results-slider" data-client-map-results-slider>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill app-client-map-slider-control" data-client-map-slider-prev>
+                                                    <i class="bi bi-chevron-up"></i>
+                                                </button>
+                                                <div class="app-client-map-results-window">
+                                                    <div class="app-client-map-results-track" data-client-map-results></div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill app-client-map-slider-control" data-client-map-slider-next>
+                                                    <i class="bi bi-chevron-down"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="pt-4 mt-4 border-top">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <div class="app-section-kicker text-secondary mb-2">Clients non localisables</div>
+                                                    <h2 class="h6 mb-0">A completer</h2>
+                                                </div>
+                                                <span class="badge rounded-pill text-bg-light" data-client-map-unlocalized-badge>{{ initialPayload.summary.non_localizable }}</span>
+                                            </div>
+                                            <div class="app-client-map-unlocalized" data-client-map-unlocalized></div>
+                                        </div>
+                                    </aside>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

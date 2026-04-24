@@ -40,6 +40,7 @@ class TourController extends AbstractController
             return $this->render('tour/index.html.twig', [
                 'tours' => $tours,
                 'tourCriticalCounts' => $this->tourCrudService->getCriticalClientCounts($tours),
+                'readyToCloseTours' => $this->commercialWorkflowService->getReadyToCloseToursForUser($this->getUser()),
             ]);
         }
 
@@ -56,6 +57,7 @@ class TourController extends AbstractController
                 Client::STATUS_ACTIVE => 'Ajoute les clients deja confirmes.',
                 Client::STATUS_REFUSED => 'Inclut les clients refuses si besoin de suivi.',
             ],
+            'readyToCloseTours' => [],
         ]);
     }
 
@@ -76,6 +78,18 @@ class TourController extends AbstractController
         return $this->render('tour/_list.html.twig', [
             'tours' => $tours,
             'tourCriticalCounts' => $this->tourCrudService->getCriticalClientCounts($tours),
+        ]);
+    }
+
+    #[Route('/commercial-alerts', name: 'commercial_alerts', methods: ['GET'])]
+    public function commercialAlerts(): Response
+    {
+        if (!$this->isGranted('ROLE_COMMERCIAL') || $this->isGranted('ROLE_ADMIN') || $this->isGranted('ROLE_DIRECTION')) {
+            return new Response('');
+        }
+
+        return $this->render('tour/_commercial_alerts.html.twig', [
+            'readyToCloseTours' => $this->commercialWorkflowService->getReadyToCloseToursForUser($this->getUser()),
         ]);
     }
 

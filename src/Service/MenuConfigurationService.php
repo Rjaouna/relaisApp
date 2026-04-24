@@ -30,6 +30,7 @@ class MenuConfigurationService
             'order' => 20,
             'children' => [
                 'commercial_clients' => ['label' => 'Clients'],
+                'commercial_client_map' => ['label' => 'Carte des clients'],
                 'commercial_team' => ['label' => 'Commerciaux'],
                 'commercial_visits' => ['label' => 'Visites'],
                 'commercial_offers' => ['label' => 'Offres'],

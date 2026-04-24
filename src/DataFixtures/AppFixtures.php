@@ -25,6 +25,14 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class AppFixtures extends Fixture
 {
     private const DEFAULT_PASSWORD = 'Relais2026!';
+    private const MOROCCO_CITY_COORDINATES = [
+        'Casablanca' => ['lat' => 33.5731, 'lng' => -7.5898],
+        'Rabat' => ['lat' => 34.0209, 'lng' => -6.8416],
+        'Marrakech' => ['lat' => 31.6295, 'lng' => -7.9811],
+        'Fes' => ['lat' => 34.0331, 'lng' => -5.0003],
+        'Tanger' => ['lat' => 35.7595, 'lng' => -5.8340],
+        'Agadir' => ['lat' => 30.4278, 'lng' => -9.5981],
+    ];
 
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
@@ -205,6 +213,10 @@ class AppFixtures extends Fixture
         $definitions = [
             'casa_centre' => ['Casablanca Centre', $cities['casablanca'], 'CAS-CEN', 'Zone a forte densite clinique et hospitaliere.'],
             'rabat_nord' => ['Rabat Nord', $cities['rabat'], 'RAB-NOR', 'Zone de developpement pour les comptes publics et laboratoires.'],
+            'marrakech_medina' => ['Marrakech Medina', $cities['marrakech'], 'MAR-MED', 'Zone mixte privee pour prospection clinique et demonstration.'],
+            'fes_atlas' => ['Fes Atlas', $cities['fes'], 'FES-ATL', 'Zone a fort potentiel laboratoire et hopital prive.'],
+            'tanger_port' => ['Tanger Port', $cities['tanger'], 'TAN-POR', 'Zone nord strategique pour comptes multisites.'],
+            'agadir_sud' => ['Agadir Sud', $cities['agadir'], 'AGA-SUD', 'Zone de developpement sur cliniques et pharmacies premium.'],
         ];
 
         foreach ($definitions as $key => [$name, $city, $code, $notes]) {
@@ -275,6 +287,10 @@ class AppFixtures extends Fixture
             ->setCurrentVisitsLoad(6)
             ->setIsActive(true)
             ->setUser($users['commercial']);
+        $ahmed
+            ->addZone($zones['casa_centre'])
+            ->addZone($zones['tanger_port'])
+            ->addZone($zones['rabat_nord']);
 
         $manager->persist($ahmed);
         $commercials['ahmed'] = $ahmed;
@@ -290,6 +306,11 @@ class AppFixtures extends Fixture
             ->setCurrentClientsLoad(3)
             ->setCurrentVisitsLoad(4)
             ->setIsActive(true);
+        $salma
+            ->addZone($zones['rabat_nord'])
+            ->addZone($zones['fes_atlas'])
+            ->addZone($zones['marrakech_medina'])
+            ->addZone($zones['agadir_sud']);
 
         $manager->persist($salma);
         $commercials['salma'] = $salma;
@@ -324,8 +345,66 @@ class AppFixtures extends Fixture
             ],
         ];
 
-        foreach ($definitions as $key => [$name, $city, $zone, $type, $status, $email, $phone, $address, $potential, $solvency, $segment, $annualRevenue, $notes, $commercial]) {
+        $seedDefinitions = [
+            ['Hopital Atlas Care', 'Casablanca', 'casa_centre', Client::TYPE_HOSPITAL, Client::STATUS_ACTIVE],
+            ['Clinique Noor', 'Casablanca', 'casa_centre', Client::TYPE_CLINIC, Client::STATUS_IN_PROGRESS],
+            ['Pharmacie Ocean', 'Casablanca', 'casa_centre', Client::TYPE_PHARMACY, Client::STATUS_POTENTIAL],
+            ['Laboratoire Vita Scan', 'Casablanca', 'casa_centre', Client::TYPE_LAB, Client::STATUS_ACTIVE],
+            ['Clinique Les Palmiers', 'Rabat', 'rabat_nord', Client::TYPE_CLINIC, Client::STATUS_IN_PROGRESS],
+            ['Hopital Al Qods', 'Rabat', 'rabat_nord', Client::TYPE_HOSPITAL, Client::STATUS_ACTIVE],
+            ['Pharmacie Marina', 'Rabat', 'rabat_nord', Client::TYPE_PHARMACY, Client::STATUS_POTENTIAL],
+            ['Laboratoire Bio Rabat', 'Rabat', 'rabat_nord', Client::TYPE_LAB, Client::STATUS_IN_PROGRESS],
+            ['Clinique Menara', 'Marrakech', 'marrakech_medina', Client::TYPE_CLINIC, Client::STATUS_ACTIVE],
+            ['Hopital Oasis', 'Marrakech', 'marrakech_medina', Client::TYPE_HOSPITAL, Client::STATUS_IN_PROGRESS],
+            ['Pharmacie Koutoubia', 'Marrakech', 'marrakech_medina', Client::TYPE_PHARMACY, Client::STATUS_POTENTIAL],
+            ['Laboratoire Atlas Med', 'Marrakech', 'marrakech_medina', Client::TYPE_LAB, Client::STATUS_ACTIVE],
+            ['Clinique Saiss', 'Fes', 'fes_atlas', Client::TYPE_CLINIC, Client::STATUS_IN_PROGRESS],
+            ['Hopital Andalou', 'Fes', 'fes_atlas', Client::TYPE_HOSPITAL, Client::STATUS_ACTIVE],
+            ['Pharmacie Medina Fes', 'Fes', 'fes_atlas', Client::TYPE_PHARMACY, Client::STATUS_POTENTIAL],
+            ['Laboratoire Fassi', 'Fes', 'fes_atlas', Client::TYPE_LAB, Client::STATUS_IN_PROGRESS],
+            ['Clinique Detroit', 'Tanger', 'tanger_port', Client::TYPE_CLINIC, Client::STATUS_ACTIVE],
+            ['Hopital Cap Spartel', 'Tanger', 'tanger_port', Client::TYPE_HOSPITAL, Client::STATUS_IN_PROGRESS],
+            ['Pharmacie Malabata', 'Tanger', 'tanger_port', Client::TYPE_PHARMACY, Client::STATUS_POTENTIAL],
+            ['Laboratoire Nord Scan', 'Tanger', 'tanger_port', Client::TYPE_LAB, Client::STATUS_ACTIVE],
+            ['Clinique Souss', 'Agadir', 'agadir_sud', Client::TYPE_CLINIC, Client::STATUS_IN_PROGRESS],
+            ['Hopital Tildi', 'Agadir', 'agadir_sud', Client::TYPE_HOSPITAL, Client::STATUS_ACTIVE],
+            ['Pharmacie Corniche', 'Agadir', 'agadir_sud', Client::TYPE_PHARMACY, Client::STATUS_POTENTIAL],
+            ['Laboratoire Oceanis', 'Agadir', 'agadir_sud', Client::TYPE_LAB, Client::STATUS_IN_PROGRESS],
+            ['Clinique Horizon', 'Casablanca', 'casa_centre', Client::TYPE_CLINIC, Client::STATUS_ACTIVE],
+            ['Pharmacie Centrale Plus', 'Rabat', 'rabat_nord', Client::TYPE_PHARMACY, Client::STATUS_IN_PROGRESS],
+            ['Laboratoire Majorelle', 'Marrakech', 'marrakech_medina', Client::TYPE_LAB, Client::STATUS_POTENTIAL],
+        ];
+
+        foreach ($seedDefinitions as $index => [$name, $city, $zoneKey, $type, $status]) {
+            $commercial = in_array($city, ['Casablanca', 'Tanger'], true) ? $commercials['ahmed'] : $commercials['salma'];
+            $segment = match ($status) {
+                Client::STATUS_ACTIVE => 'premium',
+                Client::STATUS_IN_PROGRESS => 'developpement',
+                default => 'standard',
+            };
+
+            $definitions['generated_' . ($index + 1)] = [
+                $name,
+                $city,
+                $zones[$zoneKey],
+                $type,
+                $status,
+                $this->buildClientEmail($name),
+                $this->buildClientPhone($index),
+                sprintf('%s, %s', $this->buildStreetLabel($index), $city),
+                55 + (($index * 7) % 41),
+                50 + (($index * 5) % 41),
+                $segment,
+                number_format(38000 + ($index * 4200), 2, '.', ''),
+                'Client de demonstration pour la carte, la prospection et les tournees.',
+                $commercial,
+            ];
+        }
+
+        foreach ($definitions as $key => $payload) {
+            [$name, $city, $zone, $type, $status, $email, $phone, $address, $potential, $solvency, $segment, $annualRevenue, $notes, $commercial] = $payload;
             $client = new Client();
+            $coordinates = $this->buildFixtureCoordinates($city, $address, is_numeric($key) ? (int) $key : crc32((string) $key));
             $client
                 ->setName($name)
                 ->setCity($city)
@@ -340,13 +419,59 @@ class AppFixtures extends Fixture
                 ->setSegment($segment)
                 ->setAnnualRevenue($annualRevenue)
                 ->setNotes($notes)
-                ->setAssignedCommercial($commercial);
+                ->setAssignedCommercial($commercial)
+                ->setLatitude(number_format($coordinates['lat'], 7, '.', ''))
+                ->setLongitude(number_format($coordinates['lng'], 7, '.', ''));
 
             $manager->persist($client);
             $clients[$key] = $client;
         }
 
         return $clients;
+    }
+
+    private function buildClientEmail(string $name): string
+    {
+        $slug = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name);
+        $slug = preg_replace('/[^a-z0-9]+/', '.', $slug) ?? 'client';
+        $slug = trim($slug, '.');
+
+        return $slug . '@relais-demo.ma';
+    }
+
+    private function buildClientPhone(int $index): string
+    {
+        return sprintf('05%08d', 22000000 + ($index * 137));
+    }
+
+    private function buildStreetLabel(int $index): string
+    {
+        $streets = [
+            'Bd Hassan II',
+            'Av Mohammed V',
+            'Bd Anfa',
+            'Av des FAR',
+            'Quartier administratif',
+            'Zone clinique centrale',
+        ];
+
+        return $streets[$index % count($streets)];
+    }
+
+    /**
+     * @return array{lat: float, lng: float}
+     */
+    private function buildFixtureCoordinates(string $city, string $address, int $index): array
+    {
+        $base = self::MOROCCO_CITY_COORDINATES[$city] ?? self::MOROCCO_CITY_COORDINATES['Casablanca'];
+        $hash = abs(crc32($city . '|' . $address . '|' . $index));
+        $latOffset = (($hash % 800) / 100000) - 0.004;
+        $lngOffset = (((int) floor($hash / 1000) % 800) / 100000) - 0.004;
+
+        return [
+            'lat' => $base['lat'] + $latOffset,
+            'lng' => $base['lng'] + $lngOffset,
+        ];
     }
 
     /**

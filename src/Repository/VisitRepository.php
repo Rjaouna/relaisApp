@@ -301,4 +301,30 @@ class VisitRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * @param int[] $clientIds
+     *
+     * @return Visit[]
+     */
+    public function findUnarchivedForClientIds(array $clientIds): array
+    {
+        $clientIds = array_values(array_filter(array_map('intval', $clientIds)));
+        if ($clientIds === []) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('visit')
+            ->leftJoin('visit.client', 'client')
+            ->addSelect('client')
+            ->leftJoin('visit.tour', 'tour')
+            ->addSelect('tour')
+            ->andWhere('client.id IN (:clientIds)')
+            ->andWhere('visit.archivedAt IS NULL')
+            ->setParameter('clientIds', $clientIds)
+            ->orderBy('visit.scheduledAt', 'DESC')
+            ->addOrderBy('visit.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

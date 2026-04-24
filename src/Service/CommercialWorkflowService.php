@@ -51,6 +51,25 @@ class CommercialWorkflowService
         return $this->visitRepository->findForTour($tour);
     }
 
+    /**
+     * @return Tour[]
+     */
+    public function getReadyToCloseToursForUser(?User $user): array
+    {
+        $commercial = $this->getCommercialForUser($user);
+        if (!$commercial instanceof Commercial) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $this->hydrateToursForCommercial($commercial),
+            static fn (Tour $tour): bool => $tour->getArchivedAt() === null
+                && $tour->getClosureRequestedAt() === null
+                && $tour->getPlannedVisits() > 0
+                && $tour->getCompletedVisits() >= $tour->getPlannedVisits()
+        ));
+    }
+
     public function canAccessTour(?User $user, Tour $tour): bool
     {
         $commercial = $this->getCommercialForUser($user);

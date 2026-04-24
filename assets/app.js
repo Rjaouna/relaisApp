@@ -41,8 +41,11 @@ const getClientImportModalInstance = () => {
 
 let tourLiveRefreshIntervalId = null;
 let dashboardPendingClosureIntervalId = null;
+let clientMapRefreshTimeoutId = null;
 const VISIT_RESULT_APPOINTMENT_BOOKED = 'rdv_pris';
 let chartJsLoaderPromise = null;
+let leafletLoaderPromise = null;
+let clientMapState = null;
 
 const refreshCrudList = async (url) => {
     const target = document.querySelector('[data-crud-list]');
@@ -93,6 +96,65 @@ const ensureChartJsLoaded = async () => {
 
     return chartJsLoaderPromise;
 };
+
+const ensureLeafletLoaded = async () => {
+    if (typeof window !== 'undefined' && typeof window.L !== 'undefined' && typeof window.L.markerClusterGroup === 'function') {
+        return window.L;
+    }
+
+    if (leafletLoaderPromise) {
+        return leafletLoaderPromise;
+    }
+
+    const appendStylesheet = (href, marker) => {
+        if (document.querySelector(`link[${marker}]`)) {
+            return;
+        }
+
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.setAttribute(marker, 'true');
+        document.head.appendChild(link);
+    };
+
+    leafletLoaderPromise = new Promise((resolve, reject) => {
+        appendStylesheet('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css', 'data-leaflet-style');
+        appendStylesheet('https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css', 'data-markercluster-style');
+        appendStylesheet('https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css', 'data-markercluster-default-style');
+
+        const loadScript = (src, marker) => new Promise((resolveScript, rejectScript) => {
+            const existing = document.querySelector(`script[${marker}]`);
+            if (existing) {
+                existing.addEventListener('load', resolveScript, { once: true });
+                existing.addEventListener('error', () => rejectScript(new Error(`Unable to load ${src}`)), { once: true });
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            script.setAttribute(marker, 'true');
+            script.addEventListener('load', resolveScript, { once: true });
+            script.addEventListener('error', () => rejectScript(new Error(`Unable to load ${src}`)), { once: true });
+            document.head.appendChild(script);
+        });
+
+        loadScript('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js', 'data-leaflet-script')
+            .then(() => loadScript('https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js', 'data-markercluster-script'))
+            .then(() => resolve(window.L))
+            .catch(reject);
+    });
+
+    return leafletLoaderPromise;
+};
+
+const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 
 const parseJsonDataset = (value, fallback = {}) => {
     try {
@@ -220,6 +282,363 @@ const bindVisitInsightsCharts = async () => {
     });
 };
 
+const getClientMapToneClass = (tone) => `app-client-map-marker--${tone || 'primary'}`;
+
+const buildClientMapMarkerIcon = (tone) => new window.L.DivIcon({
+    className: 'app-client-map-marker-wrapper',
+    html: `<span class="app-client-map-marker ${getClientMapToneClass(tone)}"></span>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+});
+
+const buildClientMapPopupHtml = (marker) => `
+    <div class="app-client-map-popup">
+        <div class="fw-semibold mb-1">${escapeHtml(marker.popup.title)}</div>
+        <div class="small text-body-secondary mb-2">${escapeHtml(marker.popup.code)}</div>
+        <div class="small"><strong>Ville :</strong> ${escapeHtml(marker.popup.city || 'Non renseignee')}</div>
+        <div class="small"><strong>Zone :</strong> ${escapeHtml(marker.popup.zone || 'Non renseignee')}</div>
+        <div class="small"><strong>Commercial :</strong> ${escapeHtml(marker.popup.commercial || 'Non affecte')}</div>
+        <div class="small"><strong>Visite :</strong> ${escapeHtml(marker.popup.visit_status || 'Aucune')}</div>
+        <div class="small"><strong>Tournee :</strong> ${escapeHtml(marker.popup.tour_status || 'Aucune')}</div>
+    </div>
+`;
+
+const buildClientMapRecentVisitsHtml = (client) => {
+    const visits = Array.isArray(client.recent_visits) ? client.recent_visits : [];
+    if (!visits.length) {
+        return '<div class="small text-body-secondary">Aucune visite exploitable pour ce client.</div>';
+    }
+
+    return `
+        <div class="d-flex flex-column gap-2">
+            ${visits.map((visit) => `
+                <div class="app-client-map-visit-item">
+                    <div class="fw-semibold small">${escapeHtml(visit.date || 'Date non definie')}</div>
+                    <div class="small text-body-secondary">${escapeHtml(visit.status_label || 'Statut non renseigne')}</div>
+                    <div class="small">${escapeHtml(visit.result_label || 'Resultat non renseigne')}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+};
+
+const buildClientMapSelectedHtml = (client) => {
+    const canPlanVisit = !!client.actions?.plan_visit_url;
+    const hasTour = !!client.actions?.tour_url;
+    const tourLabel = hasTour ? 'Voir la tournee' : 'Ajouter a une tournee';
+    const tourUrl = hasTour ? client.actions.tour_url : client.actions?.tour_prepare_url;
+
+    return `
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+                <div class="app-section-kicker text-secondary mb-2">${escapeHtml(client.code || '')}</div>
+                <h3 class="h5 mb-1">${escapeHtml(client.name || 'Client')}</h3>
+                <div class="small text-body-secondary">${escapeHtml(client.city || 'Ville non renseignee')} · ${escapeHtml(client.zone || 'Zone non renseignee')}</div>
+            </div>
+            <span class="badge rounded-pill text-bg-light">${escapeHtml(client.status_label || 'Client')}</span>
+        </div>
+
+        <div class="app-client-map-detail-grid mb-3">
+            <div>
+                <div class="small text-uppercase text-body-secondary mb-1">Commercial</div>
+                <div class="fw-semibold">${escapeHtml(client.commercial || 'Non affecte')}</div>
+            </div>
+            <div>
+                <div class="small text-uppercase text-body-secondary mb-1">Telephone</div>
+                <div class="fw-semibold">${escapeHtml(client.phone || 'Non renseigne')}</div>
+            </div>
+            <div>
+                <div class="small text-uppercase text-body-secondary mb-1">Visite</div>
+                <div class="fw-semibold">${escapeHtml(client.visit_status_label || 'Aucune')}</div>
+            </div>
+            <div>
+                <div class="small text-uppercase text-body-secondary mb-1">Tournee</div>
+                <div class="fw-semibold">${escapeHtml(client.tour_status_label || 'Aucune')}</div>
+            </div>
+        </div>
+
+        <div class="small text-body-secondary mb-3">${escapeHtml(client.address || 'Adresse non renseignee')}</div>
+
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a href="${escapeHtml(client.actions?.show_url || '#')}" class="btn btn-outline-secondary btn-sm rounded-pill">Voir la fiche</a>
+            <button type="button" class="btn btn-primary btn-sm rounded-pill" ${canPlanVisit ? `data-client-map-plan-visit="${escapeHtml(client.actions.plan_visit_url)}"` : 'disabled'}>${canPlanVisit ? 'Creer une visite' : 'Visite deja preparee'}</button>
+            ${tourUrl ? `<a href="${escapeHtml(tourUrl)}" class="btn btn-outline-primary btn-sm rounded-pill">${escapeHtml(tourLabel)}</a>` : ''}
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-client-map-show-visits>Voir les visites</button>
+        </div>
+
+        <div class="pt-3 border-top" data-client-map-visit-history>
+            <div class="app-section-kicker text-secondary mb-2">Historique recent</div>
+            ${buildClientMapRecentVisitsHtml(client)}
+        </div>
+    `;
+};
+
+const buildClientMapListItemHtml = (client) => `
+    <button type="button" class="app-client-map-list-item" data-client-map-focus-client="${escapeHtml(client.id)}">
+        <span class="app-client-map-list-tone ${getClientMapToneClass(client.tone)}"></span>
+        <span class="d-flex flex-column text-start">
+            <span class="fw-semibold">${escapeHtml(client.name || 'Client')}</span>
+            <span class="small text-body-secondary">${escapeHtml(client.city || 'Ville non renseignee')} · ${escapeHtml(client.commercial || 'Non affecte')}</span>
+        </span>
+    </button>
+`;
+
+const buildClientMapUnlocalizedItemHtml = (client) => `
+    <div class="app-client-map-unlocalized-item">
+        <div class="fw-semibold">${escapeHtml(client.name || 'Client')}</div>
+        <div class="small text-body-secondary">${escapeHtml(client.city || 'Ville non renseignee')} · ${escapeHtml(client.zone || 'Zone non renseignee')}</div>
+        <a href="${escapeHtml(client.actions?.show_url || '#')}" class="small fw-semibold">Completer la fiche</a>
+    </div>
+`;
+
+const updateClientMapSlider = () => {
+    if (!clientMapState?.container) {
+        return;
+    }
+
+    const slider = clientMapState.container.querySelector('[data-client-map-results-slider]');
+    const track = clientMapState.container.querySelector('[data-client-map-results]');
+    const windowElement = clientMapState.container.querySelector('.app-client-map-results-window');
+    const prevButton = clientMapState.container.querySelector('[data-client-map-slider-prev]');
+    const nextButton = clientMapState.container.querySelector('[data-client-map-slider-next]');
+
+    if (!slider || !track || !windowElement || !prevButton || !nextButton) {
+        return;
+    }
+
+    const items = Array.from(track.querySelectorAll('[data-client-map-focus-client]'));
+    slider.classList.toggle('app-client-map-results-slider-inactive', items.length <= 3);
+
+    const itemHeight = items[0]?.offsetHeight ?? 0;
+    const gap = 10;
+    const step = itemHeight > 0 ? itemHeight + gap : 0;
+    const maxScroll = Math.max(0, windowElement.scrollHeight - windowElement.clientHeight);
+
+    if (clientMapState.pendingSliderReset) {
+        windowElement.scrollTop = 0;
+        clientMapState.pendingSliderReset = false;
+    }
+
+    prevButton.disabled = windowElement.scrollTop <= 0;
+    nextButton.disabled = windowElement.scrollTop >= (maxScroll - 4);
+    clientMapState.sliderStep = step;
+};
+
+const renderClientMapSidebar = (payload) => {
+    if (!clientMapState?.container) {
+        return;
+    }
+
+    const selectedWrap = clientMapState.container.querySelector('[data-client-map-selected]');
+    const resultsWrap = clientMapState.container.querySelector('[data-client-map-results]');
+    const unlocalizedWrap = clientMapState.container.querySelector('[data-client-map-unlocalized]');
+    const countWrap = clientMapState.container.querySelector('[data-client-map-count]');
+    const visibleCountWrap = clientMapState.container.querySelector('[data-client-map-visible-count]');
+    const unlocalizedCountWrap = clientMapState.container.querySelector('[data-client-map-unlocalized-count]');
+    const unlocalizedBadge = clientMapState.container.querySelector('[data-client-map-unlocalized-badge]');
+    const geocodeButton = clientMapState.container.querySelector('[data-client-map-geocode-url]');
+
+    const clients = Array.isArray(payload.clients) ? payload.clients : [];
+    const nonLocalizableClients = Array.isArray(payload.non_localizable_clients) ? payload.non_localizable_clients : [];
+
+    if (countWrap) {
+        countWrap.textContent = String(payload.summary?.localized ?? clients.length);
+    }
+    if (visibleCountWrap) {
+        visibleCountWrap.textContent = String(clients.length);
+    }
+    if (unlocalizedCountWrap) {
+        unlocalizedCountWrap.textContent = String(nonLocalizableClients.length);
+    }
+    if (unlocalizedBadge) {
+        unlocalizedBadge.textContent = String(nonLocalizableClients.length);
+    }
+    if (geocodeButton) {
+        geocodeButton.disabled = Number(payload.summary?.missing_coordinates || 0) < 1;
+    }
+
+    resultsWrap.innerHTML = clients.length
+        ? clients.map((client) => buildClientMapListItemHtml(client)).join('')
+        : '<div class="small text-body-secondary">Aucun client ne correspond aux filtres actuels.</div>';
+
+    unlocalizedWrap.innerHTML = nonLocalizableClients.length
+        ? nonLocalizableClients.map((client) => buildClientMapUnlocalizedItemHtml(client)).join('')
+        : '<div class="small text-body-secondary">Tous les clients filtres sont localisables.</div>';
+
+    const selectedClientId = clientMapState.selectedClientId;
+    const selectedClient = clients.find((client) => String(client.id) === String(selectedClientId)) ?? clients[0] ?? null;
+    if (selectedClient) {
+        selectedWrap.innerHTML = buildClientMapSelectedHtml(selectedClient);
+        clientMapState.selectedClientId = selectedClient.id;
+    } else {
+        selectedWrap.innerHTML = '<div class="small text-body-secondary">Clique sur un marqueur ou une ligne pour consulter le detail du client.</div>';
+        clientMapState.selectedClientId = null;
+    }
+
+    updateClientMapSlider();
+};
+
+const renderClientMapMarkers = (payload, keepBounds = false) => {
+    if (!clientMapState?.map || !clientMapState?.clusterLayer) {
+        return;
+    }
+
+    const markers = Array.isArray(payload.map?.markers) ? payload.map.markers : [];
+    clientMapState.clusterLayer.clearLayers();
+    clientMapState.markerIndex = {};
+
+    markers.forEach((marker) => {
+        if (!Number.isFinite(marker.lat) || !Number.isFinite(marker.lng)) {
+            return;
+        }
+
+        const leafletMarker = window.L.marker([marker.lat, marker.lng], {
+            icon: buildClientMapMarkerIcon(marker.tone),
+        });
+
+        leafletMarker.bindPopup(buildClientMapPopupHtml(marker));
+        leafletMarker.on('click', () => {
+            clientMapState.selectedClientId = marker.client.id;
+            renderClientMapSidebar(payload);
+        });
+
+        clientMapState.clusterLayer.addLayer(leafletMarker);
+        clientMapState.markerIndex[String(marker.client.id)] = leafletMarker;
+    });
+
+    const bounds = clientMapState.clusterLayer.getBounds();
+    if (bounds.isValid()) {
+        if (keepBounds && clientMapState.map.getBounds().isValid()) {
+            clientMapState.map.fitBounds(bounds, {
+                padding: [24, 24],
+                maxZoom: 10,
+            });
+        } else {
+            clientMapState.map.setView(payload.map?.center || [31.85, -7.10], payload.map?.zoom || 6);
+        }
+    } else {
+        clientMapState.map.setView(payload.map?.center || [31.85, -7.10], payload.map?.zoom || 6);
+    }
+};
+
+const refreshClientMapData = async ({ keepBounds = true } = {}) => {
+    if (!clientMapState?.container || !clientMapState?.filtersForm) {
+        return;
+    }
+
+    const loading = clientMapState.container.querySelector('[data-client-map-loading]');
+    loading?.classList.remove('d-none');
+
+    const searchParams = new URLSearchParams(new FormData(clientMapState.filtersForm));
+    const response = await fetch(`${clientMapState.dataUrl}?${searchParams.toString()}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    if (!response.ok) {
+        loading?.classList.add('d-none');
+        throw new Error('Unable to refresh client map.');
+    }
+
+    const payload = await response.json();
+    clientMapState.payload = payload;
+    renderClientMapSidebar(payload);
+    renderClientMapMarkers(payload, keepBounds);
+    loading?.classList.add('d-none');
+};
+
+const bindClientMapPage = async () => {
+    const container = document.querySelector('[data-client-map-page]');
+    if (!container) {
+        if (clientMapState?.map) {
+            clientMapState.map.remove();
+        }
+        clientMapState = null;
+        return;
+    }
+
+    const mapCanvas = container.querySelector('[data-client-map-canvas]');
+    const filtersForm = container.querySelector('[data-client-map-filters]');
+    if (!mapCanvas || !filtersForm) {
+        return;
+    }
+
+    await ensureLeafletLoaded();
+
+    if (clientMapState?.container && clientMapState.container !== container && clientMapState.map) {
+        clientMapState.map.remove();
+        clientMapState = null;
+    }
+
+    const initialPayload = parseJsonDataset(container.dataset.clientMapInitial, null);
+    const map = clientMapState?.map ?? window.L.map(mapCanvas, {
+        zoomControl: true,
+    }).setView([31.85, -7.10], 6);
+
+    if (!clientMapState?.tileLayer) {
+        const tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+        });
+        tileLayer.addTo(map);
+        clientMapState = {
+            ...clientMapState,
+            tileLayer,
+        };
+    }
+
+    const clusterLayer = clientMapState?.clusterLayer ?? window.L.markerClusterGroup({
+        showCoverageOnHover: false,
+        spiderfyOnMaxZoom: true,
+        maxClusterRadius: 45,
+    });
+
+    if (!clientMapState?.clusterLayer) {
+        map.addLayer(clusterLayer);
+    }
+
+    clientMapState = {
+        ...clientMapState,
+        container,
+        filtersForm,
+        dataUrl: container.dataset.clientMapDataUrl,
+        map,
+        clusterLayer,
+        markerIndex: clientMapState?.markerIndex || {},
+        selectedClientId: clientMapState?.selectedClientId || null,
+        sliderStep: clientMapState?.sliderStep || 0,
+        pendingSliderReset: true,
+        payload: initialPayload,
+    };
+
+    if (initialPayload) {
+        renderClientMapSidebar(initialPayload);
+        renderClientMapMarkers(initialPayload, false);
+    } else {
+        await refreshClientMapData({ keepBounds: false });
+    }
+
+    window.setTimeout(() => {
+        clientMapState?.map?.invalidateSize();
+    }, 80);
+
+    if (filtersForm.dataset.clientMapBound !== 'true') {
+        const triggerRefresh = () => {
+            if (clientMapRefreshTimeoutId !== null) {
+                window.clearTimeout(clientMapRefreshTimeoutId);
+            }
+
+            clientMapRefreshTimeoutId = window.setTimeout(() => {
+                void refreshClientMapData();
+            }, 220);
+        };
+
+        filtersForm.addEventListener('change', triggerRefresh);
+        filtersForm.addEventListener('input', triggerRefresh);
+        filtersForm.dataset.clientMapBound = 'true';
+    }
+};
+
 const extractTourRowIds = (scope) => Array.from(
     scope.querySelectorAll('[data-tour-row-id]'),
     (row) => row.dataset.tourRowId,
@@ -297,12 +716,34 @@ const bindTourLiveRefresh = () => {
         }
 
         await refreshTourListSilently(container);
+        await refreshTourCommercialAlerts();
     }, interval);
 };
 
 const refreshDashboardPendingClosures = async () => {
     const container = document.querySelector('[data-dashboard-pending-closures-url]');
     const url = container?.dataset.dashboardPendingClosuresUrl;
+
+    if (!container || !url) {
+        return;
+    }
+
+    const response = await fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    if (!response.ok) {
+        return;
+    }
+
+    container.innerHTML = await response.text();
+};
+
+const refreshTourCommercialAlerts = async () => {
+    const container = document.querySelector('[data-tour-commercial-alerts-url]');
+    const url = container?.dataset.tourCommercialAlertsUrl;
 
     if (!container || !url) {
         return;
@@ -1527,6 +1968,118 @@ const submitCrudForm = async (form) => {
 };
 
 document.addEventListener('click', async (event) => {
+    const focusClientTrigger = event.target.closest('[data-client-map-focus-client]');
+    if (focusClientTrigger && clientMapState?.payload) {
+        event.preventDefault();
+        const clientId = focusClientTrigger.dataset.clientMapFocusClient;
+        const selectedClient = (clientMapState.payload.clients || []).find((client) => String(client.id) === String(clientId));
+        if (!selectedClient) {
+            return;
+        }
+
+        clientMapState.selectedClientId = selectedClient.id;
+        renderClientMapSidebar(clientMapState.payload);
+
+        const marker = clientMapState.markerIndex?.[String(selectedClient.id)];
+        if (marker) {
+            marker.openPopup();
+            clientMapState.map.panTo(marker.getLatLng());
+        }
+    }
+
+    const resetTrigger = event.target.closest('[data-client-map-reset]');
+    if (resetTrigger && clientMapState?.filtersForm) {
+        event.preventDefault();
+        clientMapState.filtersForm.reset();
+        await refreshClientMapData({ keepBounds: false });
+        return;
+    }
+
+    const planVisitTrigger = event.target.closest('[data-client-map-plan-visit]');
+    if (planVisitTrigger) {
+        event.preventDefault();
+        const response = await fetch(planVisitTrigger.dataset.clientMapPlanVisit, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            window.alert(payload.message || 'Impossible de creer la visite.');
+            return;
+        }
+
+        window.alert(payload.message || 'La visite a ete creee.');
+        await refreshClientMapData();
+        return;
+    }
+
+    const showVisitsTrigger = event.target.closest('[data-client-map-show-visits]');
+    if (showVisitsTrigger) {
+        event.preventDefault();
+        const historyBlock = showVisitsTrigger.closest('[data-client-map-selected]')?.querySelector('[data-client-map-visit-history]');
+        historyBlock?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+    }
+
+    const sliderPrevTrigger = event.target.closest('[data-client-map-slider-prev]');
+    if (sliderPrevTrigger && clientMapState) {
+        event.preventDefault();
+        const windowElement = clientMapState.container?.querySelector('.app-client-map-results-window');
+        if (!windowElement) {
+            return;
+        }
+
+        const nextTop = Math.max(0, windowElement.scrollTop - (clientMapState.sliderStep || 0));
+        windowElement.scrollTo({ top: nextTop, behavior: 'smooth' });
+        window.setTimeout(updateClientMapSlider, 320);
+        updateClientMapSlider();
+        return;
+    }
+
+    const sliderNextTrigger = event.target.closest('[data-client-map-slider-next]');
+    if (sliderNextTrigger && clientMapState) {
+        event.preventDefault();
+        const windowElement = clientMapState.container?.querySelector('.app-client-map-results-window');
+        if (!windowElement) {
+            return;
+        }
+
+        const maxScroll = Math.max(0, windowElement.scrollHeight - windowElement.clientHeight);
+        const nextTop = Math.min(maxScroll, windowElement.scrollTop + (clientMapState.sliderStep || 0));
+        windowElement.scrollTo({ top: nextTop, behavior: 'smooth' });
+        window.setTimeout(updateClientMapSlider, 320);
+        updateClientMapSlider();
+        return;
+    }
+
+    const geocodeTrigger = event.target.closest('[data-client-map-geocode-url]');
+    if (geocodeTrigger) {
+        event.preventDefault();
+        geocodeTrigger.disabled = true;
+
+        const response = await fetch(geocodeTrigger.dataset.clientMapGeocodeUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            window.alert(payload.message || 'Impossible de generer les coordonnees.');
+            geocodeTrigger.disabled = false;
+            return;
+        }
+
+        window.alert(payload.message || 'Coordonnees generees.');
+        await refreshClientMapData({ keepBounds: false });
+    }
+});
+
+document.addEventListener('click', async (event) => {
     const trigger = event.target.closest('[data-crud-modal-url]');
     if (!trigger) {
         return;
@@ -1726,12 +2279,17 @@ document.addEventListener('DOMContentLoaded', () => {
     bindVisitBatchSelection(document);
     bindDashboardPendingClosureRefresh();
     bindTourMoveMode(document);
+    void bindClientMapPage();
 });
 
 document.addEventListener('turbo:before-cache', () => {
     resetNavigationOverlays();
     stopTourLiveRefresh();
     stopDashboardPendingClosureRefresh();
+    if (clientMapState?.map) {
+        clientMapState.map.remove();
+        clientMapState = null;
+    }
 });
 
 document.addEventListener('turbo:load', () => {
@@ -1748,6 +2306,7 @@ document.addEventListener('turbo:load', () => {
     bindVisitBatchSelection(document);
     bindDashboardPendingClosureRefresh();
     bindTourMoveMode(document);
+    void bindClientMapPage();
 });
 
 document.addEventListener('click', async (event) => {

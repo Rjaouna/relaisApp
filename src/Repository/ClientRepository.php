@@ -135,4 +135,162 @@ class ClientRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * @param array<string, mixed> $filters
+     *
+     * @return Client[]
+     */
+    public function findForMap(array $filters = []): array
+    {
+        $queryBuilder = $this->createQueryBuilder('client')
+            ->leftJoin('client.assignedCommercial', 'commercial')
+            ->addSelect('commercial')
+            ->leftJoin('client.zone', 'zone')
+            ->addSelect('zone')
+            ->leftJoin('zone.city', 'zoneCity')
+            ->addSelect('zoneCity')
+            ->orderBy('client.name', 'ASC');
+
+        if (!empty($filters['commercial'])) {
+            $queryBuilder
+                ->andWhere('commercial.id = :commercialId')
+                ->setParameter('commercialId', (int) $filters['commercial']);
+        }
+
+        if (!empty($filters['zone'])) {
+            $queryBuilder
+                ->andWhere('zone.id = :zoneId')
+                ->setParameter('zoneId', (int) $filters['zone']);
+        }
+
+        if (!empty($filters['city'])) {
+            $queryBuilder
+                ->andWhere('client.city = :city')
+                ->setParameter('city', (string) $filters['city']);
+        }
+
+        if (!empty($filters['type'])) {
+            $queryBuilder
+                ->andWhere('client.type = :type')
+                ->setParameter('type', (string) $filters['type']);
+        }
+
+        if (!empty($filters['status'])) {
+            $queryBuilder
+                ->andWhere('client.status = :status')
+                ->setParameter('status', (string) $filters['status']);
+        }
+
+        $search = trim((string) ($filters['search'] ?? ''));
+        if ($search !== '') {
+            $normalized = mb_strtolower($search);
+            $searchExpression = $queryBuilder->expr()->orX(
+                'LOWER(client.name) LIKE :search',
+                'LOWER(client.city) LIKE :search',
+                'LOWER(COALESCE(client.address, \'\')) LIKE :search'
+            );
+
+            $searchDigits = preg_replace('/\D+/', '', $search);
+            if ($searchDigits !== '' && ctype_digit($searchDigits)) {
+                $searchExpression->add('client.id = :clientIdSearch');
+                $queryBuilder->setParameter('clientIdSearch', (int) $searchDigits);
+            }
+
+            $queryBuilder
+                ->andWhere($searchExpression)
+                ->setParameter('search', '%' . $normalized . '%');
+        }
+
+        if (!empty($filters['has_active_visit'])) {
+            $queryBuilder
+                ->andWhere('EXISTS (
+                    SELECT activeVisit.id
+                    FROM App\Entity\Visit activeVisit
+                    WHERE activeVisit.client = client
+                    AND activeVisit.archivedAt IS NULL
+                    AND activeVisit.status IN (:activeVisitStatuses)
+                )')
+                ->setParameter('activeVisitStatuses', ['prevue', 'en_attente']);
+        }
+
+        if (!empty($filters['has_planned_visit'])) {
+            $queryBuilder
+                ->andWhere('EXISTS (
+                    SELECT plannedVisit.id
+                    FROM App\Entity\Visit plannedVisit
+                    WHERE plannedVisit.client = client
+                    AND plannedVisit.archivedAt IS NULL
+                    AND plannedVisit.status = :plannedVisitStatus
+                )')
+                ->setParameter('plannedVisitStatus', 'prevue');
+        }
+
+        if (!empty($filters['assigned_to_tour'])) {
+            $queryBuilder
+                ->andWhere('EXISTS (
+                    SELECT tourVisit.id
+                    FROM App\Entity\Visit tourVisit
+                    JOIN tourVisit.tour relatedTour
+                    WHERE tourVisit.client = client
+                    AND tourVisit.archivedAt IS NULL
+                    AND relatedTour.archivedAt IS NULL
+                )');
+        }
+
+        if (!empty($filters['without_tour'])) {
+            $queryBuilder
+                ->andWhere('NOT EXISTS (
+                    SELECT freeVisit.id
+                    FROM App\Entity\Visit freeVisit
+                    JOIN freeVisit.tour usedTour
+                    WHERE freeVisit.client = client
+                    AND freeVisit.archivedAt IS NULL
+                    AND usedTour.archivedAt IS NULL
+                )');
+        }
+
+        if (!empty($filters['without_visit'])) {
+            $queryBuilder
+                ->andWhere('NOT EXISTS (
+                    SELECT noVisit.id
+                    FROM App\Entity\Visit noVisit
+                    WHERE noVisit.client = client
+                    AND noVisit.archivedAt IS NULL
+                )');
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @return array<int, array{id:int,name:string}>
+     */
+    public function getCityOptionsForMap(): array
+    {
+        $rows = $this->createQueryBuilder('client')
+            ->select('DISTINCT client.city AS name')
+            ->andWhere('client.city IS NOT NULL')
+            ->andWhere('client.city != :empty')
+            ->setParameter('empty', '')
+            ->orderBy('client.city', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $options = [];
+        $index = 1;
+        foreach ($rows as $row) {
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+
+            $options[] = [
+                'id' => $index++,
+                'name' => $name,
+            ];
+        }
+
+        return $options;
+    }
 }

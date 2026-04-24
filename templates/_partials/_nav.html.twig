@@ -52,6 +52,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4">
                             {% if menu_visible('commercial_clients') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_client_index') }}">Clients</a></li>{% endif %}
+                            {% if menu_visible('commercial_client_map') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_client_map') }}">Carte des clients</a></li>{% endif %}
                             {% if menu_visible('commercial_team') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_commercial_index') }}">Commerciaux</a></li>{% endif %}
                             {% if menu_visible('commercial_visits') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_visit_index') }}">Visites</a></li>{% endif %}
                             {% if menu_visible('commercial_offers') %}<li><a class="dropdown-item" data-turbo="false" href="{{ path('app_offer_index') }}">Offres</a></li>{% endif %}
