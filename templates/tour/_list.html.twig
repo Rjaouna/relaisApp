@@ -36,7 +36,7 @@
 {% endmacro %}
 
 {% macro mobile_tour_card(tour, commercial_mode, critical_count, is_new_tour, review_pending, archived) %}
-    <div class="app-mobile-card app-tour-card {{ review_pending ? 'app-mobile-card-warning' : '' }} {{ archived ? 'app-mobile-card-muted' : '' }}">
+    <div class="app-mobile-card app-tour-card {{ review_pending ? 'app-mobile-card-warning' : '' }} {{ archived ? 'app-mobile-card-muted' : '' }}" data-tour-search-item>
         <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
             <div class="min-w-0">
                 <a class="fw-semibold text-decoration-none app-quick-link d-inline-block mb-1" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
@@ -132,7 +132,7 @@
                 {% set critical_count = tourCriticalCounts[tour.id ?? 0]|default(0) %}
                 {% set is_new_tour = tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and tour.completedVisits == 0 %}
                 {% set review_pending = tour.closureRequestedAt and tour.status != constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
-                <tr data-tour-row-id="{{ tour.id }}" class="{{ review_pending ? 'table-warning' : '' }}">
+                <tr data-tour-row-id="{{ tour.id }}" data-tour-search-item class="{{ review_pending ? 'table-warning' : '' }}">
                     <td>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
@@ -177,7 +177,7 @@
             {% for tour in closed_tours %}
                 {% set critical_count = tourCriticalCounts[tour.id ?? 0]|default(0) %}
                 {% set is_new_tour = tour.status == constant('App\\Entity\\Tour::STATUS_PROGRAMMED') and tour.completedVisits == 0 %}
-                <tr data-tour-row-id="{{ tour.id }}">
+                <tr data-tour-row-id="{{ tour.id }}" data-tour-search-item>
                     <td>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
@@ -227,7 +227,7 @@
 
             {% for tour in archived_tours %}
                 {% set critical_count = tourCriticalCounts[tour.id ?? 0]|default(0) %}
-                <tr data-tour-row-id="{{ tour.id }}" class="table-secondary">
+                <tr data-tour-row-id="{{ tour.id }}" data-tour-search-item class="table-secondary">
                     <td>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <a class="fw-semibold text-decoration-none app-quick-link" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>

@@ -36,7 +36,7 @@
         data-tour-live-refresh-url="{{ path('app_tour_list') }}"
         data-tour-live-refresh-interval="{{ commercial_mode ? '15000' : '10000' }}"
     >
-        {% include '_partials/_listing_search.html.twig' with { placeholder: commercial_mode ? 'Rechercher une tournee...' : 'Rechercher une tournee, une ville ou un commercial...' } %}
+        {% include '_partials/_listing_search.html.twig' with { placeholder: commercial_mode ? 'Rechercher une tournee...' : 'Rechercher une tournee, une ville ou un commercial...', target: '[data-tour-search-item]' } %}
         <div class="card-body p-0" data-crud-list>
             {% include 'tour/_list.html.twig' with { tours: tours } %}
         </div>
