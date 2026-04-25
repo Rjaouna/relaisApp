@@ -4,7 +4,7 @@
 {% set archived_tours = tours|filter(t => t.archivedAt) %}
 
 {% macro tour_actions(tour, commercial_mode, review_pending) %}
-    <div class="btn-group btn-group-sm">
+    <div class="app-mobile-actions app-tour-actions">
         <a href="{{ path('app_tour_show', {id: tour.id}) }}" class="btn btn-outline-secondary rounded-pill">{{ commercial_mode ? 'Choisir' : 'Voir' }}</a>
         {% if commercial_mode %}
             {% if tour.plannedVisits > 0 and tour.completedVisits >= tour.plannedVisits and not review_pending %}

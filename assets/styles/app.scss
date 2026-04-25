@@ -352,11 +352,21 @@ a {
     box-shadow:
         0.18rem 0.18rem 0 0 rgba($secondary, 0.32),
         0 0.6rem 1.5rem rgba($dark, 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
     font-size: 0.88rem;
+    line-height: 1.2;
     transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
     transform: translate(-2px, -2px);
     border-width: 1px;
     border-color: rgba($secondary, 0.22);
+}
+
+.btn.rounded-pill,
+.rounded-pill.btn {
+    border-radius: 0.95rem !important;
 }
 
 .btn:hover {
@@ -912,7 +922,34 @@ h6,
 }
 
 .app-mobile-actions .btn {
-    flex: 0 0 auto;
+    flex: 1 1 calc(50% - 0.3rem);
+    min-height: 2.75rem;
+}
+
+.app-mobile-actions .btn:only-child {
+    flex-basis: 100%;
+}
+
+.app-mobile-actions > form {
+    display: flex;
+    flex: 1 1 calc(50% - 0.3rem);
+}
+
+.app-mobile-actions > form:only-child {
+    flex-basis: 100%;
+}
+
+.app-mobile-actions > form > .btn {
+    width: 100%;
+}
+
+.app-tour-actions {
+    width: 100%;
+    justify-content: stretch;
+}
+
+.app-tour-actions .btn {
+    width: 100%;
 }
 
 .app-stats-kpi-card {
@@ -1137,6 +1174,10 @@ h6,
     .btn {
         min-height: 2.75rem;
         font-size: 0.92rem;
+    }
+
+    .app-mobile-actions {
+        width: 100%;
     }
 
     .card-body {
