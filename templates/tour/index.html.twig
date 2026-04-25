@@ -10,33 +10,24 @@
         </div>
     {% endif %}
 
-    <div class="card border-0 shadow-sm rounded-5 mb-4 overflow-hidden">
-        <div class="card-body p-4 p-lg-5 {{ commercial_mode ? 'bg-dark text-white' : 'bg-white' }}">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                <div>
-                    <span class="badge rounded-pill {{ commercial_mode ? 'text-bg-light text-dark' : 'text-bg-primary-subtle text-primary-emphasis' }} mb-3">
-                        {{ commercial_mode ? 'Parcours terrain' : 'Planification' }}
-                    </span>
-                    <h1 class="h3 mb-1">{{ commercial_mode ? 'Mes tournees' : 'Gestion des tournees' }}</h1>
-                    <p class="{{ commercial_mode ? 'text-white-50' : 'text-body-secondary' }} mb-0">
-                        {{ commercial_mode ? 'Choisissez une tournee, consultez les clients prevus et renseignez vos resultats de visite.' : 'Planification, edition et generation rapide des tournees.' }}
-                    </p>
-                </div>
-                {% if not commercial_mode %}
-                    <div class="d-flex gap-2 flex-wrap">
-                        <form method="post" action="{{ path('app_tour_generate') }}">
-                            {% for value in tourGenerationSelectedStatuses %}
-                                <input type="hidden" name="client_statuses[]" value="{{ value }}">
-                            {% endfor %}
-                            <button class="btn btn-outline-primary" type="submit">
-                                <i class="bi bi-sliders me-2"></i>Preparer la generation
-                            </button>
-                        </form>
-                        <a href="{{ path('app_tour_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_tour_new') }}"><i class="bi bi-plus-lg me-2"></i>Ajouter</a>
-                    </div>
-                {% endif %}
-            </div>
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <div class="text-body-secondary small text-uppercase mb-1">{{ commercial_mode ? 'Tournees' : 'Gestion des tournees' }}</div>
+            <h1 class="h3 mb-0">{{ commercial_mode ? 'Mes tournees' : 'Tournees' }}</h1>
         </div>
+        {% if not commercial_mode %}
+            <div class="app-mobile-actions justify-content-start justify-content-lg-end">
+                <form method="post" action="{{ path('app_tour_generate') }}">
+                    {% for value in tourGenerationSelectedStatuses %}
+                        <input type="hidden" name="client_statuses[]" value="{{ value }}">
+                    {% endfor %}
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="bi bi-sliders me-2"></i>Preparer la generation
+                    </button>
+                </form>
+                <a href="{{ path('app_tour_new') }}" class="btn btn-primary rounded-pill px-4" data-crud-modal-url="{{ path('app_tour_new') }}"><i class="bi bi-plus-lg me-2"></i>Ajouter</a>
+            </div>
+        {% endif %}
     </div>
 
     <div

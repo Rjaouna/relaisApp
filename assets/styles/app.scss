@@ -308,6 +308,10 @@ a {
     padding-bottom: 0.75rem;
 }
 
+.table {
+    border: 0 !important;
+}
+
 .app-listing-search {
     background: linear-gradient(180deg, rgba($primary, 0.08), rgba(255, 255, 255, 0.7));
     border-bottom: 1px solid rgba($secondary, 0.08);
@@ -344,52 +348,119 @@ a {
 }
 
 .btn {
-    box-shadow: 0 0.6rem 1.6rem rgba($dark, 0.06);
+    margin: 0;
+    box-shadow:
+        0.18rem 0.18rem 0 0 rgba($secondary, 0.32),
+        0 0.6rem 1.5rem rgba($dark, 0.08);
     font-size: 0.88rem;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+    transform: translate(-2px, -2px);
+    border-width: 1px;
+    border-color: rgba($secondary, 0.22);
+}
+
+.btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow:
+        0.12rem 0.12rem 0 0 rgba($secondary, 0.26),
+        0 0.85rem 1.9rem rgba($dark, 0.09);
+}
+
+.btn:active,
+.btn.is-busy {
+    transform: translate(1px, 1px) scale(0.985);
+    box-shadow: 0 0.3rem 0.8rem rgba($dark, 0.08);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"],
+.btn.is-busy {
+    opacity: 0.72;
+}
+
+.btn-check + .btn,
+.btn-check + .btn:hover,
+.btn-check:checked + .btn,
+:not(.btn-check) + .btn:active,
+.btn:first-child:active,
+.btn.active,
+.btn.show {
+    box-shadow: 0 0.3rem 0.8rem rgba($dark, 0.08);
+    transform: translate(1px, 1px);
+}
+
+.btn-group .btn,
+.btn-group-vertical .btn {
+    margin: 0;
 }
 
 .btn-primary {
-    color: #fff;
-    background: linear-gradient(135deg, $primary 0%, color.scale($secondary, $lightness: -4%) 100%);
-    border-color: transparent;
+    color: $dark;
+    background: $primary;
+    border-color: color.scale($secondary, $lightness: -4%);
 }
 
 .btn-primary:hover,
 .btn-primary:focus-visible,
 .btn-primary:active {
-    color: #fff !important;
-    background: linear-gradient(135deg, color.scale($primary, $lightness: -8%) 0%, color.scale($secondary, $lightness: -10%) 100%) !important;
-    border-color: transparent !important;
+    color: $dark !important;
+    background: color.scale($primary, $lightness: -6%) !important;
+    border-color: color.scale($secondary, $lightness: -10%) !important;
 }
 
 .btn-dark,
 .bg-dark {
     background: linear-gradient(135deg, color.scale($secondary, $lightness: -6%) 0%, $dark 100%) !important;
-    border-color: transparent !important;
+    border-color: $dark !important;
 }
 
 .btn-outline-primary {
-    color: $secondary;
-    border-color: rgba($secondary, 0.28);
-    background: rgba(255, 255, 255, 0.85);
+    color: $dark;
+    border-color: color.scale($primary, $lightness: -10%);
+    background: rgba($primary, 0.14);
 }
 
 .btn-outline-primary:hover,
 .btn-outline-primary:focus-visible {
-    color: #fff;
-    border-color: transparent;
-    background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+    color: $dark;
+    border-color: color.scale($primary, $lightness: -12%);
+    background: color.scale($primary, $lightness: -4%);
 }
 
 .btn-outline-secondary,
 .btn-outline-dark {
     border-color: rgba($secondary, 0.18);
-    color: $body-color;
+    color: $dark;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-dark:hover {
+    color: $dark;
+    background: rgba($secondary, 0.08);
+    border-color: rgba($secondary, 0.24);
 }
 
 .btn-outline-danger,
 .btn-danger {
     box-shadow: 0 0.6rem 1.6rem rgba(220, 53, 69, 0.12);
+}
+
+.app-btn-waze {
+    color: #ffffff;
+    background: linear-gradient(135deg, #53c7ff 0%, #2a9df4 100%);
+    border-color: #1f7fd4;
+    box-shadow:
+        0.18rem 0.18rem 0 0 rgba(31, 127, 212, 0.28),
+        0 0.6rem 1.5rem rgba(42, 157, 244, 0.22);
+}
+
+.app-btn-waze:hover,
+.app-btn-waze:focus-visible,
+.app-btn-waze:active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #46bbf3 0%, #188ee8 100%) !important;
+    border-color: #176fb6 !important;
 }
 
 .badge {
@@ -608,6 +679,13 @@ h6,
     border-radius: 999px !important;
 }
 
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover,
+.btn-outline-dark:hover,
+.btn-outline-danger:hover {
+    transform: translateY(-1px);
+}
+
 .app-login {
     min-height: 100vh;
 }
@@ -757,6 +835,46 @@ h6,
     border-radius: 1.15rem;
     background: rgba(255, 255, 255, 0.94);
     box-shadow: 0 0.75rem 1.75rem rgba($dark, 0.06);
+}
+
+.app-tour-card {
+    padding: 0.95rem 1rem;
+}
+
+.app-tour-card-progress {
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.9rem;
+    background: rgba($primary, 0.07);
+}
+
+.app-tour-header-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.app-tour-stop-card {
+    cursor: default;
+}
+
+.app-tour-stop-card .app-quick-link {
+    text-decoration: none;
+}
+
+.app-icon-waze {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.app-mobile-section-title {
+    padding: 0 0.15rem;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba($body-color, 0.52);
 }
 
 .app-mobile-card-warning {
@@ -1040,6 +1158,11 @@ h6,
 
     .table-responsive {
         border-radius: 0;
+    }
+
+    .app-tour-header-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.9rem;
     }
 }
 

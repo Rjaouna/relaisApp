@@ -36,11 +36,11 @@
 {% endmacro %}
 
 {% macro mobile_tour_card(tour, commercial_mode, critical_count, is_new_tour, review_pending, archived) %}
-    <div class="app-mobile-card {{ review_pending ? 'app-mobile-card-warning' : '' }} {{ archived ? 'app-mobile-card-muted' : '' }}">
-        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+    <div class="app-mobile-card app-tour-card {{ review_pending ? 'app-mobile-card-warning' : '' }} {{ archived ? 'app-mobile-card-muted' : '' }}">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
             <div class="min-w-0">
                 <a class="fw-semibold text-decoration-none app-quick-link d-inline-block mb-1" href="{{ path('app_tour_show', {id: tour.id}) }}">{{ tour.name }}</a>
-                <div class="small text-body-secondary">{{ tour.routeSummary ?: 'Aucun itineraire defini' }}</div>
+                <div class="small text-body-secondary">{{ tour.city }}</div>
             </div>
             <div class="d-flex flex-column gap-2 align-items-end">
                 {% if is_new_tour %}
@@ -54,42 +54,29 @@
             </div>
         </div>
 
-        <div class="app-mobile-meta-grid mb-3">
-            {% if not commercial_mode %}
-                <div>
-                    <div class="app-mobile-meta-label">Commercial</div>
-                    <div class="fw-semibold">{{ tour.commercial ? tour.commercial.fullName : 'Non assigne' }}</div>
-                </div>
-            {% endif %}
-            <div>
-                <div class="app-mobile-meta-label">Ville</div>
-                <div class="fw-semibold">{{ tour.city }}</div>
+        <div class="app-tour-card-progress mb-3">
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                <div class="app-mobile-meta-label mb-0">Avancement</div>
+                <div class="small fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
             </div>
-            <div>
-                <div class="app-mobile-meta-label">Date</div>
-                <div class="fw-semibold">{{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</div>
-            </div>
-            <div>
-                <div class="app-mobile-meta-label">Statut</div>
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge rounded-pill {{ review_pending ? 'text-bg-warning' : (tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') ? 'text-bg-success' : 'text-bg-light') }}">
-                        {{ review_pending ? 'Controle admin' : (archived ? 'Archivee' : tour.status|replace({'_': ' '})|title) }}
-                    </span>
-                    {% if critical_count > 0 %}
-                        <span class="badge rounded-pill text-bg-danger">{{ critical_count }} refus</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="app-mobile-meta-span">
-                <div class="app-mobile-meta-label">Avancement</div>
-                <div class="fw-semibold mb-2">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
-                <div class="progress" style="height: 0.45rem;">
-                    <div class="progress-bar {{ review_pending ? 'bg-warning' : (archived ? 'bg-secondary' : '') }}" style="width: {{ tour.plannedVisits > 0 ? (tour.completedVisits / tour.plannedVisits * 100) : 0 }}%"></div>
-                </div>
+            <div class="progress" style="height: 0.45rem;">
+                <div class="progress-bar {{ review_pending ? 'bg-warning' : (archived ? 'bg-secondary' : '') }}" style="width: {{ tour.plannedVisits > 0 ? (tour.completedVisits / tour.plannedVisits * 100) : 0 }}%"></div>
             </div>
         </div>
 
-        <div class="app-mobile-actions">
+        <div class="app-mobile-actions justify-content-between align-items-center">
+            <div class="d-flex flex-wrap gap-2">
+                {% if review_pending %}
+                    <span class="badge rounded-pill text-bg-warning">Controle admin</span>
+                {% elseif archived %}
+                    <span class="badge rounded-pill text-bg-secondary">Archivee</span>
+                {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
+                    <span class="badge rounded-pill text-bg-success">Cloturee</span>
+                {% endif %}
+                {% if critical_count > 0 %}
+                    <span class="badge rounded-pill text-bg-danger">{{ critical_count }} refus</span>
+                {% endif %}
+            </div>
             {{ _self.tour_actions(tour, commercial_mode, review_pending) }}
         </div>
     </div>
@@ -135,12 +122,7 @@
         <thead class="table-light">
             <tr>
                 <th>Tournee</th>
-                {% if not commercial_mode %}
-                    <th>Commercial</th>
-                {% endif %}
                 <th>Ville</th>
-                <th>Date</th>
-                <th>Statut</th>
                 <th>Avancement</th>
                 <th class="text-end">Actions</th>
             </tr>
@@ -173,33 +155,7 @@
                             </div>
                         {% endif %}
                     </td>
-                    {% if not commercial_mode %}
-                        <td>
-                            {% if tour.commercial %}
-                                <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: tour.commercial.id}) }}">{{ tour.commercial.fullName }}</a>
-                            {% else %}
-                                Non assigne
-                            {% endif %}
-                        </td>
-                    {% endif %}
                     <td>{{ tour.city }}</td>
-                    <td>{{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</td>
-                    <td>
-                        {% set status_badge = review_pending ? 'text-bg-warning' : 'text-bg-light' %}
-                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_IN_PROGRESS') and not review_pending %}
-                            {% set status_badge = 'text-bg-primary' %}
-                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
-                            {% set status_badge = 'text-bg-secondary' %}
-                        {% elseif critical_count > 0 %}
-                            {% set status_badge = 'text-bg-danger' %}
-                        {% endif %}
-                        <span class="badge rounded-pill {{ status_badge }}">
-                            {{ review_pending ? 'Controle admin' : tour.status|replace({'_': ' '})|title }}
-                        </span>
-                        {% if review_pending %}
-                            <div class="small text-warning fw-semibold mt-2">Fermeture demandee</div>
-                        {% endif %}
-                    </td>
                     <td>
                         <div class="fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
                         <div class="progress mt-2" style="height: 0.4rem;">
@@ -214,7 +170,7 @@
 
             {% if closed_tours is not empty %}
                 <tr class="table-light">
-                    <td colspan="{{ commercial_mode ? 6 : 7 }}" class="fw-semibold text-body-secondary py-3">Tournees cloturees</td>
+                    <td colspan="4" class="fw-semibold text-body-secondary py-3">Tournees cloturees</td>
                 </tr>
             {% endif %}
 
@@ -241,35 +197,7 @@
                             </div>
                         {% endif %}
                     </td>
-                    {% if not commercial_mode %}
-                        <td>
-                            {% if tour.commercial %}
-                                <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: tour.commercial.id}) }}">{{ tour.commercial.fullName }}</a>
-                            {% else %}
-                                Non assigne
-                            {% endif %}
-                        </td>
-                    {% endif %}
                     <td>{{ tour.city }}</td>
-                    <td>{{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</td>
-                    <td>
-                        {% set status_badge = 'text-bg-light' %}
-                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
-                            {% set status_badge = 'text-bg-success' %}
-                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_IN_PROGRESS') %}
-                            {% set status_badge = 'text-bg-primary' %}
-                        {% elseif tour.status == constant('App\\Entity\\Tour::STATUS_CANCELLED') %}
-                            {% set status_badge = 'text-bg-secondary' %}
-                        {% elseif critical_count > 0 %}
-                            {% set status_badge = 'text-bg-danger' %}
-                        {% endif %}
-                        <span class="badge rounded-pill {{ status_badge }}">
-                            {{ tour.status|replace({'_': ' '})|title }}
-                        </span>
-                        {% if tour.status == constant('App\\Entity\\Tour::STATUS_COMPLETED') %}
-                            <div class="small text-success fw-semibold mt-2">Tournee cloturee</div>
-                        {% endif %}
-                    </td>
                     <td>
                         <div class="fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
                         <div class="progress mt-2" style="height: 0.4rem;">
@@ -293,7 +221,7 @@
 
             {% if archived_tours is not empty %}
                 <tr class="table-light">
-                    <td colspan="{{ commercial_mode ? 6 : 7 }}" class="fw-semibold text-body-secondary py-3">Historique archive</td>
+                    <td colspan="4" class="fw-semibold text-body-secondary py-3">Historique archive</td>
                 </tr>
             {% endif %}
 
@@ -314,18 +242,7 @@
                             </div>
                         {% endif %}
                     </td>
-                    {% if not commercial_mode %}
-                        <td>
-                            {% if tour.commercial %}
-                                <a class="text-decoration-none app-quick-link fw-semibold" href="{{ path('app_commercial_show', {id: tour.commercial.id}) }}">{{ tour.commercial.fullName }}</a>
-                            {% else %}
-                                Non assigne
-                            {% endif %}
-                        </td>
-                    {% endif %}
                     <td>{{ tour.city }}</td>
-                    <td>{{ tour.scheduledFor ? tour.scheduledFor|date('d/m/Y H:i') : '' }}</td>
-                    <td><span class="badge rounded-pill text-bg-secondary">Archivee</span></td>
                     <td>
                         <div class="fw-semibold">{{ tour.completedVisits }}/{{ tour.plannedVisits }}</div>
                         <div class="progress mt-2" style="height: 0.4rem;">
@@ -339,7 +256,7 @@
             {% endfor %}
 
             {% if open_tours is empty and closed_tours is empty and archived_tours is empty %}
-                <tr><td colspan="{{ commercial_mode ? 6 : 7 }}" class="text-center py-4 text-body-secondary">Aucune tournee disponible.</td></tr>
+                <tr><td colspan="4" class="text-center py-4 text-body-secondary">Aucune tournee disponible.</td></tr>
             {% endif %}
         </tbody>
     </table>

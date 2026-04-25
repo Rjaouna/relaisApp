@@ -47,6 +47,54 @@ let chartJsLoaderPromise = null;
 let leafletLoaderPromise = null;
 let clientMapState = null;
 
+const triggerHapticFeedback = () => {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        navigator.vibrate(12);
+    }
+};
+
+const setTriggerBusy = (trigger, label = null) => {
+    if (!trigger || trigger.dataset.busy === 'true') {
+        return;
+    }
+
+    triggerHapticFeedback();
+    trigger.dataset.busy = 'true';
+    trigger.dataset.originalHtml = trigger.innerHTML;
+    trigger.classList.add('is-busy');
+
+    if ('disabled' in trigger) {
+        trigger.disabled = true;
+    } else {
+        trigger.setAttribute('aria-disabled', 'true');
+        trigger.style.pointerEvents = 'none';
+    }
+
+    const busyLabel = label || trigger.dataset.loadingLabel || 'Traitement...';
+    trigger.innerHTML = `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>${busyLabel}`;
+};
+
+const clearTriggerBusy = (trigger) => {
+    if (!trigger || trigger.dataset.busy !== 'true') {
+        return;
+    }
+
+    trigger.classList.remove('is-busy');
+    if (trigger.dataset.originalHtml) {
+        trigger.innerHTML = trigger.dataset.originalHtml;
+    }
+
+    delete trigger.dataset.originalHtml;
+    delete trigger.dataset.busy;
+
+    if ('disabled' in trigger) {
+        trigger.disabled = false;
+    } else {
+        trigger.removeAttribute('aria-disabled');
+        trigger.style.pointerEvents = '';
+    }
+};
+
 const refreshCrudList = async (url) => {
     const target = document.querySelector('[data-crud-list]');
 
@@ -1548,11 +1596,12 @@ const computeTourDistances = async ({ sortByDistance = false } = {}) => {
 
     for (const row of rows) {
         const badge = row.querySelector('[data-distance-badge]');
-        const destinationQuery = row.dataset.destination;
+        const latitude = Number.parseFloat(row.dataset.latitude || '');
+        const longitude = Number.parseFloat(row.dataset.longitude || '');
 
-        if (!destinationQuery) {
+        if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
             if (badge) {
-                badge.textContent = 'Adresse incomplete';
+                badge.textContent = 'Coordonnees absentes';
                 badge.className = 'badge rounded-pill text-bg-secondary';
             }
             row.dataset.distanceValue = '';
@@ -1560,7 +1609,10 @@ const computeTourDistances = async ({ sortByDistance = false } = {}) => {
         }
 
         try {
-            const destination = await geocodeDestination(destinationQuery);
+            const destination = {
+                lat: latitude,
+                lng: longitude,
+            };
             const distance = haversineDistance(origin, destination);
             row.dataset.distanceValue = String(distance);
 
@@ -1581,19 +1633,41 @@ const computeTourDistances = async ({ sortByDistance = false } = {}) => {
         return;
     }
 
-    const tbody = document.querySelector('[data-tour-table] tbody');
-    if (!tbody) {
+    const sortGroups = Array.from(document.querySelectorAll('[data-tour-sort-group]'));
+    sortGroups.forEach((group) => {
+        const groupRows = Array.from(group.querySelectorAll(':scope > [data-tour-stop]')).filter((row) => row.offsetParent !== null);
+        if (!groupRows.length) {
+            return;
+        }
+
+        groupRows
+            .sort((left, right) => {
+                const leftDistance = Number(left.dataset.distanceValue || Number.MAX_SAFE_INTEGER);
+                const rightDistance = Number(right.dataset.distanceValue || Number.MAX_SAFE_INTEGER);
+
+                return leftDistance - rightDistance;
+            })
+            .forEach((row) => group.appendChild(row));
+    });
+};
+
+const bindTourAutoOptimize = async () => {
+    const groups = Array.from(document.querySelectorAll('[data-tour-sort-group]'));
+    if (!groups.length) {
         return;
     }
 
-    rows
-        .sort((left, right) => {
-            const leftDistance = Number(left.dataset.distanceValue || Number.MAX_SAFE_INTEGER);
-            const rightDistance = Number(right.dataset.distanceValue || Number.MAX_SAFE_INTEGER);
+    const rows = Array.from(document.querySelectorAll('[data-tour-stop]'));
+    const hasCoordinates = rows.some((row) => row.dataset.latitude && row.dataset.longitude);
+    if (!hasCoordinates) {
+        return;
+    }
 
-            return leftDistance - rightDistance;
-        })
-        .forEach((row) => tbody.appendChild(row));
+    try {
+        await computeTourDistances({ sortByDistance: true });
+    } catch {
+        // Ne pas bloquer l'ecran si la geolocalisation du commercial n'est pas disponible.
+    }
 };
 
 const bindLiveSearch = () => {
@@ -2092,7 +2166,12 @@ document.addEventListener('click', async (event) => {
     }
 
     event.preventDefault();
-    await openCrudModal(trigger.dataset.crudModalUrl);
+    setTriggerBusy(trigger, 'Ouverture...');
+    try {
+        await openCrudModal(trigger.dataset.crudModalUrl);
+    } finally {
+        clearTriggerBusy(trigger);
+    }
 });
 
 document.addEventListener('click', async (event) => {
@@ -2102,7 +2181,12 @@ document.addEventListener('click', async (event) => {
     }
 
     event.preventDefault();
-    await openCityModal(trigger.dataset.cityModalUrl);
+    setTriggerBusy(trigger, 'Ouverture...');
+    try {
+        await openCityModal(trigger.dataset.cityModalUrl);
+    } finally {
+        clearTriggerBusy(trigger);
+    }
 });
 
 document.addEventListener('click', async (event) => {
@@ -2112,7 +2196,12 @@ document.addEventListener('click', async (event) => {
     }
 
     event.preventDefault();
-    await openOptionModal(trigger.dataset.optionModalUrl);
+    setTriggerBusy(trigger, 'Ouverture...');
+    try {
+        await openOptionModal(trigger.dataset.optionModalUrl);
+    } finally {
+        clearTriggerBusy(trigger);
+    }
 });
 
 document.addEventListener('click', async (event) => {
@@ -2122,7 +2211,12 @@ document.addEventListener('click', async (event) => {
     }
 
     event.preventDefault();
-    await openZoneModal(trigger.dataset.zoneModalUrl);
+    setTriggerBusy(trigger, 'Ouverture...');
+    try {
+        await openZoneModal(trigger.dataset.zoneModalUrl);
+    } finally {
+        clearTriggerBusy(trigger);
+    }
 });
 
 document.addEventListener('click', async (event) => {
@@ -2132,7 +2226,12 @@ document.addEventListener('click', async (event) => {
     }
 
     event.preventDefault();
-    await openClientImportModal(trigger.dataset.clientImportUrl);
+    setTriggerBusy(trigger, 'Ouverture...');
+    try {
+        await openClientImportModal(trigger.dataset.clientImportUrl);
+    } finally {
+        clearTriggerBusy(trigger);
+    }
 });
 
 document.addEventListener('submit', async (event) => {
@@ -2142,7 +2241,13 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
-    await submitCrudForm(form);
+    const submitter = event.submitter;
+    setTriggerBusy(submitter, 'Enregistrement...');
+    try {
+        await submitCrudForm(form);
+    } finally {
+        clearTriggerBusy(submitter);
+    }
 });
 
 document.addEventListener('submit', async (event) => {
@@ -2152,7 +2257,13 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
-    await submitCityForm(form);
+    const submitter = event.submitter;
+    setTriggerBusy(submitter, 'Enregistrement...');
+    try {
+        await submitCityForm(form);
+    } finally {
+        clearTriggerBusy(submitter);
+    }
 });
 
 document.addEventListener('submit', async (event) => {
@@ -2162,7 +2273,13 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
-    await submitOptionForm(form);
+    const submitter = event.submitter;
+    setTriggerBusy(submitter, 'Enregistrement...');
+    try {
+        await submitOptionForm(form);
+    } finally {
+        clearTriggerBusy(submitter);
+    }
 });
 
 document.addEventListener('submit', async (event) => {
@@ -2172,7 +2289,13 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
-    await submitZoneForm(form);
+    const submitter = event.submitter;
+    setTriggerBusy(submitter, 'Enregistrement...');
+    try {
+        await submitZoneForm(form);
+    } finally {
+        clearTriggerBusy(submitter);
+    }
 });
 
 document.addEventListener('submit', async (event) => {
@@ -2182,63 +2305,12 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
-    await submitClientImportForm(form);
-});
-
-document.addEventListener('click', async (event) => {
-    const locateButton = event.target.closest('[data-tour-locate]');
-    if (locateButton) {
-        event.preventDefault();
-        try {
-            await getCurrentPosition();
-            locateButton.classList.remove('btn-outline-secondary');
-            locateButton.classList.add('btn-success');
-            locateButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Position detectee';
-        } catch {
-            locateButton.classList.remove('btn-outline-secondary');
-            locateButton.classList.add('btn-danger');
-            locateButton.innerHTML = '<i class="bi bi-x-circle me-2"></i>Position indisponible';
-        }
-
-        return;
-    }
-
-    const distanceButton = event.target.closest('[data-tour-distance]');
-    if (distanceButton) {
-        event.preventDefault();
-        distanceButton.disabled = true;
-        try {
-            await computeTourDistances();
-            distanceButton.classList.remove('btn-outline-primary');
-            distanceButton.classList.add('btn-success');
-            distanceButton.innerHTML = '<i class="bi bi-check2-circle me-2"></i>Distances calculees';
-        } catch {
-            distanceButton.classList.remove('btn-outline-primary');
-            distanceButton.classList.add('btn-danger');
-            distanceButton.innerHTML = '<i class="bi bi-x-circle me-2"></i>Calcul impossible';
-        } finally {
-            distanceButton.disabled = false;
-        }
-
-        return;
-    }
-
-    const optimizeButton = event.target.closest('[data-tour-optimize]');
-    if (optimizeButton) {
-        event.preventDefault();
-        optimizeButton.disabled = true;
-        try {
-            await computeTourDistances({ sortByDistance: true });
-            optimizeButton.classList.remove('btn-primary');
-            optimizeButton.classList.add('btn-success');
-            optimizeButton.innerHTML = '<i class="bi bi-check2-circle me-2"></i>Ordre optimise';
-        } catch {
-            optimizeButton.classList.remove('btn-primary');
-            optimizeButton.classList.add('btn-danger');
-            optimizeButton.innerHTML = '<i class="bi bi-x-circle me-2"></i>Optimisation indisponible';
-        } finally {
-            optimizeButton.disabled = false;
-        }
+    const submitter = event.submitter;
+    setTriggerBusy(submitter, 'Import...');
+    try {
+        await submitClientImportForm(form);
+    } finally {
+        clearTriggerBusy(submitter);
     }
 });
 
@@ -2254,21 +2326,26 @@ document.addEventListener('click', async (event) => {
         return;
     }
 
-    const response = await fetch(trigger.dataset.crudDeleteUrl, {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    });
+    setTriggerBusy(trigger, 'Traitement...');
+    try {
+        const response = await fetch(trigger.dataset.crudDeleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
 
-    const contentType = response.headers.get('content-type') || '';
-    const payload = contentType.includes('application/json') ? await response.json() : null;
+        const contentType = response.headers.get('content-type') || '';
+        const payload = contentType.includes('application/json') ? await response.json() : null;
 
-    if (!response.ok) {
-        throw new Error(payload?.message || 'Unable to delete item.');
+        if (!response.ok) {
+            throw new Error(payload?.message || 'Unable to delete item.');
+        }
+
+        await refreshCrudList(trigger.dataset.crudRefreshUrl);
+    } finally {
+        clearTriggerBusy(trigger);
     }
-
-    await refreshCrudList(trigger.dataset.crudRefreshUrl);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2286,6 +2363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindDashboardPendingClosureRefresh();
     bindTourMoveMode(document);
     void bindClientMapPage();
+    void bindTourAutoOptimize();
 });
 
 document.addEventListener('turbo:before-cache', () => {
@@ -2313,6 +2391,7 @@ document.addEventListener('turbo:load', () => {
     bindDashboardPendingClosureRefresh();
     bindTourMoveMode(document);
     void bindClientMapPage();
+    void bindTourAutoOptimize();
 });
 
 document.addEventListener('click', async (event) => {
@@ -2327,24 +2406,29 @@ document.addEventListener('click', async (event) => {
         return;
     }
 
-    const response = await fetch(trigger.dataset.crudPostUrl, {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    });
+    setTriggerBusy(trigger, 'Traitement...');
+    try {
+        const response = await fetch(trigger.dataset.crudPostUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
 
-    const contentType = response.headers.get('content-type') || '';
-    const payload = contentType.includes('application/json') ? await response.json() : null;
-    if (!response.ok) {
-        throw new Error(payload?.message || 'Action impossible.');
-    }
+        const contentType = response.headers.get('content-type') || '';
+        const payload = contentType.includes('application/json') ? await response.json() : null;
+        if (!response.ok) {
+            throw new Error(payload?.message || 'Action impossible.');
+        }
 
-    if (trigger.dataset.crudRefreshUrl) {
-        await refreshCrudList(trigger.dataset.crudRefreshUrl);
-    }
+        if (trigger.dataset.crudRefreshUrl) {
+            await refreshCrudList(trigger.dataset.crudRefreshUrl);
+        }
 
-    if (trigger.dataset.crudReload === 'true') {
-        window.location.reload();
+        if (trigger.dataset.crudReload === 'true') {
+            window.location.reload();
+        }
+    } finally {
+        clearTriggerBusy(trigger);
     }
 });
