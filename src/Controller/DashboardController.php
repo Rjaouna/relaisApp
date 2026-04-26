@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Service\DashboardService;
 use App\Service\OfferService;
+use App\Service\StatsService;
 use App\Service\TourGenerationWorkflowService;
 use App\Service\VisitService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,6 +20,7 @@ class DashboardController extends AbstractController
         private readonly DashboardService $dashboardService,
         private readonly VisitService $visitService,
         private readonly OfferService $offerService,
+        private readonly StatsService $statsService,
         private readonly \App\Service\DecisionSupportService $decisionSupportService,
         private readonly TourGenerationWorkflowService $tourGenerationWorkflowService,
     ) {
@@ -29,6 +31,7 @@ class DashboardController extends AbstractController
     {
         return $this->render('dashboard/index.html.twig', [
             'overview' => $this->dashboardService->buildOverview(),
+            'dashboardStats' => $this->statsService->buildOverview(),
             'visits' => $this->visitService->getUpcomingVisits(),
             'offers' => $this->offerService->getLatestOffers(),
         ]);

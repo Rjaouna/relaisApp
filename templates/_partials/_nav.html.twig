@@ -1,6 +1,7 @@
 <nav class="navbar navbar-expand-xl sticky-top app-navbar">
     <div class="container-fluid px-3 px-lg-4 px-xxl-5">
         <a class="navbar-brand app-brand d-flex align-items-center gap-3 me-4" href="{{ path('app_home') }}">
+            <div class="app-brand-mark d-inline-flex align-items-center justify-content-center">RM</div>
             <div class="lh-sm">
                 <div class="app-brand-kicker">Relais Medical</div>
                 <div class="app-brand-title">Plateforme commerciale</div>
@@ -27,7 +28,7 @@
         </div>
 
         <div class="collapse navbar-collapse order-xl-2" id="mainNavigation">
-            <ul class="navbar-nav mx-auto mb-3 mb-xl-0 app-nav-menu">
+            <ul class="navbar-nav mx-auto mb-3 mb-xl-0 app-nav-menu app-nav-shell">
                 {% if menu_group_visible('pilotage') and (is_granted('ROLE_ADMIN') or is_granted('ROLE_DIRECTION')) %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle rounded-4 px-3 py-2 d-flex flex-column align-items-center text-center app-nav-link {{ app.request.attributes.get('_route') in ['app_dashboard'] or app.request.attributes.get('_route') starts with 'app_stats_' or app.request.attributes.get('_route') starts with 'app_market_' or app.request.attributes.get('_route') starts with 'app_objective_' or app.request.attributes.get('_route') starts with 'app_weekly_meeting_' ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">

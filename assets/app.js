@@ -330,6 +330,166 @@ const bindVisitInsightsCharts = async () => {
     });
 };
 
+const bindDashboardCharts = async () => {
+    const container = document.querySelector('[data-dashboard-charts]');
+    if (!container) {
+        return;
+    }
+
+    await ensureChartJsLoaded();
+
+    const chartPalette = {
+        primary: '#4bc2c4',
+        secondary: '#2d6464',
+        dark: '#111827',
+        soft: 'rgba(75, 194, 196, 0.18)',
+        softStrong: 'rgba(75, 194, 196, 0.7)',
+        accent: '#88d7d8',
+        success: '#1b8e74',
+        warning: '#f59e0b',
+        slate: '#7b8a8b',
+    };
+
+    const toursData = parseJsonDataset(container.dataset.dashboardTours, { labels: [], values: [] });
+    const activityData = parseJsonDataset(container.dataset.dashboardActivity, { labels: [], datasets: [] });
+    const revenueData = parseJsonDataset(container.dataset.dashboardRevenue, { labels: [], values: [] });
+    const commercialsData = parseJsonDataset(container.dataset.dashboardCommercials, { labels: [], values: [] });
+
+    const createChart = (id, config) => {
+        const canvas = destroyChartIfExists(id);
+        if (!canvas) {
+            return;
+        }
+
+        if (!config?.data?.labels?.length) {
+            return;
+        }
+
+        new window.Chart(canvas, {
+            ...config,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                ...config.options,
+            },
+        });
+    };
+
+    const defaultScales = {
+        x: {
+            ticks: { color: chartPalette.dark, font: { size: 11 } },
+            grid: { display: false },
+        },
+        y: {
+            beginAtZero: true,
+            ticks: { color: chartPalette.dark, precision: 0, font: { size: 11 } },
+            grid: { color: 'rgba(17, 24, 39, 0.08)' },
+        },
+    };
+
+    createChart('dashboardToursChart', {
+        type: 'doughnut',
+        data: {
+            labels: toursData.labels ?? [],
+            datasets: [{
+                data: toursData.values ?? [],
+                backgroundColor: [chartPalette.primary, chartPalette.secondary, chartPalette.success, chartPalette.slate],
+                borderWidth: 0,
+                hoverOffset: 8,
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, boxWidth: 8, padding: 16 },
+                },
+            },
+        },
+    });
+
+    createChart('dashboardActivityChart', {
+        type: 'line',
+        data: {
+            labels: activityData.labels ?? [],
+            datasets: (activityData.datasets ?? []).map((dataset, index) => {
+                const palette = [
+                    { border: chartPalette.primary, background: 'rgba(75, 194, 196, 0.18)' },
+                    { border: chartPalette.secondary, background: 'rgba(45, 100, 100, 0.16)' },
+                    { border: chartPalette.warning, background: 'rgba(245, 158, 11, 0.16)' },
+                ][index] ?? { border: chartPalette.dark, background: 'rgba(17, 24, 39, 0.12)' };
+
+                return {
+                    label: dataset.label,
+                    data: dataset.values,
+                    borderColor: palette.border,
+                    backgroundColor: palette.background,
+                    fill: index === 0,
+                    tension: 0.35,
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                };
+            }),
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, boxWidth: 8, padding: 16 },
+                },
+            },
+            scales: defaultScales,
+        },
+    });
+
+    createChart('dashboardRevenueChart', {
+        type: 'bar',
+        data: {
+            labels: revenueData.labels ?? [],
+            datasets: [{
+                label: 'CA',
+                data: revenueData.values ?? [],
+                backgroundColor: [
+                    'rgba(75, 194, 196, 0.9)',
+                    'rgba(75, 194, 196, 0.88)',
+                    'rgba(75, 194, 196, 0.82)',
+                    'rgba(45, 100, 100, 0.9)',
+                    'rgba(75, 194, 196, 0.78)',
+                    'rgba(75, 194, 196, 0.72)',
+                ],
+                borderRadius: 14,
+                maxBarThickness: 34,
+            }],
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: defaultScales,
+        },
+    });
+
+    createChart('dashboardCommercialsChart', {
+        type: 'bar',
+        data: {
+            labels: commercialsData.labels ?? [],
+            datasets: [{
+                label: 'Visites',
+                data: commercialsData.values ?? [],
+                backgroundColor: commercialsData.values?.map((_, index) => index % 2 === 0 ? chartPalette.primary : chartPalette.secondary) ?? [],
+                borderRadius: 14,
+            }],
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: defaultScales.y,
+                y: defaultScales.x,
+            },
+        },
+    });
+};
+
 const getClientMapToneClass = (tone) => `app-client-map-marker--${tone || 'primary'}`;
 
 const buildClientMapMarkerIcon = (tone) => new window.L.DivIcon({
@@ -2359,6 +2519,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindObjectivePlanning(document);
     bindTourLiveRefresh();
     void bindVisitInsightsCharts();
+    void bindDashboardCharts();
     bindVisitBatchSelection(document);
     bindDashboardPendingClosureRefresh();
     bindTourMoveMode(document);
@@ -2387,6 +2548,7 @@ document.addEventListener('turbo:load', () => {
     bindTourLiveRefresh();
     resetNavigationOverlays();
     void bindVisitInsightsCharts();
+    void bindDashboardCharts();
     bindVisitBatchSelection(document);
     bindDashboardPendingClosureRefresh();
     bindTourMoveMode(document);
