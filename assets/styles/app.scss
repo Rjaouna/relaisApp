@@ -871,6 +871,21 @@ h6,
     text-decoration: none;
 }
 
+.app-tour-stop-completed {
+    background: rgba($secondary, 0.06);
+    border-color: rgba($secondary, 0.14);
+    opacity: 0.88;
+}
+
+.app-tour-stop-completed-row > * {
+    background: rgba($secondary, 0.05) !important;
+    color: rgba($body-color, 0.74);
+}
+
+.app-tour-stop-completed-row .app-quick-link {
+    color: $body-color;
+}
+
 .app-icon-waze {
     width: 1rem;
     height: 1rem;

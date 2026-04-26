@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Client;
 use App\Entity\Commercial;
+use App\Entity\Zone;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -97,6 +98,21 @@ class ClientRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('client')
             ->andWhere('client.assignedCommercial = :commercial')
             ->setParameter('commercial', $commercial)
+            ->orderBy('client.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Client[]
+     */
+    public function findForZone(Zone $zone): array
+    {
+        return $this->createQueryBuilder('client')
+            ->leftJoin('client.zone', 'zone')
+            ->addSelect('zone')
+            ->andWhere('client.zone = :zone')
+            ->setParameter('zone', $zone)
             ->orderBy('client.name', 'ASC')
             ->getQuery()
             ->getResult();

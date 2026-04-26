@@ -47,8 +47,82 @@ class TourCrudService
 
     public function save(Tour $tour): void
     {
+        $isNew = $tour->getId() === null;
+
+        if (!$tour->getZone()) {
+            throw new \LogicException('Choisis une zone avant de creer la tournee.');
+        }
+
         if ($tour->getZone()?->getCity()?->getName()) {
             $tour->setCity($tour->getZone()?->getCity()?->getName() ?? $tour->getCity() ?? 'Non definie');
+        }
+
+        if (!$tour->getScheduledFor() instanceof \DateTimeImmutable) {
+            $tour->setScheduledFor(new \DateTimeImmutable('today 08:00'));
+        }
+
+        if ($isNew) {
+            $clients = $this->clientRepository->findForZone($tour->getZone());
+            if ($clients === []) {
+                throw new \LogicException('Aucun client n est rattache a cette zone. Impossible de creer la tournee.');
+            }
+
+            $visits = [];
+            $skippedClients = 0;
+
+            foreach ($clients as $client) {
+                $existingVisits = $this->visitRepository->findUnarchivedForClientIds([$client->getId() ?? 0]);
+                $selectedVisit = null;
+
+                foreach ($existingVisits as $existingVisit) {
+                    if ($existingVisit->getStatus() === \App\Entity\Visit::STATUS_COMPLETED) {
+                        continue;
+                    }
+
+                    if ($existingVisit->getTour() instanceof Tour) {
+                        $selectedVisit = null;
+                        ++$skippedClients;
+                        continue 2;
+                    }
+
+                    $selectedVisit = $existingVisit;
+                    break;
+                }
+
+                if (!$selectedVisit instanceof \App\Entity\Visit) {
+                    $selectedVisit = new \App\Entity\Visit();
+                    $selectedVisit->setClient($client);
+                    $selectedVisit->setScheduledAt($selectedVisit->getCreatedAt());
+                }
+
+                $selectedVisit->setTour($tour);
+                $selectedVisit->touch();
+                $this->entityManager->persist($selectedVisit);
+                $visits[] = $selectedVisit;
+
+                if ($tour->getCommercial() instanceof Commercial) {
+                    $client->setAssignedCommercial($tour->getCommercial());
+                    $client->touch();
+                    $this->entityManager->persist($client);
+                }
+            }
+
+            if ($visits === []) {
+                throw new \LogicException('Tous les clients de cette zone sont deja engages dans d autres tournees. Aucune tournee manuelle n a ete creee.');
+            }
+
+            $summary = sprintf('Tournee manuelle preparee pour la zone %s.', $tour->getZone()->getName());
+            if ($skippedClients > 0) {
+                $summary .= sprintf(' %d client(s) deja engages ailleurs ont ete ignores.', $skippedClients);
+            }
+
+            $tour
+                ->setStatus(Tour::STATUS_PROGRAMMED)
+                ->setPlannedVisits(count($visits))
+                ->setCompletedVisits(0)
+                ->setRouteSummary($summary);
+
+            $this->entityManager->persist($tour);
         }
 
         $this->entityManager->persist($tour);

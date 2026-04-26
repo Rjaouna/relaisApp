@@ -10,16 +10,20 @@
     }
 }) }}
     <div class="modal-body">
+        {% if form.vars.errors|length > 0 %}
+            <div class="alert alert-warning rounded-4 border-0">
+                {{ form_errors(form) }}
+            </div>
+        {% endif %}
         <div class="row g-3">
             <div class="col-md-6">{{ form_row(form.name) }}</div>
             <div class="col-md-6">{{ form_row(form.commercial) }}</div>
-            <div class="col-md-6">{% include '_partials/_city_select_field.html.twig' with { field: form.city } %}</div>
-            <div class="col-md-6">{% include '_partials/_reference_option_field.html.twig' with { field: form.status, category: 'tour_status' } %}</div>
-            <div class="col-12">{{ form_row(form.scheduledFor) }}</div>
-            <div class="col-md-6">{{ form_row(form.plannedVisits) }}</div>
-            <div class="col-md-6">{{ form_row(form.completedVisits) }}</div>
-            <div class="col-12">{{ form_row(form.routeSummary) }}</div>
-            <div class="col-12">{{ form_row(form.notes) }}</div>
+            <div class="col-12">{{ form_row(form.zone) }}</div>
+            <div class="col-12">
+                <div class="alert alert-info rounded-4 border-0 mb-0">
+                    La ville, le statut et les visites seront prepares automatiquement a partir de la zone choisie.
+                </div>
+            </div>
         </div>
     </div>
     <div class="modal-footer">

@@ -6,6 +6,7 @@ use App\Entity\Client;
 use App\Entity\Commercial;
 use App\Entity\Tour;
 use App\Entity\Visit;
+use App\Entity\Zone;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -169,6 +170,27 @@ class VisitRepository extends ServiceEntityRepository
             ->setParameter('status', Visit::STATUS_PLANNED)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * @return Visit[]
+     */
+    public function findPlannedUnassignedForZone(Zone $zone): array
+    {
+        return $this->createQueryBuilder('visit')
+            ->leftJoin('visit.client', 'client')
+            ->addSelect('client')
+            ->leftJoin('client.zone', 'zone')
+            ->addSelect('zone')
+            ->andWhere('zone = :zone')
+            ->andWhere('visit.status = :status')
+            ->andWhere('visit.archivedAt IS NULL')
+            ->andWhere('visit.tour IS NULL')
+            ->setParameter('zone', $zone)
+            ->setParameter('status', Visit::STATUS_PLANNED)
+            ->orderBy('visit.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     public function countCompletedForCommercial(Commercial $commercial): int

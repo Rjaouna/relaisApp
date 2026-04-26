@@ -194,6 +194,10 @@ class TourGenerationWorkflowService
             $groups[$groupKey]['visits'][] = $visit;
         }
 
+        if ($groups === []) {
+            throw new \LogicException('Aucun client concerne par cette generation. Aucune tournee n a ete creee.');
+        }
+
         $generatedTours = 0;
         foreach ($groups as $payload) {
             $commercial = $payload['commercial'];
@@ -360,6 +364,11 @@ class TourGenerationWorkflowService
             $zoneData['clientCount'] = count($zoneData['clientIds']);
         }
         unset($zoneData);
+
+        $zones = array_filter(
+            $zones,
+            static fn (array $zoneData): bool => ($zoneData['clientCount'] ?? 0) > 0
+        );
 
         return [
             'statuses' => $statuses,

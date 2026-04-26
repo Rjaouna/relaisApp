@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/tournees', name: 'app_tour_')]
 class TourController extends AbstractController
@@ -517,11 +518,17 @@ class TourController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->tourCrudService->save($tour);
+            try {
+                $this->tourCrudService->save($tour);
+            } catch (\LogicException $exception) {
+                $form->addError(new FormError($exception->getMessage()));
+            }
 
-            return $request->isXmlHttpRequest()
-                ? $this->json(['success' => true])
-                : $this->redirectToRoute('app_tour_show', ['id' => $tour->getId()]);
+            if ($form->isValid()) {
+                return $request->isXmlHttpRequest()
+                    ? $this->json(['success' => true])
+                    : $this->redirectToRoute('app_tour_show', ['id' => $tour->getId()]);
+            }
         }
 
         if ($request->isXmlHttpRequest()) {
